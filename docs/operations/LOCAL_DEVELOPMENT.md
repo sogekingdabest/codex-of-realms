@@ -2,11 +2,21 @@
 
 ## Prerequisites
 
-- Java 21 for running Maven directly
+- Eclipse Temurin JDK 21 for running Maven directly
 - Docker Desktop with Docker Compose for the complete stack and integration tests
 - At least 8 GB of free system memory recommended while all services run
 
 Maven does not need to be installed globally; the repository includes the Maven Wrapper.
+
+Verify the selected runtime in a new terminal:
+
+~~~powershell
+java --version
+cd backend
+.\mvnw.cmd --version
+~~~
+
+Maven should report Java 21 with vendor **Eclipse Adoptium**.
 
 ## Configure secrets
 
@@ -56,7 +66,7 @@ Available endpoints:
 - Keycloak: <http://localhost:8180>
 - Ollama API: <http://localhost:11434>
 
-The imported Keycloak realm is **codex-of-realms**. The admin username is **admin**; its password comes only from **.env**. M1 intentionally creates no demo users and enables no password grant. Interactive users and realm memberships are introduced in M2.
+The imported Keycloak realm is **codex-of-realms**. The admin username is **admin**; its password comes only from **.env**. The import includes **gm-demo**, **nara-demo**, and **ivo-demo** without credentials. Set temporary passwords through the local Keycloak administration console before interactive use. Direct password grants remain disabled.
 
 Stop services without deleting their data:
 

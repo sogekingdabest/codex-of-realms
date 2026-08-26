@@ -54,7 +54,7 @@ management:
 info:
   application:
     name: Codex of Realms
-    milestone: M1
+    milestone: M2
 
 springdoc:
   swagger-ui:

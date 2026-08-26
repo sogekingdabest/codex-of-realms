@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M1 walking skeleton implemented
-- **Domain implementation begins:** M2
+- **Status:** M2 realm authorization boundary implemented
+- **Next domain milestone:** M3 source ingestion
 
 ## Architectural drivers
 

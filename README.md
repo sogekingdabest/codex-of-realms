@@ -6,7 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M1 — Walking skeleton** is implemented. The repository now contains a Java 21 Spring Boot service, package-level Spring Modulith boundaries, PostgreSQL/pgvector migration and integration testing, an importable Keycloak realm, an optional Ollama runtime, health and OpenAPI endpoints, Docker Compose, and GitHub Actions.
+**M2 — Realms and authorization** is implemented in code. The repository now contains OIDC identity synchronization, isolated realms, realm-scoped memberships and roles, access policies, member-targeted spoiler grants, non-disclosing object authorization, and negative IDOR tests.
+
+M1 and M2 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, unit tests, module verification, Compose validation, and integration-test compilation succeed.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -21,7 +23,7 @@ The M0 product foundation remains the source of truth for scope, domain language
 
 ## M1 technology baseline
 
-- Java 21 and Spring Boot 4.1.1
+- Eclipse Temurin JDK 21 and Spring Boot 4.1.1
 - Spring AI 2.0.1 and Spring Security
 - Spring Modulith 2.1.1
 - PostgreSQL 18 with pgvector 0.8.6
@@ -29,7 +31,7 @@ The M0 product foundation remains the source of truth for scope, domain language
 - Ollama 0.32.5 as the future default local model runtime
 - Flyway, Actuator, OpenAPI, Docker Compose, Testcontainers, and GitHub Actions
 
-M1 does not pull or run an AI model. Chat and embedding providers remain disabled until model quality and resource use are evaluated on the target hardware.
+M1 and M2 do not pull or run an AI model. Chat and embedding providers remain disabled until model quality and resource use are evaluated on the target hardware.
 
 ## M0 documentation
 
@@ -40,6 +42,7 @@ M1 does not pull or run an AI model. Chat and embedding providers remain disable
 - [Initial architecture](docs/architecture/ARCHITECTURE.md)
 - [Architecture decision records](docs/architecture/adr/)
 - [Threat model](docs/security/THREAT_MODEL.md)
+- [Realm authorization model](docs/security/AUTHORIZATION_MODEL.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
 - [Baseline RAG evaluation set](demo/evaluation/README.md)

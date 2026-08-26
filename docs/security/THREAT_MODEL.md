@@ -1,8 +1,8 @@
 # Threat Model
 
-- **Status:** M0 baseline
-- **Date:** 2026-08-26
-**Scope:** MVP local deployment and REST API
+- **Status:** M2 authorization controls implemented
+- **Date:** 2026-08-27
+- **Scope:** MVP local deployment and REST API
 
 This is a living threat model. Controls listed as planned are requirements for the milestone that introduces the affected asset; they are not claims about code that does not yet exist.
 
@@ -107,6 +107,8 @@ The model receives no tools in the MVP. A compromised answer can mislead the vie
 - Role and membership matrix
 - Spoiler grant/revocation tests
 - Non-disclosing error behavior
+
+Implemented evidence lives in **RealmAuthorizationIntegrationTest**, **AccessPolicyTest**, the V2 Flyway migration, and **AUTHORIZATION_MODEL.md**. Execution of the PostgreSQL-backed suite remains pending until the local Docker engine is responsive.
 
 ### M3
 

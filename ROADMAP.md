@@ -36,6 +36,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M2 — Realms and authorization
 
+**Status:** Implementation complete; container-backed acceptance pending
+
 **Goal:** Establish the security boundary before any lore can be retrieved.
 
 - Implement authenticated users from OIDC claims.
@@ -45,6 +47,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Add negative integration tests for cross-realm access and IDOR.
 
 **Exit criteria:** unauthorized requests cannot enumerate, read, or infer the existence of protected realm content.
+
+**Current evidence:** OIDC identity synchronization, Flyway authorization schema, realm and membership application services, SQL-level effective-access predicates, non-disclosing API errors, domain matrix tests, and compiled PostgreSQL integration tests. The Docker-backed suite remains pending for the same local engine issue recorded in M1.
 
 ## M3 — Source ingestion
 

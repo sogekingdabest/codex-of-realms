@@ -11,7 +11,7 @@ The walking skeleton needs a compatible, reproducible baseline before domain imp
 
 Use the following M1 baseline:
 
-- Java 21
+- Eclipse Temurin JDK 21 for development and CI
 - Spring Boot 4.1.1
 - Spring AI 2.0.1
 - Spring Modulith 2.1.1
@@ -22,6 +22,8 @@ Use the following M1 baseline:
 - Maven Wrapper 3.3.4 using Maven 3.9.16
 
 Versions are centralized in the Maven build or fixed in Docker Compose. Spring AI chat and embedding auto-configuration is disabled in M1; Ollama is present as an infrastructure boundary but no model is pulled automatically. PostgreSQL integration is exercised with Testcontainers, while Spring Modulith verifies package boundaries.
+
+Application code targets the Java 21 standard and must not depend on Temurin-specific APIs. Choosing the same distribution locally and in CI reduces environment drift without creating a runtime vendor lock-in.
 
 ## Consequences
 

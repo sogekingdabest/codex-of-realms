@@ -60,5 +60,43 @@
         "description": "Can sign in to Codex of Realms; realm authorization remains application-owned."
       }
     ]
-  }
+  },
+  "users": [
+    {
+      "id": "11111111-1111-4111-8111-111111111111",
+      "username": "gm-demo",
+      "firstName": "Maestra",
+      "lastName": "del Meridiano",
+      "email": "gm-demo@local.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "codex-user"
+      ]
+    },
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "username": "nara-demo",
+      "firstName": "Nara",
+      "lastName": "Valcor",
+      "email": "nara-demo@local.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "codex-user"
+      ]
+    },
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "username": "ivo-demo",
+      "firstName": "Ivo",
+      "lastName": "Sarel",
+      "email": "ivo-demo@local.invalid",
+      "enabled": true,
+      "emailVerified": true,
+      "realmRoles": [
+        "codex-user"
+      ]
+    }
+  ]
 }
