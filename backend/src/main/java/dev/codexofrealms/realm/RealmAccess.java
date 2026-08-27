@@ -33,6 +33,10 @@ public class RealmAccess {
         realmService.requireEditorAccess(realmId, userId);
     }
 
+    public void requireMember(UUID realmId, UUID userId) {
+        realmService.requireMemberAccess(realmId, userId);
+    }
+
     public void requireEditablePolicy(UUID realmId, UUID policyId, UUID userId) {
         realmService.requireEditablePolicyAccess(realmId, policyId, userId);
     }

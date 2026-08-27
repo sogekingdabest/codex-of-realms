@@ -113,6 +113,12 @@ public class RealmService {
     }
 
     @Transactional(readOnly = true)
+    public void requireMemberAccess(UUID realmId, UUID currentUserId) {
+        realmRepository.findActiveRealmForMember(realmId, currentUserId)
+            .orElseThrow(ResourceNotFoundException::new);
+    }
+
+    @Transactional(readOnly = true)
     public void requireEditablePolicyAccess(
         UUID realmId,
         UUID policyId,

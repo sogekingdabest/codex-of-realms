@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M3 source ingestion implemented
-- **Next domain milestone:** M4 access-aware retrieval
+- **Status:** M4 access-aware retrieval implemented
+- **Next domain milestone:** M5 grounded answers
 
 ## Architectural drivers
 
@@ -189,3 +189,4 @@ Architecture changes require evidence:
 - [ADR-003: Use server-side local models for the MVP](adr/ADR-003-local-model-runtime.md)
 - [ADR-004: Fix the M1 technology baseline](adr/ADR-004-m1-technology-baseline.md)
 - [ADR-005: Store immutable source versions and explicit embedding provenance](adr/ADR-005-source-ingestion.md)
+- [ADR-006: Filter authorized candidates before exact vector ranking](adr/ADR-006-access-aware-retrieval.md)

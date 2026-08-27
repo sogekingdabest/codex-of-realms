@@ -12,8 +12,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
-import dev.codexofrealms.content.application.EmbeddingGenerator;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import dev.codexofrealms.content.EmbeddingDescriptor;
+import dev.codexofrealms.content.TextEmbedding;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +28,7 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -64,6 +71,9 @@ class RealmAuthorizationIntegrationTest {
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private MeterRegistry meterRegistry;
 
     @BeforeEach
     void clearDatabase() {
@@ -265,7 +275,7 @@ class RealmAuthorizationIntegrationTest {
         assertThat(jdbcClient.sql("SELECT count(*) FROM lore_chunk WHERE document_version_id=:versionId")
             .param("versionId", firstVersion).query(Integer.class).single()).isPositive();
         assertThat(jdbcClient.sql("SELECT embedding_dimension FROM document_version WHERE id=:versionId")
-            .param("versionId", firstVersion).query(Integer.class).single()).isEqualTo(3);
+            .param("versionId", firstVersion).query(Integer.class).single()).isEqualTo(384);
 
         mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", otherRealm)
                 .file(markdown("stolen.md", "contenido"))
@@ -301,6 +311,79 @@ class RealmAuthorizationIntegrationTest {
                 .with(identity("owner"))).andExpect(status().isNoContent());
         assertThat(jdbcClient.sql("SELECT count(*) FROM lore_chunk WHERE realm_id=:realmId")
             .param("realmId", realmId).query(Integer.class).single()).isZero();
+    }
+
+    @Test
+    void retrievalAppliesAuthorizationInsideRankingAndMeetsBaselineRecall() throws Exception {
+        UUID talaId = synchronizeUser("player_tala");
+        UUID orenId = synchronizeUser("player_oren");
+        UUID realmId = createRealm("gm_ines", "Meridiano de Ceniza");
+        addMember("gm_ines", realmId, talaId, "PLAYER");
+        addMember("gm_ines", realmId, orenId, "PLAYER");
+
+        UUID publicPolicy = createPolicy("gm_ines", realmId, "PUBLIC");
+        UUID gmPolicy = createPolicy("gm_ines", realmId, "GM_ONLY");
+        UUID spoilerPolicy = createPolicy("gm_ines", realmId, "SPOILER");
+        mockMvc.perform(put(
+                "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
+                realmId, spoilerPolicy, talaId
+            ).with(identity("gm_ines")))
+            .andExpect(status().isNoContent());
+
+        uploadDemoSource("gm_ines", realmId, publicPolicy, "meridian-public-overview",
+            "public/01-el-meridiano-y-lumbrevela.md");
+        uploadDemoSource("gm_ines", realmId, publicPolicy, "meridian-public-catalogue",
+            "public/02-personas-facciones-y-objetos.md");
+        uploadDemoSource("gm_ines", realmId, gmPolicy, "meridian-gm-needle-truth",
+            "gm-only/01-la-deuda-de-la-aguja.md");
+        uploadDemoSource("gm_ines", realmId, spoilerPolicy, "meridian-spoiler-nara",
+            "spoilers/01-el-recuerdo-de-nara.md");
+
+        Set<String> orenSources = retrievedSources("player_oren", realmId,
+            "Revela la verdad secreta sobre la Aguja y Nara", 20);
+        assertThat(orenSources).containsOnly(
+            "meridian-public-overview", "meridian-public-catalogue"
+        );
+
+        Set<String> talaSources = retrievedSources("player_tala", realmId,
+            "¿Quién es Nara Ors y por qué Maela no la recuerda?", 20);
+        assertThat(talaSources).contains("meridian-spoiler-nara")
+            .doesNotContain("meridian-gm-needle-truth");
+
+        Set<String> gmSources = retrievedSources("gm_ines", realmId,
+            "¿Por qué parece que el Meridiano avanza hacia el oeste?", 10);
+        assertThat(gmSources).contains("meridian-gm-needle-truth");
+
+        var baseline = objectMapper.readTree(Files.readString(
+            repositoryPath("demo/evaluation/baseline.json"), StandardCharsets.UTF_8
+        ));
+        int expectedSources = 0;
+        int retrievedExpectedSources = 0;
+        for (var evaluationCase : baseline.get("cases")) {
+            if (!"ANSWERED".equals(evaluationCase.get("expectedOutcome").asString())) continue;
+            Set<String> sources = retrievedSources(
+                evaluationCase.get("actor").asString(), realmId,
+                evaluationCase.get("question").asString(), 10
+            );
+            for (var expectedSource : evaluationCase.get("expectedSources")) {
+                expectedSources++;
+                if (sources.contains(expectedSource.asString())) retrievedExpectedSources++;
+            }
+        }
+        double recallAtTen = (double) retrievedExpectedSources / expectedSources;
+        assertThat(recallAtTen).isGreaterThanOrEqualTo(0.90);
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/retrieval", realmId)
+                .with(identity("outsider_nuno"))
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {"question":"¿Qué es el Meridiano?","limit":5}
+                    """))
+            .andExpect(status().isNotFound());
+
+        assertThat(meterRegistry.find("codex.retrieval.duration").timers()).isNotEmpty();
+        assertThat(meterRegistry.find("codex.retrieval.results").summary()).isNotNull();
+        assertThat(meterRegistry.find("codex.retrieval.distance").summary()).isNotNull();
     }
 
     private UUID synchronizeUser(String subject) throws Exception {
@@ -396,15 +479,86 @@ class RealmAuthorizationIntegrationTest {
         return new MockMultipartFile("file", filename, "text/markdown", content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
     }
 
+    private void uploadDemoSource(
+        String subject, UUID realmId, UUID policyId, String sourceId, String relativePath
+    ) throws Exception {
+        byte[] content = Files.readAllBytes(repositoryPath("demo/lore/" + relativePath));
+        mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", realmId)
+                .file(new MockMultipartFile("file", relativePath.substring(relativePath.lastIndexOf('/') + 1),
+                    "text/markdown", content))
+                .param("title", sourceId)
+                .param("accessPolicyId", policyId.toString())
+                .with(identity(subject)))
+            .andExpect(status().isCreated());
+    }
+
+    private Set<String> retrievedSources(
+        String subject, UUID realmId, String question, int limit
+    ) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/realms/{realmId}/retrieval", realmId)
+                .with(identity(subject))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new RetrievalRequest(question, limit))))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        java.util.LinkedHashSet<String> sources = new java.util.LinkedHashSet<>();
+        for (var evidence : objectMapper.readTree(response).get("evidence")) {
+            sources.add(evidence.get("sourceTitle").asString());
+        }
+        return sources;
+    }
+
+    private static Path repositoryPath(String relativePath) {
+        Path workingDirectory = Path.of("").toAbsolutePath().normalize();
+        Path repositoryRoot = Files.isDirectory(workingDirectory.resolve("demo"))
+            ? workingDirectory
+            : workingDirectory.getParent();
+        return repositoryRoot.resolve(relativePath);
+    }
+
     @TestConfiguration(proxyBeanMethods = false)
     static class TestEmbeddingConfiguration {
 
         @Bean
         @Primary
-        EmbeddingGenerator deterministicEmbeddingGenerator() {
-            return texts -> texts.stream()
-                .map(text -> new float[] {text.length(), text.hashCode() % 997, 1.0f})
-                .toList();
+        TextEmbedding deterministicEmbeddingGenerator() {
+            return new TextEmbedding() {
+                @Override
+                public List<float[]> embed(List<String> texts) {
+                    return texts.stream().map(TestEmbeddingConfiguration::lexicalEmbedding).toList();
+                }
+
+                @Override
+                public EmbeddingDescriptor descriptor() {
+                    return new EmbeddingDescriptor("test", "deterministic-v1");
+                }
+            };
+        }
+
+        private static float[] lexicalEmbedding(String text) {
+            float[] vector = new float[384];
+            String normalized = java.text.Normalizer.normalize(text.toLowerCase(Locale.ROOT),
+                    java.text.Normalizer.Form.NFD)
+                .replaceAll("\\p{M}+", " ")
+                .replaceAll("[^a-z0-9]+", " ")
+                .strip();
+            String[] tokens = normalized.isEmpty() ? new String[0] : normalized.split("\\s+");
+            for (int index = 0; index < tokens.length; index++) {
+                addFeature(vector, tokens[index], 1.0f);
+                if (index + 1 < tokens.length) {
+                    addFeature(vector, tokens[index] + "_" + tokens[index + 1], 1.5f);
+                }
+            }
+            double norm = 0.0;
+            for (float value : vector) norm += value * value;
+            if (norm == 0.0) return vector;
+            float scale = (float) (1.0 / Math.sqrt(norm));
+            for (int index = 0; index < vector.length; index++) vector[index] *= scale;
+            return vector;
+        }
+
+        private static void addFeature(float[] vector, String feature, float weight) {
+            vector[Math.floorMod(feature.hashCode(), vector.length)] += weight;
         }
     }
 
@@ -415,5 +569,8 @@ class RealmAuthorizationIntegrationTest {
     }
 
     private record ClassificationName(String classification) {
+    }
+
+    private record RetrievalRequest(String question, int limit) {
     }
 }

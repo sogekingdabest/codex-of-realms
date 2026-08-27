@@ -72,6 +72,7 @@ docker compose ps
 Available endpoints:
 
 - API health: <http://localhost:8080/actuator/health>
+- Application metrics: <http://localhost:8080/actuator/metrics>
 - OpenAPI document: <http://localhost:8080/v3/api-docs>
 - Swagger UI: <http://localhost:8080/swagger-ui.html>
 - Keycloak: <http://localhost:8180>

@@ -1,12 +1,14 @@
 package dev.codexofrealms.content.application;
 
+import dev.codexofrealms.content.EmbeddingDescriptor;
+import dev.codexofrealms.content.TextEmbedding;
 import dev.codexofrealms.content.domain.ProcessingStatus;
 import dev.codexofrealms.content.infrastructure.SourceVersionRecord;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.ArrayList;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.beans.factory.ObjectProvider;
@@ -19,12 +21,12 @@ public class SourceIngestionService {
     private final StructuralChunker chunker;
     private final RawSourceStorage storage;
     private final SourceMetadataCoordinator metadata;
-    private final ObjectProvider<EmbeddingGenerator> embeddingProvider;
+    private final ObjectProvider<TextEmbedding> embeddingProvider;
     private final IngestionProperties properties;
 
     SourceIngestionService(
         SourceFileValidator validator, StructuralChunker chunker, RawSourceStorage storage,
-        SourceMetadataCoordinator metadata, ObjectProvider<EmbeddingGenerator> embeddingProvider,
+        SourceMetadataCoordinator metadata, ObjectProvider<TextEmbedding> embeddingProvider,
         IngestionProperties properties
     ) {
         this.validator = validator;
@@ -95,12 +97,13 @@ public class SourceIngestionService {
         metadata.status(version.versionId(), ProcessingStatus.VALIDATED, null);
         List<SourceChunk> chunks = chunker.split(source.text());
         metadata.status(version.versionId(), ProcessingStatus.PROCESSING, null);
-        EmbeddingGenerator generator = embeddingProvider.getIfAvailable(() -> {
+        TextEmbedding generator = embeddingProvider.getIfAvailable(() -> {
             throw new EmbeddingUnavailableException("No embedding model is configured.");
         });
         List<float[]> embeddings = embedInBatches(generator, chunks);
+        EmbeddingDescriptor descriptor = generator.descriptor();
         return metadata.activate(realmId, userId, version, chunks, embeddings,
-            properties.embeddingProvider(), properties.embeddingModel());
+            descriptor.provider(), descriptor.model());
     }
 
     private String fingerprint() {
@@ -115,7 +118,7 @@ public class SourceIngestionService {
         }
     }
 
-    private List<float[]> embedInBatches(EmbeddingGenerator generator, List<SourceChunk> chunks) {
+    private List<float[]> embedInBatches(TextEmbedding generator, List<SourceChunk> chunks) {
         List<float[]> embeddings = new ArrayList<>(chunks.size());
         for (int start = 0; start < chunks.size(); start += properties.embeddingBatchSize()) {
             int end = Math.min(start + properties.embeddingBatchSize(), chunks.size());

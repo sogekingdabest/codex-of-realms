@@ -1,6 +1,6 @@
 # Threat Model
 
-- **Status:** M3 ingestion controls implemented
+- **Status:** M4 retrieval authorization controls implemented
 - **Date:** 2026-08-27
 - **Scope:** MVP local deployment and REST API
 
@@ -125,6 +125,8 @@ Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTe
 - Hidden-source questions that must return `INSUFFICIENT_EVIDENCE`
 - Token/context/output bounds
 - Model output schema and citation validation
+
+M4 evidence lives in **PgVectorLoreRetriever**, **ADR-006**, **RetrievalQueryTest**, and the baseline retrieval case in **RealmAuthorizationIntegrationTest**. Authorization is part of the materialized SQL candidate set before vector distance is evaluated. PostgreSQL execution remains pending until Docker Desktop is responsive.
 
 ## Residual risks
 

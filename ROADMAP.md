@@ -69,6 +69,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M4 — Access-aware retrieval
 
+**Status:** Implementation complete; container-backed acceptance pending
+
 **Goal:** Return relevant evidence without ever retrieving unauthorized chunks.
 
 - Introduce the `LoreRetriever` application port.
@@ -78,6 +80,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Add metrics for retrieval latency, result count, and score distribution.
 
 **Exit criteria:** access precision is 100% in the security suite and answerable-query recall at `k` meets the calibrated baseline target.
+
+**Current evidence:** public `LoreRetriever` port, exact pgvector cosine query with authorization inside its materialized candidate set, active embedding-generation checks, ranked provenance-rich results, low-cardinality Micrometer metrics, and a compiled integration evaluation against `demo/evaluation/baseline.json`. The suite requires access precision of 100% and recall@10 of at least 0.90; PostgreSQL execution remains pending on a responsive Docker engine.
 
 ## M5 — Grounded answers
 

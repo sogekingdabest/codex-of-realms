@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M3 — Source ingestion** is implemented in code. Authorized editors can upload bounded UTF-8 Markdown/TXT files, create immutable checksummed versions, split them with structural provenance, generate local embeddings, replace or reprocess them idempotently, and retire all derived data.
+**M4 — Access-aware retrieval** is implemented in code. Realm members can retrieve ranked evidence through an exact pgvector query that applies realm membership, role, policy, grants, active-version state, and embedding-generation compatibility before distance ranking.
 
-M1–M3 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, unit tests, module verification, Compose validation, and integration-test compilation succeed.
+M1–M4 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, unit tests, module verification, Compose validation, and integration-test compilation succeed.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -44,6 +44,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. The applica
 - [Threat model](docs/security/THREAT_MODEL.md)
 - [Realm authorization model](docs/security/AUTHORIZATION_MODEL.md)
 - [Source ingestion runbook](docs/operations/SOURCE_INGESTION.md)
+- [Retrieval baseline](docs/evaluation/RETRIEVAL_BASELINE.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
 - [Baseline RAG evaluation set](demo/evaluation/README.md)
