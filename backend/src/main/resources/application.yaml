@@ -6,6 +6,10 @@ spring:
     name: codex-of-realms
   lifecycle:
     timeout-per-shutdown-phase: 20s
+  servlet:
+    multipart:
+      max-file-size: ${SOURCE_MAX_FILE_SIZE:1MB}
+      max-request-size: ${SOURCE_MAX_REQUEST_SIZE:1100KB}
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/codex_of_realms}
     username: ${DB_USERNAME:codex}
@@ -31,6 +35,8 @@ spring:
       embedding: ${AI_EMBEDDING_PROVIDER:none}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      embedding:
+        model: ${AI_EMBEDDING_MODEL:bge-m3}
       init:
         pull-model-strategy: never
   modulith:
@@ -54,7 +60,18 @@ management:
 info:
   application:
     name: Codex of Realms
-    milestone: M2
+    milestone: M3
+
+codex:
+  storage:
+    root: ${CODEX_SOURCE_STORAGE:./data/sources}
+  ingestion:
+    max-file-bytes: ${SOURCE_MAX_FILE_BYTES:1048576}
+    chunk-max-characters: ${SOURCE_CHUNK_MAX_CHARACTERS:1400}
+    chunk-overlap-characters: ${SOURCE_CHUNK_OVERLAP_CHARACTERS:160}
+    embedding-batch-size: ${SOURCE_EMBEDDING_BATCH_SIZE:32}
+    embedding-provider: ${AI_EMBEDDING_PROVIDER:none}
+    embedding-model: ${AI_EMBEDDING_MODEL:bge-m3}
 
 springdoc:
   swagger-ui:

@@ -1,6 +1,6 @@
 # Threat Model
 
-- **Status:** M2 authorization controls implemented
+- **Status:** M3 ingestion controls implemented
 - **Date:** 2026-08-27
 - **Scope:** MVP local deployment and REST API
 
@@ -115,6 +115,8 @@ Implemented evidence lives in **RealmAuthorizationIntegrationTest**, **AccessPol
 - Upload size, type, name, encoding, and malformed-content tests
 - Storage traversal tests
 - Idempotent deletion and reprocessing tests
+
+Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTest**, **LocalRawSourceStorageTest**, the V3 Flyway migration, and the source lifecycle case in **RealmAuthorizationIntegrationTest**. The unit controls pass; execution of the PostgreSQL-backed case remains pending until the local Docker engine is responsive.
 
 ### M4/M5
 

@@ -5,6 +5,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -12,13 +13,20 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.UUID;
+import dev.codexofrealms.content.application.EmbeddingGenerator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.testcontainers.junit.jupiter.Container;
@@ -30,6 +38,12 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
+@Import(RealmAuthorizationIntegrationTest.TestEmbeddingConfiguration.class)
+@TestPropertySource(properties = {
+    "codex.storage.root=target/test-sources",
+    "codex.ingestion.embedding-provider=test",
+    "codex.ingestion.embedding-model=deterministic-v1"
+})
 class RealmAuthorizationIntegrationTest {
 
     private static final String ISSUER =
@@ -230,6 +244,65 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(status().isNotFound());
     }
 
+    @Test
+    void sourceLifecycleIsTraceableIdempotentRealmScopedAndRemovable() throws Exception {
+        UUID realmId = createRealm("owner", "Archivo de Lumbrevela");
+        UUID otherRealm = createRealm("other-owner", "Archivo ajeno");
+        UUID policyId = createPolicy("owner", realmId, "GM_ONLY");
+        MockMultipartFile first = markdown("lumbrevela.md", "# Lumbrevela\n\nLa Aguja guarda una deuda antigua.");
+
+        String created = mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", realmId)
+                .file(first).param("title", "Crónica de Lumbrevela")
+                .param("accessPolicyId", policyId.toString()).with(identity("owner")))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("READY"))
+            .andExpect(jsonPath("$.versionNumber").value(1))
+            .andExpect(jsonPath("$.embeddingModel").value("deterministic-v1"))
+            .andReturn().getResponse().getContentAsString();
+        UUID documentId = UUID.fromString(objectMapper.readTree(created).get("id").asString());
+        UUID firstVersion = UUID.fromString(objectMapper.readTree(created).get("versionId").asString());
+
+        assertThat(jdbcClient.sql("SELECT count(*) FROM lore_chunk WHERE document_version_id=:versionId")
+            .param("versionId", firstVersion).query(Integer.class).single()).isPositive();
+        assertThat(jdbcClient.sql("SELECT embedding_dimension FROM document_version WHERE id=:versionId")
+            .param("versionId", firstVersion).query(Integer.class).single()).isEqualTo(3);
+
+        mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", otherRealm)
+                .file(markdown("stolen.md", "contenido"))
+                .param("title", "Intento cruzado").param("accessPolicyId", policyId.toString())
+                .with(identity("other-owner")))
+            .andExpect(status().isNotFound());
+
+        String unchanged = mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
+                .file(markdown("lumbrevela.md", "# Lumbrevela\n\nLa Aguja guarda una deuda antigua."))
+                .param("accessPolicyId", policyId.toString()).with(identity("owner"))
+                .with(request -> { request.setMethod("PUT"); return request; }))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(objectMapper.readTree(unchanged).get("versionId").asString()).isEqualTo(firstVersion.toString());
+
+        String replaced = mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
+                .file(markdown("lumbrevela.md", "# Lumbrevela\n\nLa deuda ha sido saldada."))
+                .param("accessPolicyId", policyId.toString()).with(identity("owner"))
+                .with(request -> { request.setMethod("PUT"); return request; }))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.versionNumber").value(2))
+            .andReturn().getResponse().getContentAsString();
+        UUID secondVersion = UUID.fromString(objectMapper.readTree(replaced).get("versionId").asString());
+        assertThat(secondVersion).isNotEqualTo(firstVersion);
+        assertThat(jdbcClient.sql("SELECT count(*) FROM document_version WHERE document_id=:documentId AND active")
+            .param("documentId", documentId).query(Integer.class).single()).isEqualTo(1);
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/sources/{documentId}/reprocess", realmId, documentId)
+                .with(identity("owner")))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.versionId").value(secondVersion.toString()));
+
+        mockMvc.perform(delete("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
+                .with(identity("owner"))).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
+                .with(identity("owner"))).andExpect(status().isNoContent());
+        assertThat(jdbcClient.sql("SELECT count(*) FROM lore_chunk WHERE realm_id=:realmId")
+            .param("realmId", realmId).query(Integer.class).single()).isZero();
+    }
+
     private UUID synchronizeUser(String subject) throws Exception {
         String response = mockMvc.perform(get("/api/v1/me").with(identity(subject)))
             .andExpect(status().isOk())
@@ -317,6 +390,22 @@ class RealmAuthorizationIntegrationTest {
             .claim("iss", ISSUER)
             .claim("preferred_username", subject)
             .claim("aud", List.of("codex-api")));
+    }
+
+    private MockMultipartFile markdown(String filename, String content) {
+        return new MockMultipartFile("file", filename, "text/markdown", content.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    }
+
+    @TestConfiguration(proxyBeanMethods = false)
+    static class TestEmbeddingConfiguration {
+
+        @Bean
+        @Primary
+        EmbeddingGenerator deterministicEmbeddingGenerator() {
+            return texts -> texts.stream()
+                .map(text -> new float[] {text.length(), text.hashCode() % 997, 1.0f})
+                .toList();
+        }
     }
 
     private record RealmName(String name) {

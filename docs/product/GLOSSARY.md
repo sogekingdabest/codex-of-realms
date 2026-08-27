@@ -44,7 +44,7 @@ The controlled process that validates, reads, splits, embeds, and indexes a docu
 
 ### Reprocessing
 
-Running ingestion again for an existing immutable document version, normally after an implementation or model change. Reprocessing must be idempotent.
+Running ingestion again from the active version's immutable raw bytes, normally after an implementation or model change. A changed pipeline creates a new immutable version; an unchanged pipeline is a no-op.
 
 ## Knowledge and canon
 

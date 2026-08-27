@@ -107,6 +107,21 @@ public class RealmService {
             .orElseThrow(ResourceNotFoundException::new);
     }
 
+    @Transactional(readOnly = true)
+    public void requireEditorAccess(UUID realmId, UUID currentUserId) {
+        requireEditor(realmId, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
+    public void requireEditablePolicyAccess(
+        UUID realmId,
+        UUID policyId,
+        UUID currentUserId
+    ) {
+        realmRepository.findPolicyForEditor(realmId, policyId, currentUserId)
+            .orElseThrow(ResourceNotFoundException::new);
+    }
+
     @Transactional
     public void grantSpoilerAccess(
         UUID realmId,

@@ -11,7 +11,9 @@ RUN ./mvnw --batch-mode --no-transfer-progress package -DskipTests
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
 
-RUN addgroup -S codex && adduser -S codex -G codex
+RUN addgroup -S codex && adduser -S codex -G codex \
+    && mkdir -p /app/data/sources \
+    && chown -R codex:codex /app
 COPY --from=build --chown=codex:codex /workspace/target/codex-of-realms-backend-*.jar app.jar
 
 USER codex

@@ -44,7 +44,18 @@ cd backend
 ./mvnw --batch-mode --no-transfer-progress verify
 ~~~
 
-The integration test starts an isolated PostgreSQL/pgvector container, applies Flyway, checks the vector extension, and verifies the public and protected HTTP boundaries. Docker must be running.
+The integration test starts an isolated PostgreSQL/pgvector container, applies Flyway, checks the vector extension, and verifies authorization plus the complete source lifecycle with deterministic embeddings. Docker must be running; Ollama is not used by tests.
+
+## Prepare the M3 embedding model
+
+The selected baseline is `bge-m3`: a multilingual 1024-dimensional embedding model whose Ollama package is about 1.2 GB. Model pulling is deliberately never performed during application startup.
+
+~~~powershell
+docker compose up -d postgres keycloak ollama
+docker compose exec ollama ollama pull bge-m3
+~~~
+
+This preparation is needed once per `ollama-data` volume.
 
 ## Start the complete local stack
 
@@ -105,4 +116,4 @@ Tokens used locally must have issuer **http://localhost:8180/realms/codex-of-rea
 
 ### Ollama has no models
 
-That is expected in M1. Startup never pulls a model, and Spring AI model auto-configuration is disabled. Model installation and evaluated defaults arrive in later milestones.
+Run `docker compose exec ollama ollama pull bge-m3`. Startup intentionally never downloads models. If embeddings are disabled outside Compose (`AI_EMBEDDING_PROVIDER=none`), source processing returns HTTP 503 and records a safe failed status.

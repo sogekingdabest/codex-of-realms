@@ -69,7 +69,9 @@ services:
       OIDC_AUDIENCE: codex-api
       OLLAMA_BASE_URL: http://ollama:11434
       AI_CHAT_PROVIDER: none
-      AI_EMBEDDING_PROVIDER: none
+      AI_EMBEDDING_PROVIDER: ollama
+      AI_EMBEDDING_MODEL: bge-m3
+      CODEX_SOURCE_STORAGE: /app/data/sources
     depends_on:
       keycloak:
         condition: service_healthy
@@ -85,7 +87,10 @@ services:
       start_period: 30s
     ports:
       - "8080:8080"
+    volumes:
+      - source-data:/app/data/sources
 
 volumes:
   ollama-data:
   postgres-data:
+  source-data:

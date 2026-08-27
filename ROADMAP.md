@@ -52,6 +52,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M3 — Source ingestion
 
+**Status:** Implementation complete; container-backed acceptance pending
+
 **Goal:** Turn Markdown and TXT sources into traceable, replaceable chunks.
 
 - Add safe file upload with explicit size and type limits.
@@ -62,6 +64,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Make replacement, deletion, and reprocessing idempotent.
 
 **Exit criteria:** every chunk can be traced to an immutable source location and removed without leaving active derived data.
+
+**Current evidence:** Flyway source/version/chunk schema, realm-facing authorization facade, bounded UTF-8 upload validation, local storage port, structural chunker with exact offsets, Spring AI embedding adapter, model/pipeline provenance, idempotent management endpoints, deterministic unit tests, and a compiled PostgreSQL lifecycle test. Runtime acceptance remains pending on the unresponsive Docker engine.
 
 ## M4 — Access-aware retrieval
 

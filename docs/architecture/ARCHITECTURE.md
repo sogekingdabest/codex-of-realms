@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M2 realm authorization boundary implemented
-- **Next domain milestone:** M3 source ingestion
+- **Status:** M3 source ingestion implemented
+- **Next domain milestone:** M4 access-aware retrieval
 
 ## Architectural drivers
 
@@ -38,7 +38,7 @@ The MVP contains four Docker Compose services:
 
 Model download may require an explicit documented preparation command because pulling a large model implicitly during every startup is slow and surprising. Observability services are added under an optional profile only after meaningful metrics exist.
 
-M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. Spring AI chat and embedding providers are disabled until their later milestones, so the walking skeleton starts without a model.
+M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables Ollama embeddings in Compose with an explicitly preloaded `bge-m3`; chat remains disabled.
 
 ## Application modules
 
@@ -188,3 +188,4 @@ Architecture changes require evidence:
 - [ADR-002: Use Keycloak as the local OpenID Connect provider](adr/ADR-002-local-identity-provider.md)
 - [ADR-003: Use server-side local models for the MVP](adr/ADR-003-local-model-runtime.md)
 - [ADR-004: Fix the M1 technology baseline](adr/ADR-004-m1-technology-baseline.md)
+- [ADR-005: Store immutable source versions and explicit embedding provenance](adr/ADR-005-source-ingestion.md)
