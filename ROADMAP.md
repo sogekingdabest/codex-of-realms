@@ -18,7 +18,7 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M1 — Walking skeleton
 
-**Status:** Implementation complete; acceptance pending a responsive local Docker engine
+**Status:** Implementation and Testcontainers acceptance complete; full Compose health pending local secrets
 
 **Goal:** A clean clone can build, test, and start a minimal service locally.
 
@@ -32,11 +32,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** `./mvnw verify` succeeds, Docker Compose becomes healthy, and no secret is stored in the repository.
 
-**Current evidence:** `backend/`, `compose.yaml`, `infra/keycloak/`, `.github/workflows/ci.yml`, ADR-004, and the local development guide. The Java package build, module verification test, Compose validation, and secret guardrails pass locally. Full Testcontainers and service-health acceptance remains pending because the installed Docker Desktop engine did not become responsive during this run.
+**Current evidence:** `backend/`, `compose.yaml`, `infra/keycloak/`, `.github/workflows/ci.yml`, ADR-004, and the local development guide. The Java package build, module verification, Compose validation, secret guardrails, and PostgreSQL/pgvector Testcontainers suite pass locally. Starting the four-service Compose stack and observing every health check remains pending until local development passwords are supplied through `.env`.
 
 ## M2 — Realms and authorization
 
-**Status:** Implementation complete; container-backed acceptance pending
+**Status:** Complete
 
 **Goal:** Establish the security boundary before any lore can be retrieved.
 
@@ -48,11 +48,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** unauthorized requests cannot enumerate, read, or infer the existence of protected realm content.
 
-**Current evidence:** OIDC identity synchronization, Flyway authorization schema, realm and membership application services, SQL-level effective-access predicates, non-disclosing API errors, domain matrix tests, and compiled PostgreSQL integration tests. The Docker-backed suite remains pending for the same local engine issue recorded in M1.
+**Current evidence:** OIDC identity synchronization, Flyway authorization schema, realm and membership application services, SQL-level effective-access predicates, non-disclosing API errors, domain matrix tests, and seven passing PostgreSQL-backed acceptance cases in `RealmAuthorizationIntegrationTest`.
 
 ## M3 — Source ingestion
 
-**Status:** Implementation complete; container-backed acceptance pending
+**Status:** Complete
 
 **Goal:** Turn Markdown and TXT sources into traceable, replaceable chunks.
 
@@ -65,11 +65,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** every chunk can be traced to an immutable source location and removed without leaving active derived data.
 
-**Current evidence:** Flyway source/version/chunk schema, realm-facing authorization facade, bounded UTF-8 upload validation, local storage port, structural chunker with exact offsets, Spring AI embedding adapter, model/pipeline provenance, idempotent management endpoints, deterministic unit tests, and a compiled PostgreSQL lifecycle test. Runtime acceptance remains pending on the unresponsive Docker engine.
+**Current evidence:** Flyway source/version/chunk schema, realm-facing authorization facade, bounded UTF-8 upload validation, local storage port, structural chunker with exact offsets, Spring AI embedding adapter, model/pipeline provenance, idempotent management endpoints, deterministic unit tests, and the passing PostgreSQL-backed source lifecycle case.
 
 ## M4 — Access-aware retrieval
 
-**Status:** Implementation complete; container-backed acceptance pending
+**Status:** Complete
 
 **Goal:** Return relevant evidence without ever retrieving unauthorized chunks.
 
@@ -81,11 +81,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** access precision is 100% in the security suite and answerable-query recall at `k` meets the calibrated baseline target.
 
-**Current evidence:** public `LoreRetriever` port, exact pgvector cosine query with authorization inside its materialized candidate set, active embedding-generation checks, ranked provenance-rich results, low-cardinality Micrometer metrics, and a compiled integration evaluation against `demo/evaluation/baseline.json`. The suite requires access precision of 100% and recall@10 of at least 0.90; PostgreSQL execution remains pending on a responsive Docker engine.
+**Current evidence:** public `LoreRetriever` port, exact pgvector cosine query with authorization inside its materialized candidate set, active embedding-generation checks, ranked provenance-rich results, low-cardinality Micrometer metrics, and a passing PostgreSQL integration evaluation against `demo/evaluation/baseline.json`. The suite enforces access precision of 100% and recall@10 of at least 0.90.
 
 ## M5 — Grounded answers
 
-**Status:** Implementation complete; real-model and container-backed acceptance pending
+**Status:** Complete
 
 **Goal:** Produce cited answers or a deterministic insufficient-evidence outcome.
 
@@ -98,11 +98,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** every factual answer has valid visible citations, and restricted or unsupported questions do not leak an answer.
 
-**Current evidence:** public `LoreSearch` boundary, deterministic evidence gate, Spring AI `ChatModel` adapter for `qwen3:4b`, untrusted-evidence prompt separation, structured claim output, fail-closed citation and groundedness validation, low-cardinality metrics, unit orchestration with deterministic model doubles, and classification of every non-authorization case in the versioned Spanish baseline. The PostgreSQL/API matrix is compiled with deterministic embedding and chat doubles; execution and real-model quality calibration remain pending on a responsive Docker engine.
+**Current evidence:** public `LoreSearch` boundary, deterministic evidence gate, Spring AI `ChatModel` adapter, untrusted-evidence prompt separation, structured claim output, fail-closed citation and groundedness validation, low-cardinality metrics, unit orchestration with deterministic model doubles, and passing PostgreSQL/API classification of every baseline case. A real `qwen3.5:4b` smoke also produced only valid structured outcomes and citations with zero security failures; comparative model selection remains isolated in M5.1.
 
 ### M5.1 — Local model selection and runtime calibration
 
-**Status:** Implementation complete; target-hardware evaluation pending
+**Status:** Implementation complete; one-run target-hardware smoke passed, reviewed comparison pending
 
 - Make the chat model selectable without rebuilding the application.
 - Add an explicit NVIDIA GPU Compose override while retaining a CPU-compatible base stack.
@@ -113,7 +113,7 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** at least one reviewed three-run comparison exists on the target RTX 3060 Mobile; the selected model has zero security failures, meets every quality threshold, fits the available memory, and its exact tag is recorded.
 
-**Current evidence:** ADR-008, GPU Compose override, request-level JSON Schema, test-only Ollama telemetry adapter, opt-in Maven profile, comparison script, Spanish generation dataset harness, and deterministic adapter tests. Compilation and 28 non-container tests pass. A real report is intentionally pending because no responsive Ollama runtime or candidate weights are currently available.
+**Current evidence:** ADR-008, GPU Compose override, provider-native JSON Schema, test-only Ollama telemetry adapter, opt-in Maven profile, comparison script, Spanish generation dataset harness, deterministic adapter tests, and the documented `qwen3.5:4b` smoke at commit `709495c`. That single run met every eligibility threshold with zero security failures and full GPU residency. It is calibration evidence, not the required reviewed three-run comparison.
 
 ## M6 — Lore catalogue
 

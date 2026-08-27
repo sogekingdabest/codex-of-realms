@@ -108,7 +108,7 @@ The model receives no tools in the MVP. A compromised answer can mislead the vie
 - Spoiler grant/revocation tests
 - Non-disclosing error behavior
 
-Implemented evidence lives in **RealmAuthorizationIntegrationTest**, **AccessPolicyTest**, the V2 Flyway migration, and **AUTHORIZATION_MODEL.md**. Execution of the PostgreSQL-backed suite remains pending until the local Docker engine is responsive.
+Implemented evidence lives in **RealmAuthorizationIntegrationTest**, **AccessPolicyTest**, the V2 Flyway migration, and **AUTHORIZATION_MODEL.md**. The PostgreSQL-backed authorization suite passes through Docker Testcontainers.
 
 ### M3
 
@@ -116,7 +116,7 @@ Implemented evidence lives in **RealmAuthorizationIntegrationTest**, **AccessPol
 - Storage traversal tests
 - Idempotent deletion and reprocessing tests
 
-Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTest**, **LocalRawSourceStorageTest**, the V3 Flyway migration, and the source lifecycle case in **RealmAuthorizationIntegrationTest**. The unit controls pass; execution of the PostgreSQL-backed case remains pending until the local Docker engine is responsive.
+Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTest**, **LocalRawSourceStorageTest**, the V3 Flyway migration, and the passing PostgreSQL-backed source lifecycle case in **RealmAuthorizationIntegrationTest**.
 
 ### M4/M5
 
@@ -126,9 +126,9 @@ Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTe
 - Token/context/output bounds
 - Model output schema and citation validation
 
-M4 evidence lives in **PgVectorLoreRetriever**, **ADR-006**, **RetrievalQueryTest**, and the baseline retrieval case in **RealmAuthorizationIntegrationTest**. Authorization is part of the materialized SQL candidate set before vector distance is evaluated. PostgreSQL execution remains pending until Docker Desktop is responsive.
+M4 evidence lives in **PgVectorLoreRetriever**, **ADR-006**, **RetrievalQueryTest**, and the passing baseline retrieval case in **RealmAuthorizationIntegrationTest**. Authorization is part of the materialized SQL candidate set before vector distance is evaluated.
 
-M5 evidence lives in **EvidenceGate**, **AnswerValidator**, **SpringAiGroundedAnswerModel**, **ADR-007**, the deterministic Spanish baseline gate test, and the answer cases compiled into **RealmAuthorizationIntegrationTest**. Direct injection, weak evidence, malformed output, unknown citations, and ungrounded claims all fail closed without an answer. M5.1 adds provider-native JSON Schema and a real-model evaluation where any restricted-fact leak or unexpected answer is a hard blocker. Container-backed and target-hardware execution remain pending until Docker Desktop or native Ollama is responsive.
+M5 evidence lives in **EvidenceGate**, **AnswerValidator**, **SpringAiGroundedAnswerModel**, **ADR-007**, the deterministic Spanish baseline gate test, and the passing answer cases in **RealmAuthorizationIntegrationTest**. Direct injection, weak evidence, malformed output, unknown citations, and ungrounded claims all fail closed without an answer. M5.1 adds provider-native JSON Schema and a real-model evaluation where any restricted-fact leak or unexpected answer is a hard blocker. A one-run `qwen3.5:4b` target-hardware smoke passed every eligibility threshold with zero security failures; the required comparative three-run review remains pending.
 
 ## Residual risks
 

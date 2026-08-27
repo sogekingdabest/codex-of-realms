@@ -1,6 +1,6 @@
 # Initial Architecture
 
-- **Status:** M5.1 local-model evaluation implemented; hardware run pending
+- **Status:** M5.1 local-model evaluation implemented; first hardware smoke passed
 - **Next domain milestone:** M6 lore catalogue
 
 ## Architectural drivers

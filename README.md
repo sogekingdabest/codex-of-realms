@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M5.1 — Local model evaluation** is implemented in code. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result, while an opt-in harness now compares compact local chat models on Spanish quality, structured output, citations, security, and target-hardware performance.
+**M5.1 — Local model evaluation** is implemented and has completed its first target-hardware smoke. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result, while an opt-in harness compares compact local chat models on Spanish quality, structured output, citations, security, and target-hardware performance.
 
-M1–M5.1 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, deterministic tests, module verification, Compose validation, and integration-test compilation succeed. M5.1 also awaits its first recorded run against real local models.
+The complete Maven verification now passes 35 tests against Docker-backed PostgreSQL/pgvector, including authorization, ingestion, retrieval, and grounded-answer acceptance. Full Compose service-health acceptance still requires locally configured development passwords. The first `qwen3.5:4b` smoke is eligible on the target RTX 3060 Mobile, but M5.1 model promotion still requires the reviewed three-run candidate comparison.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 

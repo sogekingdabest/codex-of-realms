@@ -77,6 +77,20 @@ Normal `test` and `verify` runs do not invoke a real model.
 The evaluation HTTP read timeout defaults to five minutes and can be changed with
 `LOCAL_MODEL_HTTP_READ_TIMEOUT_SECONDS`; the application default is two minutes through `AI_HTTP_READ_TIMEOUT`.
 
+## First target-hardware smoke
+
+The first development smoke was recorded on 2026-08-27 against commit `709495c` with native Ollama 0.33.1,
+an RTX 3060 Laptop GPU with 6 GB VRAM, 16 GB system RAM, and a Ryzen 7 5800H. The evaluated model was
+`qwen3.5:4b`, digest `2a654d98e6fb`, Q4_K_M, with an 8192-token context and full model residency in VRAM.
+
+| Runs | Outcome | Fact coverage | JSON | Citations | Security failures | Median | p95 | Generation |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 1.000 | 0.789 | 1.000 | 1.000 | 0 | 2956 ms | 13992 ms | 67.42 tok/s |
+
+The result is eligible under the automated thresholds. It is only a smoke: the p95 includes the first cold model
+call, output varies between runs, and no promotion decision is valid until all candidates complete the required
+three-run comparison and their answers are reviewed.
+
 ## Interpretation and promotion rule
 
 The report marks a model eligible only when all of these hold:
