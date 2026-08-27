@@ -130,6 +130,20 @@ M4 evidence lives in **PgVectorLoreRetriever**, **ADR-006**, **RetrievalQueryTes
 
 M5 evidence lives in **EvidenceGate**, **AnswerValidator**, **SpringAiGroundedAnswerModel**, **ADR-007**, the deterministic Spanish baseline gate test, and the passing answer cases in **RealmAuthorizationIntegrationTest**. Direct injection, weak evidence, malformed output, unknown citations, and ungrounded claims all fail closed without an answer. M5.1 adds provider-native JSON Schema and a real-model evaluation where any restricted-fact leak or unexpected answer is a hard blocker. A one-run `qwen3.5:4b` target-hardware smoke passed every eligibility threshold with zero security failures; the required comparative three-run review remains pending.
 
+### M6
+
+- Assert catalogue mutations require an active `OWNER` or `EDITOR` membership.
+- Apply effective-access predicates before materializing entities or relations.
+- Require a viewer to access the relation policy and both endpoint policies.
+- Reject self-relations, cross-realm endpoints, and cross-policy source evidence.
+- Preserve immutable evidence snapshots and append-only promotion history.
+- Return canonical edits to `PROPOSED` and require a new explicit promotion.
+
+M6 evidence lives in **LoreCatalogueService**, **LoreCatalogueJdbcRepository**, **LoreEntityTest**,
+**LoreRelationTest**, Flyway V5, ADR-009, and the passing catalogue case in
+**RealmAuthorizationIntegrationTest**. It covers player/editor separation, hidden endpoints, cross-realm rejection,
+canon transitions, provenance survival after source deletion, and non-disclosing errors.
+
 ## Residual risks
 
 - A model can still generate misleading text from authorized evidence.

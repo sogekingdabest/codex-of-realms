@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M5.1 local-model evaluation implemented; first hardware smoke passed
-- **Next domain milestone:** M6 lore catalogue
+- **Status:** M6 lore catalogue complete; M5.1 comparative model review remains open
+- **Next milestone:** M7 portfolio hardening
 
 ## Architectural drivers
 
@@ -61,7 +61,9 @@ Source documents, immutable versions, storage, ingestion, chunks, and embedding 
 
 ### `lore`
 
-Manual entities, typed relations, canon status, and structured provenance.
+Manual entities, typed relations, canon status, structured provenance, and access-aware retrieval. Catalogue writes
+are editor-only; member reads apply policy predicates in SQL, and relation reads also require both endpoints to be
+visible.
 
 ### `qa`
 

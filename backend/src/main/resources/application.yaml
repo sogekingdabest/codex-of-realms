@@ -70,7 +70,7 @@ management:
 info:
   application:
     name: Codex of Realms
-    milestone: M5.1
+    milestone: M6
 
 codex:
   storage:

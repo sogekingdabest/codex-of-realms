@@ -13,6 +13,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.nio.charset.StandardCharsets;
@@ -326,6 +327,162 @@ class RealmAuthorizationIntegrationTest {
     }
 
     @Test
+    void loreCataloguePreservesAccessCanonRealmAndProvenanceInvariants() throws Exception {
+        UUID playerId = synchronizeUser("catalogue-player");
+        UUID realmId = createRealm("catalogue-owner", "Atlas del Meridiano");
+        addMember("catalogue-owner", realmId, playerId, "PLAYER");
+        UUID publicPolicy = createPolicy("catalogue-owner", realmId, "PUBLIC");
+        UUID spoilerPolicy = createPolicy("catalogue-owner", realmId, "SPOILER");
+
+        String sourceResponse = mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", realmId)
+                .file(markdown("atlas.md", "# Nara Vey\n\nNara cartografía las rutas de Lumbrevela."))
+                .param("title", "Atlas público")
+                .param("accessPolicyId", publicPolicy.toString())
+                .with(identity("catalogue-owner")))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        UUID documentId = UUID.fromString(objectMapper.readTree(sourceResponse).get("id").asString());
+        UUID versionId = UUID.fromString(objectMapper.readTree(sourceResponse).get("versionId").asString());
+        UUID chunkId = jdbcClient.sql("SELECT id FROM lore_chunk WHERE document_version_id=:versionId")
+            .param("versionId", versionId).query(UUID.class).single();
+
+        UUID naraId = createCatalogueEntity(
+            "catalogue-owner", realmId, "CHARACTER", "Nara Vey", publicPolicy, List.of(chunkId)
+        );
+        UUID cityId = createCatalogueEntity(
+            "catalogue-owner", realmId, "PLACE", "Lumbrevela", publicPolicy, List.of()
+        );
+        UUID secretId = createCatalogueEntity(
+            "catalogue-owner", realmId, "OBJECT", "La Aguja", spoilerPolicy, List.of()
+        );
+        mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/entities", realmId)
+                .with(identity("catalogue-owner"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entityPayload(
+                    "EVENT", "Evidencia degradada", spoilerPolicy, List.of(chunkId)
+                ))))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities", realmId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, secretId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isNotFound());
+
+        UUID hiddenEndpointRelation = createCatalogueRelation(
+            "catalogue-owner", realmId, naraId, secretId, "CUSTODIA", publicPolicy, List.of()
+        );
+        UUID visibleRelation = createCatalogueRelation(
+            "catalogue-owner", realmId, naraId, cityId, "VIVE EN", publicPolicy, List.of(chunkId)
+        );
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(visibleRelation.toString()))
+            .andExpect(jsonPath("$[0].relationType").value("VIVE_EN"));
+
+        mockMvc.perform(put(
+                    "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
+                    realmId, spoilerPolicy, playerId
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(delete(
+                    "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
+                    realmId, spoilerPolicy, playerId
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1));
+
+        mockMvc.perform(post(
+                    "/api/v1/realms/{realmId}/catalogue/entities/{entityId}/promotion",
+                    realmId, naraId
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.canonStatus").value("CANON"))
+            .andExpect(jsonPath("$.promotionHistory.length()").value(1));
+        mockMvc.perform(post(
+                    "/api/v1/realms/{realmId}/catalogue/relations/{relationId}/promotion",
+                    realmId, visibleRelation
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.canonStatus").value("CANON"))
+            .andExpect(jsonPath("$.sourceEvidence[0].chunkId").value(chunkId.toString()));
+
+        mockMvc.perform(put(
+                    "/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, naraId
+                ).with(identity("catalogue-owner"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entityPayload(
+                    "CHARACTER", "Nara Vey", publicPolicy, List.of(chunkId)
+                ))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.canonStatus").value("PROPOSED"))
+            .andExpect(jsonPath("$.promotionHistory.length()").value(1));
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/entities", realmId)
+                .with(identity("catalogue-player"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entityPayload(
+                    "EVENT", "Intento", publicPolicy, List.of()
+                ))))
+            .andExpect(status().isNotFound());
+
+        UUID otherRealm = createRealm("other-catalogue-owner", "Atlas ajeno");
+        UUID otherPolicy = createPolicy("other-catalogue-owner", otherRealm, "PUBLIC");
+        UUID otherEntity = createCatalogueEntity(
+            "other-catalogue-owner", otherRealm, "FACTION", "Forasteros", otherPolicy, List.of()
+        );
+        mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity("catalogue-owner"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(relationPayload(
+                    naraId, otherEntity, "CONOCE_A", publicPolicy, List.of()
+                ))))
+            .andExpect(status().isNotFound());
+
+        mockMvc.perform(delete("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, naraId)
+                .with(identity("catalogue-owner")))
+            .andExpect(status().isConflict());
+
+        mockMvc.perform(delete("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
+                .with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, naraId)
+                .with(identity("catalogue-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.sourceEvidence[0].documentVersionId").value(versionId.toString()))
+            .andExpect(jsonPath("$.sourceEvidence[0].chunkId").value(chunkId.toString()));
+
+        mockMvc.perform(delete(
+                    "/api/v1/realms/{realmId}/catalogue/relations/{relationId}", realmId, visibleRelation
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(delete(
+                    "/api/v1/realms/{realmId}/catalogue/relations/{relationId}", realmId, hiddenEndpointRelation
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+        mockMvc.perform(delete("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, naraId)
+                .with(identity("catalogue-owner")))
+            .andExpect(status().isNoContent());
+
+        String openApi = mockMvc.perform(get("/v3/api-docs"))
+            .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+        assertThat(objectMapper.readTree(openApi).get("paths").has(
+            "/api/v1/realms/{realmId}/catalogue/entities"
+        )).isTrue();
+    }
+
+    @Test
     void retrievalAppliesAuthorizationInsideRankingAndMeetsBaselineRecall() throws Exception {
         UUID talaId = synchronizeUser("player_tala");
         UUID orenId = synchronizeUser("player_oren");
@@ -485,6 +642,80 @@ class RealmAuthorizationIntegrationTest {
             .getResponse()
             .getContentAsString();
         return UUID.fromString(objectMapper.readTree(response).get("id").asString());
+    }
+
+    private UUID createCatalogueEntity(
+        String subject,
+        UUID realmId,
+        String type,
+        String displayName,
+        UUID policyId,
+        List<UUID> evidenceChunkIds
+    ) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/entities", realmId)
+                .with(identity(subject))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                    entityPayload(type, displayName, policyId, evidenceChunkIds)
+                )))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.canonStatus").value("PROPOSED"))
+            .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
+    }
+
+    private UUID createCatalogueRelation(
+        String subject,
+        UUID realmId,
+        UUID sourceEntityId,
+        UUID targetEntityId,
+        String relationType,
+        UUID policyId,
+        List<UUID> evidenceChunkIds
+    ) throws Exception {
+        String response = mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity(subject))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(relationPayload(
+                    sourceEntityId, targetEntityId, relationType, policyId, evidenceChunkIds
+                ))))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.canonStatus").value("PROPOSED"))
+            .andReturn().getResponse().getContentAsString();
+        return UUID.fromString(objectMapper.readTree(response).get("id").asString());
+    }
+
+    private static Map<String, Object> entityPayload(
+        String type,
+        String displayName,
+        UUID policyId,
+        List<UUID> evidenceChunkIds
+    ) {
+        return Map.of(
+            "type", type,
+            "displayName", displayName,
+            "aliases", List.of("Alias de " + displayName),
+            "description", "Descripción manual de " + displayName,
+            "accessPolicyId", policyId,
+            "evidenceChunkIds", evidenceChunkIds
+        );
+    }
+
+    private static Map<String, Object> relationPayload(
+        UUID sourceEntityId,
+        UUID targetEntityId,
+        String relationType,
+        UUID policyId,
+        List<UUID> evidenceChunkIds
+    ) {
+        return Map.of(
+            "sourceEntityId", sourceEntityId,
+            "targetEntityId", targetEntityId,
+            "relationType", relationType,
+            "description", "Relación registrada manualmente.",
+            "accessPolicyId", policyId,
+            "evidenceChunkIds", evidenceChunkIds
+        );
     }
 
     private void expectPolicyVisible(

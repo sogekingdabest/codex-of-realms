@@ -2,6 +2,7 @@ package dev.codexofrealms.content.infrastructure;
 
 import dev.codexofrealms.content.application.SourceChunk;
 import dev.codexofrealms.content.application.SourceDocumentView;
+import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.content.domain.ProcessingStatus;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -75,6 +76,43 @@ public class SourceJdbcRepository {
                 """)
             .param("realmId", realmId).param("documentId", documentId)
             .query(SourceJdbcRepository::mapVersion).optional();
+    }
+
+    public Optional<SourceEvidence> findActiveEvidence(
+        UUID realmId,
+        UUID accessPolicyId,
+        UUID chunkId
+    ) {
+        return jdbc.sql("""
+                SELECT d.id document_id, v.id document_version_id, c.id chunk_id,
+                       d.title source_title, v.checksum_sha256, c.heading,
+                       c.start_offset, c.end_offset
+                FROM lore_chunk c
+                JOIN document_version v
+                  ON v.realm_id=c.realm_id AND v.id=c.document_version_id
+                JOIN source_document d
+                  ON d.realm_id=v.realm_id AND d.id=v.document_id
+                WHERE c.realm_id=:realmId
+                  AND c.id=:chunkId
+                  AND v.access_policy_id=:accessPolicyId
+                  AND v.active
+                  AND v.processing_status='READY'
+                  AND d.active
+                """)
+            .param("realmId", realmId)
+            .param("accessPolicyId", accessPolicyId)
+            .param("chunkId", chunkId)
+            .query((rs, row) -> new SourceEvidence(
+                rs.getObject("document_id", UUID.class),
+                rs.getObject("document_version_id", UUID.class),
+                rs.getObject("chunk_id", UUID.class),
+                rs.getString("source_title"),
+                rs.getString("checksum_sha256"),
+                rs.getString("heading"),
+                rs.getInt("start_offset"),
+                rs.getInt("end_offset")
+            ))
+            .optional();
     }
 
     public void setStatus(UUID versionId, ProcessingStatus status, String failureCode) {

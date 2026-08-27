@@ -117,6 +117,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M6 — Lore catalogue
 
+**Status:** Complete
+
 **Goal:** Make important concepts explicitly navigable without automatic extraction.
 
 - Add characters, places, factions, objects, and events.
@@ -125,6 +127,10 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Expose catalogue endpoints through OpenAPI.
 
 **Exit criteria:** entity and relation claims retain realm, access, canon, and provenance invariants.
+
+**Current evidence:** Flyway V5, the `LoreCatalogueService`, SQL-level entity/relation visibility predicates,
+immutable source-evidence snapshots, append-only promotion history, the OpenAPI catalogue controller, pure domain
+tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The complete suite passes 40 tests.
 
 ## M7 — Portfolio hardening
 

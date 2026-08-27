@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M5.1 — Local model evaluation** is implemented and has completed its first target-hardware smoke. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result, while an opt-in harness compares compact local chat models on Spanish quality, structured output, citations, security, and target-hardware performance.
+**M6 — Lore catalogue** is complete. Editors can manage proposed characters, places, factions, objects, and events; connect them with typed directional relations; attach immutable source evidence; and explicitly promote reviewed claims to canon. Members only receive entities and relations allowed by their current realm and spoiler access.
 
-The complete Maven verification now passes 35 tests against Docker-backed PostgreSQL/pgvector, including authorization, ingestion, retrieval, and grounded-answer acceptance. Full Compose service-health acceptance still requires locally configured development passwords. The first `qwen3.5:4b` smoke is eligible on the target RTX 3060 Mobile, but M5.1 model promotion still requires the reviewed three-run candidate comparison.
+The complete Maven verification now passes 40 tests against Docker-backed PostgreSQL/pgvector, including authorization, ingestion, retrieval, grounded answers, and catalogue acceptance. Full Compose service-health acceptance still requires locally configured development passwords. The first `qwen3.5:4b` smoke is eligible on the target RTX 3060 Mobile, but M5.1 model promotion still requires the reviewed three-run candidate comparison.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -47,6 +47,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [Retrieval baseline](docs/evaluation/RETRIEVAL_BASELINE.md)
 - [Local chat-model evaluation](docs/evaluation/LOCAL_MODEL_EVALUATION.md)
 - [Grounded-answer runbook](docs/operations/GROUNDED_ANSWERS.md)
+- [Lore catalogue runbook](docs/operations/LORE_CATALOGUE.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
 - [Baseline RAG evaluation set](demo/evaluation/README.md)
