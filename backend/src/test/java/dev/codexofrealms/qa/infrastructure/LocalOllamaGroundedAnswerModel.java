@@ -14,6 +14,8 @@ import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
+import org.springframework.http.client.ReactorClientHttpRequestFactory;
+import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
@@ -25,7 +27,13 @@ public final class LocalOllamaGroundedAnswerModel {
     }
 
     public static Session connect(Configuration configuration, QaProperties properties) {
-        OllamaApi api = OllamaApi.builder().baseUrl(configuration.baseUrl()).build();
+        ReactorClientHttpRequestFactory requestFactory = new ReactorClientHttpRequestFactory();
+        requestFactory.setConnectTimeout(Duration.ofSeconds(10));
+        requestFactory.setReadTimeout(configuration.readTimeout());
+        OllamaApi api = OllamaApi.builder()
+            .baseUrl(configuration.baseUrl())
+            .restClientBuilder(RestClient.builder().requestFactory(requestFactory))
+            .build();
         var available = api.listModels().models().stream()
             .map(model -> model.name() == null ? model.model() : model.name())
             .toList();
@@ -63,7 +71,8 @@ public final class LocalOllamaGroundedAnswerModel {
         String model,
         int contextSize,
         int maxPredictTokens,
-        String keepAlive
+        String keepAlive,
+        Duration readTimeout
     ) {
     }
 

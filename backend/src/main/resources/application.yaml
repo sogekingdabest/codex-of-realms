@@ -4,6 +4,10 @@ server:
 spring:
   application:
     name: codex-of-realms
+  http:
+    clients:
+      connect-timeout: ${AI_HTTP_CONNECT_TIMEOUT:10s}
+      read-timeout: ${AI_HTTP_READ_TIMEOUT:2m}
   lifecycle:
     timeout-per-shutdown-phase: 20s
   servlet:
@@ -17,7 +21,7 @@ spring:
     hikari:
       maximum-pool-size: ${DB_MAX_POOL_SIZE:10}
       minimum-idle: ${DB_MIN_IDLE:1}
-      connection-timeout: 5s
+      connection-timeout: ${DB_CONNECTION_TIMEOUT_MS:5000}
   flyway:
     enabled: true
     locations: classpath:db/migration
@@ -88,6 +92,9 @@ codex:
     max-answer-characters: ${QA_MAX_ANSWER_CHARACTERS:2000}
     chat-provider: ${AI_CHAT_PROVIDER:none}
     chat-model: ${AI_CHAT_MODEL:qwen3:4b}
+    chat-context-size: ${AI_CHAT_CONTEXT_SIZE:8192}
+    chat-max-predict-tokens: ${AI_CHAT_MAX_PREDICT_TOKENS:768}
+    chat-keep-alive: ${AI_CHAT_KEEP_ALIVE:5m}
 
 springdoc:
   swagger-ui:

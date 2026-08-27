@@ -15,7 +15,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.converter.BeanOutputConverter;
-import org.springframework.ai.model.tool.StructuredOutputChatOptions;
+import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -30,6 +30,7 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
         No inventes, no uses conocimiento previo y no intentes completar información ausente.
         Si la evidencia no respalda directamente la respuesta, devuelve INSUFFICIENT_EVIDENCE sin afirmaciones.
         Para ANSWERED, divide la respuesta en afirmaciones breves y asigna a cada una uno o más rangos de evidencia.
+        Incluye solo hechos necesarios para contestar la pregunta y no devuelvas más de %d afirmaciones.
         Los rangos deben existir en la evidencia. No incluyas Markdown ni texto fuera del JSON.
         No tienes herramientas ni capacidad para consultar otras fuentes o cambiar datos.
 
@@ -40,6 +41,8 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
     private final ObjectMapper objectMapper;
     private final BeanOutputConverter<GroundedAnswerDraft> outputConverter;
     private final ModelDescriptor descriptor;
+    private final OllamaChatOptions requestOptions;
+    private final String systemInstructions;
 
     SpringAiGroundedAnswerModel(
         ObjectProvider<ChatModel> modelProvider,
@@ -50,6 +53,18 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
         this.objectMapper = objectMapper;
         this.outputConverter = new BeanOutputConverter<>(GroundedAnswerDraft.class);
         this.descriptor = new ModelDescriptor(properties.chatProvider(), properties.chatModel());
+        this.systemInstructions = SYSTEM_INSTRUCTIONS.formatted(
+            properties.maxClaims(), outputConverter.getFormat()
+        );
+        this.requestOptions = OllamaChatOptions.builder()
+            .model(descriptor.model())
+            .temperature(0.0)
+            .numCtx(properties.chatContextSize())
+            .numPredict(properties.chatMaxPredictTokens())
+            .keepAlive(properties.chatKeepAlive())
+            .disableThinking()
+            .outputSchema(outputConverter.getJsonSchema())
+            .build();
     }
 
     @Override
@@ -63,12 +78,10 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
             ));
             Prompt prompt = new Prompt(
                 List.of(
-                    new SystemMessage(SYSTEM_INSTRUCTIONS.formatted(outputConverter.getFormat())),
+                    new SystemMessage(systemInstructions),
                     new UserMessage(userPayload)
                 ),
-                StructuredOutputChatOptions.builder()
-                    .outputSchema(outputConverter.getJsonSchema())
-                    .build()
+                requestOptions
             );
             ChatResponse response = chatModel.call(prompt);
             if (response == null || response.getResult() == null

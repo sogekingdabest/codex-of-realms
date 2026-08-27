@@ -74,6 +74,8 @@ $env:AI_CHAT_MODEL = "qwen3:4b"
 ~~~
 
 Normal `test` and `verify` runs do not invoke a real model.
+The evaluation HTTP read timeout defaults to five minutes and can be changed with
+`LOCAL_MODEL_HTTP_READ_TIMEOUT_SECONDS`; the application default is two minutes through `AI_HTTP_READ_TIMEOUT`.
 
 ## Interpretation and promotion rule
 

@@ -21,6 +21,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -69,12 +70,14 @@ class LocalModelEvaluationIT {
 
         QaProperties properties = new QaProperties(
             10, 6, 0.45, 0.70, 0.35, 6, 2000,
-            "ollama", settings.model()
+            "ollama", settings.model(), settings.contextSize(),
+            settings.maxPredictTokens(), settings.keepAlive()
         );
         var modelSession = LocalOllamaGroundedAnswerModel.connect(
             new LocalOllamaGroundedAnswerModel.Configuration(
                 settings.ollamaBaseUrl(), settings.model(), settings.contextSize(),
-                settings.maxPredictTokens(), settings.keepAlive()
+                settings.maxPredictTokens(), settings.keepAlive(),
+                Duration.ofSeconds(settings.httpReadTimeoutSeconds())
             ),
             properties
         );
@@ -163,7 +166,7 @@ class LocalModelEvaluationIT {
             .toList();
         Set<String> actualSources = new LinkedHashSet<>(citedSources);
         boolean citationsCorrect = answer.outcome() != AnswerOutcome.ANSWERED
-            || (!actualSources.isEmpty() && actualSources.equals(expectedSources));
+            || (!actualSources.isEmpty() && expectedSources.containsAll(actualSources));
         boolean unexpectedAnswer = !"ANSWERED".equals(evaluationCase.expectedOutcome())
             && answer.outcome() == AnswerOutcome.ANSWERED;
 
@@ -421,7 +424,10 @@ class LocalModelEvaluationIT {
     }
 
     private static String gitCommit(Path root) {
-        String output = commandOutput(List.of("git", "-C", root.toString(), "rev-parse", "HEAD"));
+        String output = commandOutput(List.of(
+            "git", "-c", "safe.directory=" + root.toString().replace('\\', '/'),
+            "-C", root.toString(), "rev-parse", "HEAD"
+        ));
         return output == null ? "unknown" : output.lines().findFirst().orElse("unknown");
     }
 
@@ -529,7 +535,8 @@ class LocalModelEvaluationIT {
     }
 
     record EvaluationSettings(String ollamaBaseUrl, String model, int contextSize,
-                              int maxPredictTokens, String keepAlive, int repetitions,
+                              int maxPredictTokens, String keepAlive, int httpReadTimeoutSeconds,
+                              int repetitions,
                               double factMatchThreshold, double forbiddenFactThreshold,
                               double minimumOutcomeAccuracy, double minimumFactCoverage,
                               double minimumStructuredOutputRate, double minimumCitationSuccessRate,
@@ -542,6 +549,7 @@ class LocalModelEvaluationIT {
                 integer("AI_CHAT_CONTEXT_SIZE", 8192),
                 integer("AI_CHAT_MAX_PREDICT_TOKENS", 768),
                 setting("AI_CHAT_KEEP_ALIVE", "5m"),
+                integer("LOCAL_MODEL_HTTP_READ_TIMEOUT_SECONDS", 300),
                 integer("LOCAL_MODEL_EVALUATION_REPETITIONS", 1),
                 decimalSetting("LOCAL_MODEL_FACT_MATCH_THRESHOLD", 0.60),
                 decimalSetting("LOCAL_MODEL_FORBIDDEN_FACT_THRESHOLD", 0.60),

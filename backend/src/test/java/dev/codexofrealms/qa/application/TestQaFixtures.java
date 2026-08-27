@@ -9,7 +9,10 @@ public final class TestQaFixtures {
     }
 
     static QaProperties properties() {
-        return new QaProperties(10, 6, 0.45, 0.70, 0.35, 6, 2000, "test", "chat-v1");
+        return new QaProperties(
+            10, 6, 0.45, 0.70, 0.35, 6, 2000,
+            "test", "chat-v1", 8192, 768, "5m"
+        );
     }
 
     public static RetrievedEvidence evidence(int rank, double similarity, String content) {

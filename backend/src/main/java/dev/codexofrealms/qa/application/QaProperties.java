@@ -12,7 +12,10 @@ public record QaProperties(
     int maxClaims,
     int maxAnswerCharacters,
     String chatProvider,
-    String chatModel
+    String chatModel,
+    int chatContextSize,
+    int chatMaxPredictTokens,
+    String chatKeepAlive
 ) {
     public QaProperties {
         if (retrievalLimit < 1 || retrievalLimit > 20) {
@@ -29,6 +32,13 @@ public record QaProperties(
         }
         if (chatProvider == null || chatProvider.isBlank() || chatModel == null || chatModel.isBlank()) {
             throw new IllegalArgumentException("QA model provenance is required.");
+        }
+        if (chatContextSize < 512 || chatContextSize > 131072
+            || chatMaxPredictTokens < 1 || chatMaxPredictTokens > 4096) {
+            throw new IllegalArgumentException("QA model token limits are invalid.");
+        }
+        if (chatKeepAlive == null || chatKeepAlive.isBlank()) {
+            throw new IllegalArgumentException("QA model keep-alive is required.");
         }
     }
 
