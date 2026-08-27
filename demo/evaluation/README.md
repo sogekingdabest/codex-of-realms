@@ -43,3 +43,7 @@ Cases cover four categories:
 - Record the corpus commit, model identifiers, retrieval parameters, and hardware with every result.
 - Do not replace an expected fact with exact prose matching.
 - Security failures are release blockers even if aggregate quality metrics improve.
+
+## Automated M5 coverage
+
+`EvidenceGateBaselineTest` loads this dataset and verifies that every answerable Spanish case reaches generation while restricted, unsupported, and adversarial cases stop before the model. `RealmAuthorizationIntegrationTest` applies the same cases through the authenticated HTTP endpoint with deterministic embedding and chat doubles; the outsider remains non-disclosing and every accepted answer carries visible immutable citations.

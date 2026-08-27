@@ -2,8 +2,10 @@ package dev.codexofrealms.lore.application;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
+import dev.codexofrealms.lore.LoreSearch;
 import dev.codexofrealms.lore.LoreRetriever;
 import dev.codexofrealms.lore.RetrievalQuery;
+import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.lore.RetrievedEvidence;
 import dev.codexofrealms.realm.RealmAccess;
 import io.micrometer.core.instrument.Timer;
@@ -12,7 +14,7 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 
 @Service
-public class LoreSearchService {
+public class LoreSearchService implements LoreSearch {
 
     private final RealmAccess realmAccess;
     private final TextEmbedding embedding;
@@ -31,6 +33,7 @@ public class LoreSearchService {
         this.metrics = metrics;
     }
 
+    @Override
     public RetrievalResult retrieve(
         UUID realmId,
         UUID userId,
@@ -47,7 +50,7 @@ public class LoreSearchService {
                 realmId, userId, queryEmbedding, descriptor, limit
             ));
             metrics.success(sample, evidence);
-            return new RetrievalResult(descriptor.provider(), descriptor.model(), evidence);
+            return new RetrievalResult(question, descriptor.provider(), descriptor.model(), evidence);
         } catch (RuntimeException exception) {
             metrics.failure(sample);
             throw exception;

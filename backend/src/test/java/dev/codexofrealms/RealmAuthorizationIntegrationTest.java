@@ -20,6 +20,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
+import dev.codexofrealms.qa.AnswerOutcome;
+import dev.codexofrealms.qa.DraftClaim;
+import dev.codexofrealms.qa.GroundedAnswerDraft;
+import dev.codexofrealms.qa.GroundedAnswerModel;
+import dev.codexofrealms.qa.GroundedAnswerRequest;
+import dev.codexofrealms.qa.ModelDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,11 +51,17 @@ import tools.jackson.databind.ObjectMapper;
 @SpringBootTest
 @AutoConfigureMockMvc
 @Testcontainers
-@Import(RealmAuthorizationIntegrationTest.TestEmbeddingConfiguration.class)
+@Import({
+    RealmAuthorizationIntegrationTest.TestEmbeddingConfiguration.class,
+    RealmAuthorizationIntegrationTest.TestChatConfiguration.class
+})
 @TestPropertySource(properties = {
     "codex.storage.root=target/test-sources",
     "codex.ingestion.embedding-provider=test",
-    "codex.ingestion.embedding-model=deterministic-v1"
+    "codex.ingestion.embedding-model=deterministic-v1",
+    "codex.qa.minimum-similarity=0.0",
+    "codex.qa.chat-provider=test",
+    "codex.qa.chat-model=deterministic-v1"
 })
 class RealmAuthorizationIntegrationTest {
 
@@ -384,6 +396,38 @@ class RealmAuthorizationIntegrationTest {
         assertThat(meterRegistry.find("codex.retrieval.duration").timers()).isNotEmpty();
         assertThat(meterRegistry.find("codex.retrieval.results").summary()).isNotNull();
         assertThat(meterRegistry.find("codex.retrieval.distance").summary()).isNotNull();
+
+        for (var evaluationCase : baseline.get("cases")) {
+            String expectedOutcome = evaluationCase.get("expectedOutcome").asString();
+            var request = post("/api/v1/realms/{realmId}/questions", realmId)
+                .with(identity(evaluationCase.get("actor").asString()))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                    new QuestionRequest(evaluationCase.get("question").asString())
+                ));
+            if ("FORBIDDEN".equals(expectedOutcome)) {
+                mockMvc.perform(request).andExpect(status().isNotFound());
+                continue;
+            }
+            var response = objectMapper.readTree(mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString());
+            assertThat(response.get("outcome").asString())
+                .as(evaluationCase.get("id").asString())
+                .isEqualTo(expectedOutcome);
+            if ("ANSWERED".equals(expectedOutcome)) {
+                assertThat(response.get("answer").asString()).contains("[1");
+                assertThat(response.get("citations").isEmpty()).isFalse();
+                response.get("citations").forEach(citation ->
+                    assertThat(citation.get("realmId").asString()).isEqualTo(realmId.toString())
+                );
+            } else {
+                assertThat(response.get("answer").isNull()).isTrue();
+                assertThat(response.get("citations").isEmpty()).isTrue();
+            }
+        }
+        assertThat(meterRegistry.find("codex.qa.duration").timers()).isNotEmpty();
+        assertThat(meterRegistry.find("codex.qa.outcomes").counters()).isNotEmpty();
     }
 
     private UUID synchronizeUser(String subject) throws Exception {
@@ -562,6 +606,33 @@ class RealmAuthorizationIntegrationTest {
         }
     }
 
+    @TestConfiguration(proxyBeanMethods = false)
+    static class TestChatConfiguration {
+
+        @Bean
+        @Primary
+        GroundedAnswerModel deterministicGroundedAnswerModel() {
+            return new GroundedAnswerModel() {
+                @Override
+                public GroundedAnswerDraft generate(GroundedAnswerRequest request) {
+                    if (request.evidence().isEmpty()) return GroundedAnswerDraft.insufficient();
+                    var evidence = request.evidence().getFirst();
+                    String claim = evidence.content().strip().replaceAll("\\s+", " ");
+                    if (claim.length() > 200) claim = claim.substring(0, 200).strip();
+                    return new GroundedAnswerDraft(
+                        AnswerOutcome.ANSWERED,
+                        List.of(new DraftClaim(claim, List.of(evidence.rank())))
+                    );
+                }
+
+                @Override
+                public ModelDescriptor descriptor() {
+                    return new ModelDescriptor("test", "deterministic-v1");
+                }
+            };
+        }
+    }
+
     private record RealmName(String name) {
     }
 
@@ -572,5 +643,8 @@ class RealmAuthorizationIntegrationTest {
     }
 
     private record RetrievalRequest(String question, int limit) {
+    }
+
+    private record QuestionRequest(String question) {
     }
 }

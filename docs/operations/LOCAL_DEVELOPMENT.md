@@ -44,15 +44,16 @@ cd backend
 ./mvnw --batch-mode --no-transfer-progress verify
 ~~~
 
-The integration test starts an isolated PostgreSQL/pgvector container, applies Flyway, checks the vector extension, and verifies authorization plus the complete source lifecycle with deterministic embeddings. Docker must be running; Ollama is not used by tests.
+The integration test starts an isolated PostgreSQL/pgvector container, applies Flyway, and verifies authorization, ingestion, retrieval, and grounded-answer outcomes with deterministic embedding and chat doubles. Docker must be running; Ollama is not used by tests.
 
-## Prepare the M3 embedding model
+## Prepare the M3 and M5 models
 
 The selected baseline is `bge-m3`: a multilingual 1024-dimensional embedding model whose Ollama package is about 1.2 GB. Model pulling is deliberately never performed during application startup.
 
 ~~~powershell
 docker compose up -d postgres keycloak ollama
 docker compose exec ollama ollama pull bge-m3
+docker compose exec ollama ollama pull qwen3:4b
 ~~~
 
 This preparation is needed once per `ollama-data` volume.
@@ -117,4 +118,4 @@ Tokens used locally must have issuer **http://localhost:8180/realms/codex-of-rea
 
 ### Ollama has no models
 
-Run `docker compose exec ollama ollama pull bge-m3`. Startup intentionally never downloads models. If embeddings are disabled outside Compose (`AI_EMBEDDING_PROVIDER=none`), source processing returns HTTP 503 and records a safe failed status.
+Run `docker compose exec ollama ollama pull bge-m3` and `docker compose exec ollama ollama pull qwen3:4b`. Startup intentionally never downloads models. If embeddings are disabled outside Compose (`AI_EMBEDDING_PROVIDER=none`), source processing returns HTTP 503 and records a safe failed status. If chat is disabled or unavailable, questions fail closed to `INSUFFICIENT_EVIDENCE`.

@@ -85,6 +85,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M5 — Grounded answers
 
+**Status:** Implementation complete; real-model and container-backed acceptance pending
+
 **Goal:** Produce cited answers or a deterministic insufficient-evidence outcome.
 
 - Integrate the selected local chat model through Spring AI.
@@ -95,6 +97,8 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Test orchestration with deterministic model doubles in CI.
 
 **Exit criteria:** every factual answer has valid visible citations, and restricted or unsupported questions do not leak an answer.
+
+**Current evidence:** public `LoreSearch` boundary, deterministic evidence gate, Spring AI `ChatModel` adapter for `qwen3:4b`, untrusted-evidence prompt separation, structured claim output, fail-closed citation and groundedness validation, low-cardinality metrics, unit orchestration with deterministic model doubles, and classification of every non-authorization case in the versioned Spanish baseline. The PostgreSQL/API matrix is compiled with deterministic embedding and chat doubles; execution and real-model quality calibration remain pending on a responsive Docker engine.
 
 ## M6 — Lore catalogue
 

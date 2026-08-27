@@ -1,6 +1,6 @@
 # Threat Model
 
-- **Status:** M4 retrieval authorization controls implemented
+- **Status:** M5 grounded-answer controls implemented
 - **Date:** 2026-08-27
 - **Scope:** MVP local deployment and REST API
 
@@ -127,6 +127,8 @@ Implemented evidence lives in **SourceFileValidatorTest**, **StructuralChunkerTe
 - Model output schema and citation validation
 
 M4 evidence lives in **PgVectorLoreRetriever**, **ADR-006**, **RetrievalQueryTest**, and the baseline retrieval case in **RealmAuthorizationIntegrationTest**. Authorization is part of the materialized SQL candidate set before vector distance is evaluated. PostgreSQL execution remains pending until Docker Desktop is responsive.
+
+M5 evidence lives in **EvidenceGate**, **AnswerValidator**, **SpringAiGroundedAnswerModel**, **ADR-007**, the deterministic Spanish baseline gate test, and the answer cases compiled into **RealmAuthorizationIntegrationTest**. Direct injection, weak evidence, malformed output, unknown citations, and ungrounded claims all fail closed without an answer. Container-backed execution remains pending until Docker Desktop is responsive.
 
 ## Residual risks
 

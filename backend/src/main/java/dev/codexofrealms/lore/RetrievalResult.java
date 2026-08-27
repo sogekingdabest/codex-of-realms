@@ -1,9 +1,9 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore;
 
-import dev.codexofrealms.lore.RetrievedEvidence;
 import java.util.List;
 
 public record RetrievalResult(
+    String question,
     String embeddingProvider,
     String embeddingModel,
     List<RetrievedEvidence> evidence

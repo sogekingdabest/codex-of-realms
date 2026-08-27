@@ -1,11 +1,9 @@
-package dev.codexofrealms.lore.web;
+package dev.codexofrealms.qa.web;
 
-import dev.codexofrealms.lore.LoreSearch;
-import dev.codexofrealms.lore.RetrievalResult;
+import dev.codexofrealms.qa.LoreAnswer;
+import dev.codexofrealms.qa.application.LoreQuestionService;
 import dev.codexofrealms.realm.RealmAccess;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
@@ -18,24 +16,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/v1/realms/{realmId}/retrieval")
-class LoreRetrievalController {
+@RequestMapping("/api/v1/realms/{realmId}/questions")
+class LoreQuestionController {
 
     private final RealmAccess realmAccess;
-    private final LoreSearch service;
+    private final LoreQuestionService service;
 
-    LoreRetrievalController(RealmAccess realmAccess, LoreSearch service) {
+    LoreQuestionController(RealmAccess realmAccess, LoreQuestionService service) {
         this.realmAccess = realmAccess;
         this.service = service;
     }
 
     @PostMapping
-    RetrievalResult retrieve(
+    LoreAnswer answer(
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable UUID realmId,
-        @Valid @RequestBody RetrievalRequest request
+        @Valid @RequestBody QuestionRequest request
     ) {
-        return service.retrieve(realmId, currentUser(jwt), request.question(), request.limit());
+        return service.answer(realmId, currentUser(jwt), request.question());
     }
 
     private UUID currentUser(Jwt jwt) {
@@ -50,9 +48,6 @@ class LoreRetrievalController {
         return null;
     }
 
-    record RetrievalRequest(
-        @NotBlank @Size(max = 1000) String question,
-        @Min(1) @Max(20) int limit
-    ) {
+    record QuestionRequest(@NotBlank @Size(max = 1000) String question) {
     }
 }

@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M4 access-aware retrieval implemented
-- **Next domain milestone:** M5 grounded answers
+- **Status:** M5 grounded answers implemented
+- **Next domain milestone:** M6 lore catalogue
 
 ## Architectural drivers
 
@@ -38,7 +38,7 @@ The MVP contains four Docker Compose services:
 
 Model download may require an explicit documented preparation command because pulling a large model implicitly during every startup is slow and surprising. Observability services are added under an optional profile only after meaningful metrics exist.
 
-M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables Ollama embeddings in Compose with an explicitly preloaded `bge-m3`; chat remains disabled.
+M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables explicitly preloaded `bge-m3` embeddings. M5 enables explicitly preloaded `qwen3:4b` chat generation with deterministic gate and validation controls outside the model.
 
 ## Application modules
 
@@ -48,7 +48,6 @@ flowchart LR
     LORE[lore] --> REALM
     LORE --> CONTENT
     QA[qa] --> REALM
-    QA --> CONTENT
     QA --> LORE
 ```
 
@@ -66,7 +65,7 @@ Manual entities, typed relations, canon status, and structured provenance.
 
 ### `qa`
 
-Question normalization, access-aware retrieval, evidence gating, model orchestration, structured outcomes, and citation validation.
+Question answering through the public `LoreSearch` facade, deterministic evidence gating, model orchestration, structured outcomes, and citation validation. The model adapter is replaceable; authorization and validation are not provider responsibilities.
 
 ### `shared`
 
@@ -190,3 +189,4 @@ Architecture changes require evidence:
 - [ADR-004: Fix the M1 technology baseline](adr/ADR-004-m1-technology-baseline.md)
 - [ADR-005: Store immutable source versions and explicit embedding provenance](adr/ADR-005-source-ingestion.md)
 - [ADR-006: Filter authorized candidates before exact vector ranking](adr/ADR-006-access-aware-retrieval.md)
+- [ADR-007: Gate and validate every generated answer outside the model](adr/ADR-007-deterministic-grounded-answers.md)

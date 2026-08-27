@@ -35,6 +35,13 @@ spring:
       embedding: ${AI_EMBEDDING_PROVIDER:none}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
+      chat:
+        model: ${AI_CHAT_MODEL:qwen3:4b}
+        format: json
+        temperature: 0.0
+        think: false
+        num-ctx: ${AI_CHAT_CONTEXT_SIZE:8192}
+        num-predict: ${AI_CHAT_MAX_PREDICT_TOKENS:768}
       embedding:
         model: ${AI_EMBEDDING_MODEL:bge-m3}
       init:
@@ -60,7 +67,7 @@ management:
 info:
   application:
     name: Codex of Realms
-    milestone: M4
+    milestone: M5
 
 codex:
   storage:
@@ -72,6 +79,16 @@ codex:
     embedding-batch-size: ${SOURCE_EMBEDDING_BATCH_SIZE:32}
     embedding-provider: ${AI_EMBEDDING_PROVIDER:none}
     embedding-model: ${AI_EMBEDDING_MODEL:bge-m3}
+  qa:
+    retrieval-limit: ${QA_RETRIEVAL_LIMIT:10}
+    max-evidence-chunks: ${QA_MAX_EVIDENCE_CHUNKS:6}
+    minimum-similarity: ${QA_MINIMUM_SIMILARITY:0.45}
+    minimum-question-coverage: ${QA_MINIMUM_QUESTION_COVERAGE:0.70}
+    minimum-claim-coverage: ${QA_MINIMUM_CLAIM_COVERAGE:0.35}
+    max-claims: ${QA_MAX_CLAIMS:6}
+    max-answer-characters: ${QA_MAX_ANSWER_CHARACTERS:2000}
+    chat-provider: ${AI_CHAT_PROVIDER:none}
+    chat-model: ${AI_CHAT_MODEL:qwen3:4b}
 
 springdoc:
   swagger-ui:

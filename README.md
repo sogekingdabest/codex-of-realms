@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M4 — Access-aware retrieval** is implemented in code. Realm members can retrieve ranked evidence through an exact pgvector query that applies realm membership, role, policy, grants, active-version state, and embedding-generation compatibility before distance ranking.
+**M5 — Grounded answers** is implemented in code. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result. Authorization remains inside retrieval; deterministic evidence and output gates surround the local chat model.
 
-M1–M4 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, unit tests, module verification, Compose validation, and integration-test compilation succeed.
+M1–M5 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, deterministic tests, module verification, Compose validation, and integration-test compilation succeed. M5 also awaits a recorded quality run against the real local chat model.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -31,7 +31,7 @@ The M0 product foundation remains the source of truth for scope, domain language
 - Ollama 0.32.5 as the future default local model runtime
 - Flyway, Actuator, OpenAPI, Docker Compose, Testcontainers, and GitHub Actions
 
-M3 selects `bge-m3` as the first Spanish-capable embedding baseline. The application never downloads it implicitly; prepare it explicitly with `ollama pull bge-m3`. Chat remains disabled until M5.
+M3 selects `bge-m3` as the first Spanish-capable embedding baseline. M5 selects the multilingual `qwen3:4b` chat model for the 6 GB GPU target. The application never downloads either model implicitly; prepare them with `ollama pull bge-m3` and `ollama pull qwen3:4b`.
 
 ## M0 documentation
 
@@ -45,6 +45,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. The applica
 - [Realm authorization model](docs/security/AUTHORIZATION_MODEL.md)
 - [Source ingestion runbook](docs/operations/SOURCE_INGESTION.md)
 - [Retrieval baseline](docs/evaluation/RETRIEVAL_BASELINE.md)
+- [Grounded-answer runbook](docs/operations/GROUNDED_ANSWERS.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
 - [Baseline RAG evaluation set](demo/evaluation/README.md)
