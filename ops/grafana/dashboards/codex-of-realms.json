@@ -1,0 +1,50 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "QA outcomes per minute",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {"expr": "sum by (outcome, stage) (rate(codex_qa_outcomes_total[5m])) * 60", "legendFormat": "{{outcome}} / {{stage}}"}
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "QA average latency",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {"expr": "sum by (outcome) (rate(codex_qa_duration_seconds_sum[5m])) / sum by (outcome) (rate(codex_qa_duration_seconds_count[5m]))", "legendFormat": "{{outcome}}"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Retrieval average latency",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {"expr": "sum(rate(codex_retrieval_duration_seconds_sum[5m])) / sum(rate(codex_retrieval_duration_seconds_count[5m]))", "legendFormat": "retrieval"}
+      ],
+      "fieldConfig": {"defaults": {"unit": "s"}, "overrides": []}
+    },
+    {
+      "type": "timeseries",
+      "title": "Average authorized results",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {"expr": "rate(codex_retrieval_results_sum[5m]) / rate(codex_retrieval_results_count[5m])", "legendFormat": "results"}
+      ]
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 42,
+  "tags": ["codex-of-realms", "m7"],
+  "templating": {"list": []},
+  "time": {"from": "now-30m", "to": "now"},
+  "timezone": "browser",
+  "title": "Codex of Realms — quality and retrieval",
+  "uid": "codex-of-realms",
+  "version": 1
+}

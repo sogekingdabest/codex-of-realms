@@ -1,7 +1,7 @@
 # Threat Model
 
-- **Status:** M5.1 grounded-answer and model-evaluation controls implemented
-- **Date:** 2026-08-27
+- **Status:** M7 attack suite and privacy-preserving observability implemented
+- **Date:** 2026-08-28
 - **Scope:** MVP local deployment and REST API
 
 This is a living threat model. Controls listed as planned are requirements for the milestone that introduces the affected asset; they are not claims about code that does not yet exist.
@@ -143,6 +143,17 @@ M6 evidence lives in **LoreCatalogueService**, **LoreCatalogueJdbcRepository**, 
 **LoreRelationTest**, Flyway V5, ADR-009, and the passing catalogue case in
 **RealmAuthorizationIntegrationTest**. It covers player/editor separation, hidden endpoints, cross-realm rejection,
 canon transitions, provenance survival after source deletion, and non-disclosing errors.
+
+### M7
+
+- Reject direct injection patterns before retrieval reaches the model.
+- Reject indirect instruction patterns in selected evidence before generation.
+- Run hidden-content, outsider, and prompt-injection cases through the authenticated API.
+- Export only low-cardinality aggregate metrics; never questions, chunks, answers, source titles, or identity labels.
+
+M7 evidence lives in **EvidenceGateTest**, the version 2 Spanish baseline, **RealmAuthorizationIntegrationTest**,
+the generated deterministic portfolio report, ADR-010, and the optional observability configuration. The report records
+eight passing security cases, including a malicious uploaded-source fixture that fails closed without citations.
 
 ## Residual risks
 

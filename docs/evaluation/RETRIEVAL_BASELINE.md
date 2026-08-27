@@ -1,6 +1,6 @@
 # M4 retrieval baseline
 
-M4 evaluates source-level retrieval against [`demo/evaluation/baseline.json`](../../demo/evaluation/baseline.json). The dataset remains the semantic source of truth; the test does not duplicate its answerable questions or expected source identifiers.
+M4 and M7 evaluate source-level retrieval against [`demo/evaluation/baseline.json`](../../demo/evaluation/baseline.json). The dataset remains the semantic source of truth; the test does not duplicate its answerable questions or expected source identifiers. Version 2 expands the baseline to 22 cases over seven original Spanish sources and adds broader public, GM-only, spoiler, restricted, and prompt-injection coverage.
 
 ## Acceptance targets
 

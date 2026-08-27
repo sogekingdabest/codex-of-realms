@@ -74,10 +74,13 @@ Available endpoints:
 
 - API health: <http://localhost:8080/actuator/health>
 - Application metrics: <http://localhost:8080/actuator/metrics>
+- Prometheus scrape: <http://localhost:8080/actuator/prometheus>
 - OpenAPI document: <http://localhost:8080/v3/api-docs>
 - Swagger UI: <http://localhost:8080/swagger-ui.html>
 - Keycloak: <http://localhost:8180>
 - Ollama API: <http://localhost:11434>
+
+The optional Prometheus/Grafana overlay and its network-security constraints are documented in [Local observability](OBSERVABILITY.md).
 
 The imported Keycloak realm is **codex-of-realms**. The admin username is **admin**; its password comes only from **.env**. The import includes **gm-demo**, **nara-demo**, and **ivo-demo** without credentials. Set temporary passwords through the local Keycloak administration console before interactive use. Direct password grants remain disabled.
 

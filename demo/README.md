@@ -2,13 +2,13 @@
 
 `El Meridiano de Ceniza` is the original Spanish-language realm used to demonstrate and evaluate Codex of Realms. Its content was created specifically for this project and must remain independent from existing fantasy franchises.
 
-The realm is intentionally small but contains enough structure to exercise:
+The realm contains seven focused sources—three public, two GM-only, and two spoiler documents—with enough structure to exercise:
 
 - Public canon shared by all realm members
 - Game Master-only explanations that contradict an incomplete public account
 - A spoiler revealed to one player but not another
 - Characters, places, factions, objects, events, and dated claims
-- Questions with direct, multi-source, restricted, and absent evidence
+- Questions with direct, multi-source, restricted, absent, and adversarial evidence
 
 ## Demo identities
 
@@ -19,7 +19,7 @@ The realm is intentionally small but contains enough structure to exercise:
 | `player_oren` | `PLAYER` | None |
 | `outsider_nuno` | Member of another realm | None |
 
-These are stable test identifiers, not passwords or production identities. M2 may map them to non-secret users in a versioned Keycloak development realm.
+These are stable deterministic-test identifiers, not passwords or production identities. The imported Keycloak realm contains the separate interactive placeholders `gm-demo`, `nara-demo`, and `ivo-demo`, also without committed credentials.
 
 ## Source layout
 

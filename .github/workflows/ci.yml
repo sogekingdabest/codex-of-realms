@@ -41,4 +41,7 @@ jobs:
         env:
           POSTGRES_PASSWORD: ci-placeholder-not-a-secret
           KEYCLOAK_ADMIN_PASSWORD: ci-placeholder-not-a-secret
-        run: docker compose config --quiet
+          GRAFANA_ADMIN_PASSWORD: ci-placeholder-not-a-secret
+        run: |
+          docker compose config --quiet
+          docker compose -f compose.yaml -f compose.observability.yaml --profile observability config --quiet

@@ -16,6 +16,7 @@ class SecurityConfiguration {
         "/actuator/health",
         "/actuator/health/**",
         "/actuator/info",
+        "/actuator/prometheus",
         "/v3/api-docs/**",
         "/swagger-ui.html",
         "/swagger-ui/**",

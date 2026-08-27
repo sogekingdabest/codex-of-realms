@@ -134,6 +134,8 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 
 ## M7 — Portfolio hardening
 
+**Status:** Complete
+
 **Goal:** Make the system independently understandable and demonstrable.
 
 - Expand the Spanish demo corpus and evaluation set.
@@ -144,6 +146,8 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 - Complete README, operational guide, ADR index, and demo script.
 
 **Exit criteria:** a reviewer can run, inspect, evaluate, and discuss the system without private setup knowledge.
+
+**Current evidence:** baseline v2 contains 22 Spanish cases over seven original sources; deterministic acceptance writes refusal, citation, groundedness, retrieval, and attack metrics; direct and indirect prompt injection fail closed; the existing authorization matrix remains PostgreSQL-backed; Spring Modulith generates module diagrams and canvases; and the optional observability overlay provisions pinned Prometheus/Grafana services and a content-safe dashboard. `scripts/demo.ps1`, the reviewer runbook, ADR-010, and the consolidated M7 report complete the handoff. The full suite passes 42 tests.
 
 ## Later candidates, not commitments
 

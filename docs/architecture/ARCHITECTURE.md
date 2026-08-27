@@ -1,7 +1,7 @@
 # Initial Architecture
 
-- **Status:** M6 lore catalogue complete; M5.1 comparative model review remains open
-- **Next milestone:** M7 portfolio hardening
+- **Status:** M7 portfolio hardening complete; M5.1 comparative model review remains open
+- **Next milestone:** Select a later candidate only after measurable acceptance criteria are agreed
 
 ## Architectural drivers
 
@@ -36,7 +36,7 @@ The MVP contains four Docker Compose services:
 3. `keycloak`: the development OpenID Connect provider.
 4. `ollama`: the default local model runtime.
 
-Model download may require an explicit documented preparation command because pulling a large model implicitly during every startup is slow and surprising. Observability services are added under an optional profile only after meaningful metrics exist.
+Model download may require an explicit documented preparation command because pulling a large model implicitly during every startup is slow and surprising. Prometheus and Grafana are available through the optional M7 observability overlay now that retrieval and QA expose meaningful metrics.
 
 M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables explicitly preloaded `bge-m3` embeddings. M5 enables explicitly preloaded `qwen3:4b` chat generation with deterministic gate and validation controls outside the model. M5.1 makes the tag runtime-selectable, adds an explicit NVIDIA GPU override, and requires evidence-based comparison before replacing the incumbent.
 
@@ -85,6 +85,8 @@ Each capability is organized feature-first. Its public module package contains o
 - `web`: REST controllers and transport mapping
 
 The exact package arrangement will be verified with Spring Modulith in M1 before significant implementation accumulates.
+
+Spring Modulith now verifies these boundaries on every build and generates the component diagram and module canvases. See [Application modules](MODULES.md).
 
 ## Source ingestion flow
 
@@ -195,3 +197,5 @@ Architecture changes require evidence:
 - [ADR-006: Filter authorized candidates before exact vector ranking](adr/ADR-006-access-aware-retrieval.md)
 - [ADR-007: Gate and validate every generated answer outside the model](adr/ADR-007-deterministic-grounded-answers.md)
 - [ADR-008: Select the local chat model through a reproducible safety-first evaluation](adr/ADR-008-evidence-based-local-model-selection.md)
+- [ADR-009: Keep structured lore manual, access-aware, and explicitly promoted](adr/ADR-009-manual-lore-catalogue.md)
+- [ADR-010: Keep Prometheus and Grafana as an optional local overlay](adr/ADR-010-optional-local-observability.md)

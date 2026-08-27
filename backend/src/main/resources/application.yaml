@@ -62,7 +62,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,applicationmodules,metrics
+        include: health,info,applicationmodules,metrics,prometheus
   info:
     env:
       enabled: true
@@ -70,7 +70,7 @@ management:
 info:
   application:
     name: Codex of Realms
-    milestone: M6
+    milestone: M7
 
 codex:
   storage:

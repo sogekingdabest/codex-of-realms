@@ -36,13 +36,17 @@ class EvidenceGateBaselineTest {
     private static List<RetrievedEvidence> visibleEvidence(String actor) throws Exception {
         List<String> paths = new ArrayList<>(List.of(
             "demo/lore/public/01-el-meridiano-y-lumbrevela.md",
-            "demo/lore/public/02-personas-facciones-y-objetos.md"
+            "demo/lore/public/02-personas-facciones-y-objetos.md",
+            "demo/lore/public/03-rutas-y-vida-civica.md"
         ));
         if ("gm_ines".equals(actor)) {
             paths.add("demo/lore/gm-only/01-la-deuda-de-la-aguja.md");
+            paths.add("demo/lore/gm-only/02-el-pacto-del-velo.md");
             paths.add("demo/lore/spoilers/01-el-recuerdo-de-nara.md");
+            paths.add("demo/lore/spoilers/02-la-campana-de-vidrio.md");
         } else if ("player_tala".equals(actor)) {
             paths.add("demo/lore/spoilers/01-el-recuerdo-de-nara.md");
+            paths.add("demo/lore/spoilers/02-la-campana-de-vidrio.md");
         }
         List<RetrievedEvidence> evidence = new ArrayList<>();
         for (int index = 0; index < paths.size(); index++) {

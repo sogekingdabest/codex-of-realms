@@ -10,11 +10,13 @@ import org.springframework.stereotype.Component;
 @Component
 class EvidenceGate {
 
-    private static final List<Pattern> DIRECT_INJECTION_PATTERNS = List.of(
+    private static final List<Pattern> INJECTION_PATTERNS = List.of(
         Pattern.compile("\\bignora(?:r)?\\b.{0,40}\\b(reglas|instrucciones|sistema|anterior(?:es)?)\\b"),
         Pattern.compile("\\bactua\\s+como\\b"),
         Pattern.compile("\\b(system prompt|mensaje del sistema)\\b"),
-        Pattern.compile("\\bomite\\b.{0,30}\\b(reglas|restricciones|seguridad)\\b")
+        Pattern.compile("\\bomite\\b.{0,30}\\b(reglas|restricciones|seguridad)\\b"),
+        Pattern.compile("\\b(instruccion|instruction)(?:es)?\\s+(para|al)\\s+(el\\s+)?(asistente|modelo|assistant)\\b"),
+        Pattern.compile("\\b(begin|inicio)\\s+(system|instructions|instrucciones)\\b")
     );
 
     private final QaProperties properties;
@@ -24,12 +26,15 @@ class EvidenceGate {
     }
 
     EvidenceGateDecision evaluate(String question, List<RetrievedEvidence> retrieved) {
-        if (isDirectInjection(question)) return EvidenceGateDecision.reject("direct_injection");
+        if (containsInjection(question)) return EvidenceGateDecision.reject("direct_injection");
         if (retrieved.isEmpty()) return EvidenceGateDecision.reject("no_evidence");
 
         List<RetrievedEvidence> evidence = retrieved.stream()
             .limit(properties.maxEvidenceChunks())
             .toList();
+        if (evidence.stream().map(RetrievedEvidence::content).anyMatch(EvidenceGate::containsInjection)) {
+            return EvidenceGateDecision.reject("indirect_injection");
+        }
         double bestSimilarity = evidence.stream()
             .mapToDouble(RetrievedEvidence::similarity)
             .max()
@@ -48,10 +53,10 @@ class EvidenceGate {
         return new EvidenceGateDecision(true, "sufficient", evidence);
     }
 
-    private static boolean isDirectInjection(String question) {
-        String normalized = Normalizer.normalize(question.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
+    private static boolean containsInjection(String text) {
+        String normalized = Normalizer.normalize(text.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
             .replaceAll("\\p{M}+", " ")
             .replaceAll("\\s+", " ");
-        return DIRECT_INJECTION_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(normalized).find());
+        return INJECTION_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(normalized).find());
     }
 }
