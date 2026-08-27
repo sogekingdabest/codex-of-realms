@@ -100,6 +100,21 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Current evidence:** public `LoreSearch` boundary, deterministic evidence gate, Spring AI `ChatModel` adapter for `qwen3:4b`, untrusted-evidence prompt separation, structured claim output, fail-closed citation and groundedness validation, low-cardinality metrics, unit orchestration with deterministic model doubles, and classification of every non-authorization case in the versioned Spanish baseline. The PostgreSQL/API matrix is compiled with deterministic embedding and chat doubles; execution and real-model quality calibration remain pending on a responsive Docker engine.
 
+### M5.1 — Local model selection and runtime calibration
+
+**Status:** Implementation complete; target-hardware evaluation pending
+
+- Make the chat model selectable without rebuilding the application.
+- Add an explicit NVIDIA GPU Compose override while retaining a CPU-compatible base stack.
+- Request provider-native JSON Schema and retain deterministic output validation.
+- Compare the incumbent with current compact candidates against the versioned Spanish baseline.
+- Record quality, citations, security failures, latency, throughput, runtime state, hardware, and Git commit.
+- Keep real-model execution opt-in so normal CI remains deterministic and download-free.
+
+**Exit criteria:** at least one reviewed three-run comparison exists on the target RTX 3060 Mobile; the selected model has zero security failures, meets every quality threshold, fits the available memory, and its exact tag is recorded.
+
+**Current evidence:** ADR-008, GPU Compose override, request-level JSON Schema, test-only Ollama telemetry adapter, opt-in Maven profile, comparison script, Spanish generation dataset harness, and deterministic adapter tests. Compilation and 28 non-container tests pass. A real report is intentionally pending because no responsive Ollama runtime or candidate weights are currently available.
+
 ## M6 — Lore catalogue
 
 **Goal:** Make important concepts explicitly navigable without automatic extraction.

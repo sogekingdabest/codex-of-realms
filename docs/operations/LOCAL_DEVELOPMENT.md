@@ -119,3 +119,7 @@ Tokens used locally must have issuer **http://localhost:8180/realms/codex-of-rea
 ### Ollama has no models
 
 Run `docker compose exec ollama ollama pull bge-m3` and `docker compose exec ollama ollama pull qwen3:4b`. Startup intentionally never downloads models. If embeddings are disabled outside Compose (`AI_EMBEDDING_PROVIDER=none`), source processing returns HTTP 503 and records a safe failed status. If chat is disabled or unavailable, questions fail closed to `INSUFFICIENT_EVIDENCE`.
+
+For GPU startup, alternate chat-model candidates, and the opt-in M5.1 comparison, follow the
+[local model evaluation guide](../evaluation/LOCAL_MODEL_EVALUATION.md). Normal Maven verification never contacts
+Ollama or downloads weights.

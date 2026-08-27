@@ -15,6 +15,7 @@ import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.model.tool.StructuredOutputChatOptions;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
@@ -60,10 +61,15 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
                 "question", request.question(),
                 "untrustedEvidence", request.evidence().stream().map(this::evidenceView).toList()
             ));
-            Prompt prompt = new Prompt(List.of(
-                new SystemMessage(SYSTEM_INSTRUCTIONS.formatted(outputConverter.getFormat())),
-                new UserMessage(userPayload)
-            ));
+            Prompt prompt = new Prompt(
+                List.of(
+                    new SystemMessage(SYSTEM_INSTRUCTIONS.formatted(outputConverter.getFormat())),
+                    new UserMessage(userPayload)
+                ),
+                StructuredOutputChatOptions.builder()
+                    .outputSchema(outputConverter.getJsonSchema())
+                    .build()
+            );
             ChatResponse response = chatModel.call(prompt);
             if (response == null || response.getResult() == null
                 || response.getResult().getOutput() == null) {

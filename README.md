@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M5 — Grounded answers** is implemented in code. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result. Authorization remains inside retrieval; deterministic evidence and output gates surround the local chat model.
+**M5.1 — Local model evaluation** is implemented in code. Realm members can receive a cited `ANSWERED` result or a fail-closed `INSUFFICIENT_EVIDENCE` result, while an opt-in harness now compares compact local chat models on Spanish quality, structured output, citations, security, and target-hardware performance.
 
-M1–M5 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, deterministic tests, module verification, Compose validation, and integration-test compilation succeed. M5 also awaits a recorded quality run against the real local chat model.
+M1–M5.1 still await full local container-backed acceptance because Docker Desktop has not exposed a responsive engine in this environment. Compilation, deterministic tests, module verification, Compose validation, and integration-test compilation succeed. M5.1 also awaits its first recorded run against real local models.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -28,10 +28,10 @@ The M0 product foundation remains the source of truth for scope, domain language
 - Spring Modulith 2.1.1
 - PostgreSQL 18 with pgvector 0.8.6
 - Keycloak 26.7.2 as the local OpenID Connect provider
-- Ollama 0.32.5 as the future default local model runtime
+- Ollama 0.32.5 as the default local model runtime
 - Flyway, Actuator, OpenAPI, Docker Compose, Testcontainers, and GitHub Actions
 
-M3 selects `bge-m3` as the first Spanish-capable embedding baseline. M5 selects the multilingual `qwen3:4b` chat model for the 6 GB GPU target. The application never downloads either model implicitly; prepare them with `ollama pull bge-m3` and `ollama pull qwen3:4b`.
+M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` remains the incumbent chat model for the 6 GB GPU target until M5.1 produces reviewed evidence for a replacement. The application and evaluation script never download models implicitly.
 
 ## M0 documentation
 
@@ -45,6 +45,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. M5 selects 
 - [Realm authorization model](docs/security/AUTHORIZATION_MODEL.md)
 - [Source ingestion runbook](docs/operations/SOURCE_INGESTION.md)
 - [Retrieval baseline](docs/evaluation/RETRIEVAL_BASELINE.md)
+- [Local chat-model evaluation](docs/evaluation/LOCAL_MODEL_EVALUATION.md)
 - [Grounded-answer runbook](docs/operations/GROUNDED_ANSWERS.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
@@ -83,6 +84,14 @@ Run the complete test suite from **backend**:
 ~~~
 
 Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers. See the [local development guide](docs/operations/LOCAL_DEVELOPMENT.md) for endpoints, non-Docker checks, and troubleshooting.
+
+Once Ollama and the candidate weights are prepared, run the opt-in Spanish model comparison from the repository root:
+
+~~~powershell
+.\scripts\evaluate-local-models.ps1 -Repetitions 3
+~~~
+
+See the [evaluation guide](docs/evaluation/LOCAL_MODEL_EVALUATION.md) before interpreting or promoting a result.
 
 ## Intellectual property
 

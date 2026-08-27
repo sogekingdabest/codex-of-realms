@@ -1,6 +1,6 @@
 # Initial Architecture
 
-- **Status:** M5 grounded answers implemented
+- **Status:** M5.1 local-model evaluation implemented; hardware run pending
 - **Next domain milestone:** M6 lore catalogue
 
 ## Architectural drivers
@@ -38,7 +38,7 @@ The MVP contains four Docker Compose services:
 
 Model download may require an explicit documented preparation command because pulling a large model implicitly during every startup is slow and surprising. Observability services are added under an optional profile only after meaningful metrics exist.
 
-M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables explicitly preloaded `bge-m3` embeddings. M5 enables explicitly preloaded `qwen3:4b` chat generation with deterministic gate and validation controls outside the model.
+M1 fixes the container baseline at PostgreSQL 18 with pgvector 0.8.6, Keycloak 26.7.2, and Ollama 0.32.5. M3 enables explicitly preloaded `bge-m3` embeddings. M5 enables explicitly preloaded `qwen3:4b` chat generation with deterministic gate and validation controls outside the model. M5.1 makes the tag runtime-selectable, adds an explicit NVIDIA GPU override, and requires evidence-based comparison before replacing the incumbent.
 
 ## Application modules
 
@@ -65,7 +65,9 @@ Manual entities, typed relations, canon status, and structured provenance.
 
 ### `qa`
 
-Question answering through the public `LoreSearch` facade, deterministic evidence gating, model orchestration, structured outcomes, and citation validation. The model adapter is replaceable; authorization and validation are not provider responsibilities.
+Question answering through the public `LoreSearch` facade, deterministic evidence gating, model orchestration,
+provider-native JSON Schema, structured outcomes, and citation validation. The model adapter is replaceable;
+authorization and validation are not provider responsibilities.
 
 ### `shared`
 
@@ -190,3 +192,4 @@ Architecture changes require evidence:
 - [ADR-005: Store immutable source versions and explicit embedding provenance](adr/ADR-005-source-ingestion.md)
 - [ADR-006: Filter authorized candidates before exact vector ranking](adr/ADR-006-access-aware-retrieval.md)
 - [ADR-007: Gate and validate every generated answer outside the model](adr/ADR-007-deterministic-grounded-answers.md)
+- [ADR-008: Select the local chat model through a reproducible safety-first evaluation](adr/ADR-008-evidence-based-local-model-selection.md)

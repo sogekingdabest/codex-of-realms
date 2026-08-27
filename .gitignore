@@ -6,4 +6,6 @@ backend/target/
 backend/.maven-cache/
 backend/data/
 graphify-out/
+demo/evaluation/results/*
+!demo/evaluation/results/README.md
 *.log

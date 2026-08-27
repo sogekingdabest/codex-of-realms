@@ -9,5 +9,6 @@
 | [ADR-005](ADR-005-source-ingestion.md) | Accepted | Store immutable source versions and explicit embedding provenance. |
 | [ADR-006](ADR-006-access-aware-retrieval.md) | Accepted | Filter authorized candidates before exact vector ranking. |
 | [ADR-007](ADR-007-deterministic-grounded-answers.md) | Accepted | Gate and validate every generated answer outside the model. |
+| [ADR-008](ADR-008-evidence-based-local-model-selection.md) | Accepted | Select the local chat model through a reproducible safety-first evaluation. |
 
 New ADRs use the next sequential identifier and record context, decision, consequences, and rejected alternatives. Accepted ADRs are not rewritten to hide earlier reasoning; superseding decisions link to the record they replace.

@@ -2,7 +2,7 @@
 
 ## Local models
 
-M5 uses `bge-m3` for embeddings and `qwen3:4b` for Spanish answer generation. Both are downloaded explicitly:
+M5 uses `bge-m3` for embeddings and keeps `qwen3:4b` as the incumbent Spanish answer model. Both are downloaded explicitly:
 
 ~~~powershell
 docker compose up -d postgres keycloak ollama
@@ -11,6 +11,15 @@ docker compose exec ollama ollama pull qwen3:4b
 ~~~
 
 Compose enables both Ollama integrations. Outside Compose, set `AI_EMBEDDING_PROVIDER=ollama` and `AI_CHAT_PROVIDER=ollama` explicitly. Startup never downloads a model.
+
+On a machine with NVIDIA Container Toolkit support, start Ollama with the explicit GPU override:
+
+~~~powershell
+docker compose -f compose.yaml -f compose.gpu.yaml up -d ollama
+~~~
+
+Select another installed chat model without rebuilding by setting `AI_CHAT_MODEL`. Model changes are governed by
+the [local evaluation guide](../evaluation/LOCAL_MODEL_EVALUATION.md), not by recency alone.
 
 ## API contract
 
@@ -31,7 +40,8 @@ An accepted result has `outcome: ANSWERED`, citation markers in the answer, a ci
 1. Realm membership is required before embedding or retrieval.
 2. PostgreSQL ranks only chunks visible to that member.
 3. A deterministic gate checks injection indicators, similarity, and question/evidence term coverage.
-4. The model receives only the bounded visible evidence as untrusted JSON and has no tools.
+4. The model receives only the bounded visible evidence as untrusted JSON, an exact provider-native JSON Schema,
+   and no tools.
 5. Every returned claim must cite a supplied rank and overlap its cited text.
 6. Any invalid or unavailable model result fails closed to `INSUFFICIENT_EVIDENCE`.
 
