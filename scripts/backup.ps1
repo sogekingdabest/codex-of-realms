@@ -49,12 +49,23 @@ try {
     if ($LASTEXITCODE -ne 0) {
         throw "Could not resolve the Git commit for the backup manifest."
     }
+    $databaseSha256 = (Get-FileHash -LiteralPath $databaseArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    $sourceFiles = @(Get-ChildItem -LiteralPath $sourcesDirectory -Recurse -File | ForEach-Object {
+        [ordered]@{
+            path = [IO.Path]::GetRelativePath($sourcesDirectory, $_.FullName).Replace('\', '/')
+            length = $_.Length
+            sha256 = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+        }
+    })
     @{
         createdAt = (Get-Date).ToUniversalTime().ToString("o")
         gitCommit = $gitCommit.Trim()
         database = "codex-of-realms.dump"
+        databaseSha256 = $databaseSha256
         sources = "sources"
-    } | ConvertTo-Json | Set-Content -Path (Join-Path $destination "manifest.json") -Encoding utf8
+        sourceFileCount = $sourceFiles.Count
+        sourceFiles = $sourceFiles
+    } | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $destination "manifest.json") -Encoding utf8
 
     Write-Host "Backup created at $destination"
 }

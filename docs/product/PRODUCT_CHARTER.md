@@ -1,8 +1,8 @@
 # Product Charter
 
 - **Product:** Codex of Realms
-- **Status:** M0 baseline
-**Date:** 2026-08-26
+- **Status:** M8.2 validated local-product baseline
+- **Date:** 2026-08-28
 
 ## Product definition
 
@@ -102,14 +102,13 @@ The numbers are engineering hypotheses, not claims. Evaluation reports must incl
 - Ollama is the default server-side model runtime.
 - Small quantized chat models and multilingual embedding models are expected, but exact models remain a benchmark decision.
 - Browser-side inference through WebLLM or LiteRT-LM is a later candidate.
-- The repository starts without automatic commits or deployments.
+- Changes are versioned locally with Git; publishing and automated deployment remain deferred.
 
 ## Open decisions for later milestones
 
-These are intentionally not blockers for M0:
+These remain intentionally separate decisions:
 
-- Exact Spring dependency versions for M1.
-- Exact chat and embedding models after local benchmarking.
-- Chunk size, overlap, and evidence thresholds after retrieval evaluation.
-- Maximum source size after measuring ingestion behavior.
+- Exact chat-model promotion after the reviewed M5.1 comparison.
+- Production identity, secrets, TLS, and deployment topology.
+- Browser-side inference after the server-side product path is mature.
 - Repository license before public distribution.

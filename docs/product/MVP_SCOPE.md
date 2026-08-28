@@ -8,8 +8,8 @@ This document is the scope contract for the first portfolio-ready release. A fea
 
 - Authenticate through OpenID Connect using a local Keycloak deployment.
 - Create and read isolated realms.
-- Manage realm memberships with `OWNER`, `EDITOR`, and `PLAYER` roles.
-- Apply `PUBLIC`, `GM_ONLY`, and member-targeted `SPOILER` access policies.
+- Invite and manage realm memberships with `OWNER`, `EDITOR`, and `PLAYER` roles.
+- Apply named `PUBLIC`, `GM_ONLY`, and member-targeted `SPOILER` access policies.
 
 ### Source management
 
@@ -27,7 +27,16 @@ This document is the scope contract for the first portfolio-ready release. A fea
 - Retrieve with realm and access constraints inside the database query.
 - Generate an answer from visible evidence through an interchangeable chat-model adapter.
 - Return citations and a structured `INSUFFICIENT_EVIDENCE` outcome.
+- Open the exact authorized source context behind a citation.
 - Distinguish canonical facts from proposed AI content.
+
+### First-party web experience
+
+- Register and authenticate through Keycloak Authorization Code with PKCE `S256`.
+- Create and switch realms without exposing internal identifiers.
+- Administer invitations, spoiler groups, grants, sources, and questions in Spanish.
+- Show only viewer-visible sources and distinguish insufficient evidence from model-runtime failure.
+- Keep access and refresh tokens in the Keycloak adapter's memory rather than browser persistence.
 
 ### Lore catalogue
 
@@ -49,7 +58,7 @@ This document is the scope contract for the first portfolio-ready release. A fea
 
 ## Explicit exclusions
 
-- Browser or native user interface
+- Native desktop or mobile user interface
 - PDF, OCR, images, audio, and video
 - Social login and production identity hosting
 - Password storage in the application
@@ -61,6 +70,7 @@ This document is the scope contract for the first portfolio-ready release. A fea
 - Neo4j or a separate graph database
 - GraphRAG
 - Automatic entity and relation extraction
+- Lore catalogue editing in the web interface
 - Reranking
 - Hybrid keyword/vector retrieval
 - Contradiction detection
@@ -88,9 +98,9 @@ This document is the scope contract for the first portfolio-ready release. A fea
 
 The local demonstration contains one Game Master and two players. A public source is visible to both players, a `GM_ONLY` source is visible only to the Game Master, and one `SPOILER` source is revealed to only one player.
 
-The same question is executed for all three identities. The Game Master and revealed player receive only the evidence they are permitted to see. The unrevealed player receives an evidence-insufficient response without learning whether hidden evidence exists.
+The same question is executed for all three identities through the browser. The Game Master and revealed player receive only the evidence they are permitted to see and can open their citations. The unrevealed player receives an evidence-insufficient response without learning whether hidden evidence exists.
 
-This scenario must be covered by automated integration tests and by the versioned RAG evaluation set.
+This scenario must be covered by automated integration tests, the versioned RAG evaluation set, and the reproducible M8.2 acceptance command.
 
 ## Change control
 

@@ -14,5 +14,6 @@
 | [ADR-010](ADR-010-optional-local-observability.md) | Accepted | Keep Prometheus and Grafana as an optional local overlay. |
 | [ADR-011](ADR-011-first-party-web-client.md) | Accepted | Build the first-party React client in the monorepo with Authorization Code + PKCE. |
 | [ADR-012](ADR-012-multi-user-product-closure.md) | Accepted | Close invitations, named access, citation inspection, and durable local identity. |
+| [ADR-013](ADR-013-reproducible-local-release-gate.md) | Accepted | Make deterministic product acceptance and isolated restore verification the local release gate. |
 
 New ADRs use the next sequential identifier and record context, decision, consequences, and rejected alternatives. Accepted ADRs are not rewritten to hide earlier reasoning; superseding decisions link to the record they replace.

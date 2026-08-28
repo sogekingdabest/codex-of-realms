@@ -190,6 +190,28 @@ Spanish web UI. Backend verification passes 43 tests; frontend lint, all 6 tests
 browser smoke verified Spanish registration and Authorization Code + PKCE `S256`, then a Keycloak container recreation
 proved the realm remained available. The final multi-account answer comparison remains parked with local model testing.
 
+## M8.2 — Reproducible local product acceptance
+
+**Status:** Complete; optional live-model extension pending by choice
+
+**Goal:** Turn the first multi-user product slice into a safe, repeatable local release gate.
+
+- Pin Authorization Code + PKCE `S256`, token renewal, and player/owner behavior in frontend tests.
+- Run the complete deterministic Java and web suites from one command.
+- Create a coordinated database/source backup with integrity metadata.
+- Restore the backup in a uniquely named Compose project without publishing ports or touching active volumes.
+- Prove Flyway history, source-file parity, and a healthy Keycloak boot with the expected realm.
+- Report live-model evaluation as an explicit opt-in extension rather than silently downloading weights.
+- Reconcile the product charter and MVP scope with the web product that now exists.
+
+**Exit criteria:** `scripts/verify-m8.2.ps1` passes without a live model; the restore drill cleans up its isolated resources;
+the three-identity security and citation scenario remains deterministic; and the omitted real-model run is reported as
+such rather than presented as passed.
+
+**Current evidence:** ADR-013, the M8.2 acceptance guide, eight frontend tests, the PostgreSQL-backed authorization/RAG
+suite, backup checksums and counts, the unpublished-port restore topology, and a successful restore of six Flyway
+migrations plus the persistent Keycloak realm. The M5.1 three-run benchmark remains a separate promotion gate.
+
 ## Later candidates, not commitments
 
 - PDF ingestion and OCR

@@ -87,8 +87,12 @@ npm run build
 ~~~
 
 The tests cover bearer-token API requests, safe multipart handling, owner source presentation, citation rendering, and
-the player path that loads visible sources without requesting editor-only policy or membership data. CI runs these
-checks independently of the deterministic Java suite.
+the player path that loads visible sources without requesting editor-only policy or membership data. They also pin the
+Authorization Code + PKCE `S256` configuration and the expired-token recovery path. CI runs these checks independently
+of the deterministic Java suite.
+
+For the complete backend, frontend, running-stack, backup, and isolated-restore gate, use
+[`M8.2 local product acceptance`](../evaluation/M8_2_ACCEPTANCE.md).
 
 ## Security boundary
 

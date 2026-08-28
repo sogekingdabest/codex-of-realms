@@ -6,12 +6,12 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M8.1 — Multi-user product closure** is implementation-complete. A realm owner can register through Keycloak,
+**M8.2 — Reproducible local product acceptance** is complete. A realm owner can register through Keycloak,
 create a realm with safe default policies, invite editors or players by email, create named spoiler groups, manage grants,
 upload sources, ask grounded questions, and open the exact authorized evidence behind every citation from the Spanish
 interface at `http://localhost:5173`. Keycloak now persists in PostgreSQL and coordinated backup/restore scripts cover
-the database and raw sources. The final model-backed interactive Compose smoke remains pending while local model testing
-is parked.
+the database and raw sources. M8.2 adds one deterministic release command and verifies recovery in isolated Docker
+volumes; the final model-backed comparison remains explicitly parked rather than blocking product development.
 
 The deterministic backend suite includes PostgreSQL/pgvector acceptance of invitation activation, role and grant
 boundaries, player-visible source browsing, ingestion, retrieval, grounded answers, and catalogue invariants. The
@@ -63,6 +63,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [Local observability](docs/operations/OBSERVABILITY.md)
 - [Web UI](docs/operations/WEB_UI.md)
 - [Backup and restore](docs/operations/BACKUP_AND_RESTORE.md)
+- [M8.2 local product acceptance](docs/evaluation/M8_2_ACCEPTANCE.md)
 - [Application modules](docs/architecture/MODULES.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
@@ -121,6 +122,15 @@ Run the reviewer workflow from the repository root:
 ~~~
 
 Use `-StartStack` after configuring `.env`, and add `-WithObservability` for the optional Prometheus/Grafana overlay. See the [reviewer demo](docs/operations/DEMO.md) for the complete walkthrough.
+
+With the normal stack running, execute the complete deterministic product and recovery gate:
+
+~~~powershell
+.\scripts\verify-m8.2.ps1
+~~~
+
+This does not require installed model weights. Add `-WithLiveModel` only when deliberately running the separate M5.1
+quality benchmark.
 
 Once Ollama and the candidate weights are prepared, run the opt-in Spanish model comparison from the repository root:
 
