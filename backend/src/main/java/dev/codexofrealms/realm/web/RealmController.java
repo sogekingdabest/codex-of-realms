@@ -117,6 +117,15 @@ class RealmController {
             .body(policy);
     }
 
+    @GetMapping("/{realmId}/access-policies")
+    List<AccessPolicyView> listPolicies(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        return realmService.listAccessiblePolicies(realmId, user.id());
+    }
+
     @GetMapping("/{realmId}/access-policies/{policyId}")
     AccessPolicyView getPolicy(
         @AuthenticationPrincipal Jwt jwt,

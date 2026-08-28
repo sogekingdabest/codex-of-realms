@@ -59,6 +59,7 @@ Realm listing is always derived from the caller's active memberships. The API ha
 | **PUT /api/v1/realms/{realmId}/memberships/{userId}** | Add, reactivate, or change a membership as an owner. |
 | **DELETE /api/v1/realms/{realmId}/memberships/{userId}** | Revoke a membership as an owner. |
 | **POST /api/v1/realms/{realmId}/access-policies** | Create a policy as an owner or editor. |
+| **GET /api/v1/realms/{realmId}/access-policies** | List only policies effectively visible to the current member. |
 | **GET /api/v1/realms/{realmId}/access-policies/{policyId}** | Read a policy only when effective access permits it. |
 | **PUT .../access-policies/{policyId}/grants/{userId}** | Grant a spoiler policy to an active player. |
 | **DELETE .../access-policies/{policyId}/grants/{userId}** | Revoke a spoiler grant. |

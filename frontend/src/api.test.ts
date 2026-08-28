@@ -1,0 +1,66 @@
+import { afterEach, describe, expect, it, vi } from 'vitest'
+
+import { HttpCodexApi } from './api'
+
+describe('HttpCodexApi', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it('renueva el token y envía preguntas como JSON autenticado', async () => {
+    const getToken = vi.fn().mockResolvedValue('fresh-token')
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          outcome: 'INSUFFICIENT_EVIDENCE',
+          answer: null,
+          citations: [],
+          provenance: {
+            embeddingProvider: 'ollama',
+            embeddingModel: 'bge-m3',
+            chatProvider: 'ollama',
+            chatModel: 'qwen3.5:4b',
+          },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1/', getToken)
+
+    await api.ask('realm 1', '¿Qué protege la Aguja?')
+
+    expect(getToken).toHaveBeenCalledOnce()
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/v1/realms/realm%201/questions')
+    expect(init.method).toBe('POST')
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer fresh-token')
+    expect(new Headers(init.headers).get('Content-Type')).toBe('application/json')
+    expect(init.body).toBe(JSON.stringify({ question: '¿Qué protege la Aguja?' }))
+  })
+
+  it('deja que el navegador construya el content type multipart', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: 'source-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const file = new File(['# Lumbrevela'], 'lumbrevela.md', {
+      type: 'text/markdown',
+    })
+
+    await api.uploadSource('realm-1', 'Lumbrevela', 'policy-1', file)
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    const headers = new Headers(init.headers)
+    expect(headers.has('Content-Type')).toBe(false)
+    expect(init.body).toBeInstanceOf(FormData)
+    const body = init.body as FormData
+    expect(body.get('title')).toBe('Lumbrevela')
+    expect(body.get('accessPolicyId')).toBe('policy-1')
+    expect(body.get('file')).toBe(file)
+  })
+})

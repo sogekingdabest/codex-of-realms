@@ -108,6 +108,15 @@ public class RealmService {
     }
 
     @Transactional(readOnly = true)
+    public List<AccessPolicyView> listAccessiblePolicies(
+        UUID realmId,
+        UUID currentUserId
+    ) {
+        requireMemberAccess(realmId, currentUserId);
+        return realmRepository.findAccessiblePolicies(realmId, currentUserId);
+    }
+
+    @Transactional(readOnly = true)
     public void requireEditorAccess(UUID realmId, UUID currentUserId) {
         requireEditor(realmId, currentUserId);
     }

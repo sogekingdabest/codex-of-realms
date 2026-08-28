@@ -3,6 +3,7 @@
 ## Prerequisites
 
 - Eclipse Temurin JDK 21 for running Maven directly
+- Node.js 24 LTS for running the web client directly
 - Docker Desktop with Docker Compose for the complete stack and integration tests
 - At least 8 GB of free system memory recommended while all services run
 
@@ -64,7 +65,7 @@ This preparation is needed once per `ollama-data` volume.
 docker compose up --build
 ~~~
 
-Wait until all four services report healthy:
+Wait until all five services report healthy:
 
 ~~~powershell
 docker compose ps
@@ -72,6 +73,7 @@ docker compose ps
 
 Available endpoints:
 
+- Web UI: <http://localhost:5173>
 - API health: <http://localhost:8080/actuator/health>
 - Application metrics: <http://localhost:8080/actuator/metrics>
 - Prometheus scrape: <http://localhost:8080/actuator/prometheus>
@@ -118,6 +120,18 @@ Create **.env** from **.env.example** and provide both passwords. Empty credenti
 ### The API cannot validate a token
 
 Tokens used locally must have issuer **http://localhost:8180/realms/codex-of-realms** and audience **codex-api**. The application uses Keycloak's internal container address only to obtain signing keys.
+
+### PostgreSQL rejects the password after changing `.env`
+
+The database role keeps the password used when `postgres-data` was first initialized; changing `.env` does not rewrite an existing role. To preserve the data, start PostgreSQL, open `psql`, and use its non-echoing password prompt to set the current `POSTGRES_PASSWORD` value:
+
+~~~powershell
+docker compose up -d postgres
+docker compose exec postgres psql -U codex -d codex_of_realms
+\password codex
+~~~
+
+Exit with `\q`, then restart the application. Only remove the named volume when its contents are genuinely disposable.
 
 ### Ollama has no models
 

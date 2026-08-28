@@ -12,5 +12,6 @@
 | [ADR-008](ADR-008-evidence-based-local-model-selection.md) | Accepted | Select the local chat model through a reproducible safety-first evaluation. |
 | [ADR-009](ADR-009-manual-lore-catalogue.md) | Accepted | Keep structured lore manual, access-aware, and explicitly promoted. |
 | [ADR-010](ADR-010-optional-local-observability.md) | Accepted | Keep Prometheus and Grafana as an optional local overlay. |
+| [ADR-011](ADR-011-first-party-web-client.md) | Accepted | Build the first-party React client in the monorepo with Authorization Code + PKCE. |
 
 New ADRs use the next sequential identifier and record context, decision, consequences, and rejected alternatives. Accepted ADRs are not rewritten to hide earlier reasoning; superseding decisions link to the record they replace.

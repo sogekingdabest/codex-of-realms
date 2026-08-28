@@ -6,9 +6,9 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M7 — Portfolio hardening** is complete. A reviewer can run the deterministic acceptance suite, inspect generated module documentation, reproduce the Spanish quality report, exercise direct and indirect prompt-injection controls, and opt into a pre-provisioned Prometheus/Grafana dashboard.
+**M8 — First web interface** is implementation-complete. A user can authenticate through Keycloak Authorization Code + PKCE, create or select a realm, establish a visibility policy, upload sources, ask grounded questions, and inspect exact citations from a responsive Spanish interface at `http://localhost:5173`. The five-service Compose stack is healthy and the browser redirect has been verified; the final model-backed interactive smoke remains pending while local model testing is parked.
 
-The complete Maven verification passes 42 tests against Docker-backed PostgreSQL/pgvector. Baseline v2 covers 22 cases over seven original Spanish sources and reports 1.000 retrieval recall@10, refusal accuracy, citation correctness, validated grounded-answer rate, and security attack pass rate under deterministic CI. Full Compose service-health acceptance still requires locally configured development passwords. M5.1 model promotion still requires the reviewed three-run candidate comparison.
+The complete Maven verification passes 42 tests against Docker-backed PostgreSQL/pgvector, while the frontend adds four deterministic component and API-client tests plus lint and production-build checks. Baseline v2 covers 22 cases over seven original Spanish sources and reports 1.000 retrieval recall@10, refusal accuracy, citation correctness, validated grounded-answer rate, and security attack pass rate under deterministic CI. Interactive Compose acceptance still requires a temporary demo-user password and locally available Ollama models. M5.1 model promotion still requires the reviewed three-run candidate comparison.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -31,6 +31,8 @@ The M0 product foundation remains the source of truth for scope, domain language
 - Ollama 0.32.5 as the default local model runtime
 - Flyway, Actuator, OpenAPI, Docker Compose, Testcontainers, and GitHub Actions
 
+M8 adds React 19.2, TypeScript 6, Vite 8, Node.js 24 LTS, the official Keycloak JavaScript adapter, and an unprivileged Nginx runtime container.
+
 M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` remains the incumbent chat model for the 6 GB GPU target until M5.1 produces reviewed evidence for a replacement. The application and evaluation script never download models implicitly.
 
 ## M0 documentation
@@ -51,6 +53,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [M7 deterministic quality report](docs/evaluation/PORTFOLIO_REPORT.md)
 - [Reviewer demo](docs/operations/DEMO.md)
 - [Local observability](docs/operations/OBSERVABILITY.md)
+- [Web UI](docs/operations/WEB_UI.md)
 - [Application modules](docs/architecture/MODULES.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
@@ -60,6 +63,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 
 ```text
 backend/                 Java 21 Spring Boot application
+frontend/                React and TypeScript web application
 demo/lore/               Original Spanish canonical source documents
 demo/evaluation/         Versioned RAG evaluation cases
 docs/product/            Product definition and scope
@@ -82,10 +86,21 @@ Copy **.env.example** to **.env**, set both local passwords, then start the stac
 docker compose up --build
 ~~~
 
+Then open <http://localhost:5173>. See the [web UI guide](docs/operations/WEB_UI.md) for Keycloak demo-user setup and the first-use flow.
+
 Run the complete test suite from **backend**:
 
 ~~~powershell
 .\mvnw.cmd --batch-mode --no-transfer-progress verify
+~~~
+
+Verify the web application from **frontend**:
+
+~~~powershell
+npm ci
+npm run lint
+npm run test
+npm run build
 ~~~
 
 Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers. See the [local development guide](docs/operations/LOCAL_DEVELOPMENT.md) for endpoints, non-Docker checks, and troubleshooting.

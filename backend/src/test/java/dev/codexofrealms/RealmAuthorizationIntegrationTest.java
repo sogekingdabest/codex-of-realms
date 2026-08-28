@@ -203,6 +203,16 @@ class RealmAuthorizationIntegrationTest {
         UUID gmOnlyPolicy = createPolicy("owner", realmId, "GM_ONLY");
         UUID spoilerPolicy = createPolicy("owner", realmId, "SPOILER");
 
+        mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
+                .with(identity("owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(3));
+        mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
+                .with(identity("hidden-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(publicPolicy.toString()));
+
         expectPolicyVisible("owner", realmId, gmOnlyPolicy);
         expectPolicyVisible("editor", realmId, gmOnlyPolicy);
         expectPolicyHidden("revealed-player", realmId, gmOnlyPolicy);
@@ -217,6 +227,10 @@ class RealmAuthorizationIntegrationTest {
 
         expectPolicyVisible("revealed-player", realmId, spoilerPolicy);
         expectPolicyHidden("hidden-player", realmId, spoilerPolicy);
+        mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
+                .with(identity("revealed-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2));
 
         mockMvc.perform(put(
                     "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",

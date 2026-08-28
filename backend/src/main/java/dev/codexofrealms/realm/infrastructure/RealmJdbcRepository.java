@@ -271,6 +271,40 @@ public class RealmJdbcRepository {
             .optional();
     }
 
+    public List<AccessPolicyView> findAccessiblePolicies(UUID realmId, UUID userId) {
+        return jdbcClient.sql("""
+                SELECT p.id, p.realm_id, p.classification
+                FROM access_policy p
+                JOIN realm r ON r.id = p.realm_id
+                JOIN realm_membership m
+                  ON m.realm_id = p.realm_id
+                 AND m.user_id = :userId
+                 AND m.active
+                WHERE p.realm_id = :realmId
+                  AND p.active
+                  AND r.active
+                  AND (
+                    m.role IN ('OWNER', 'EDITOR')
+                    OR p.classification = 'PUBLIC'
+                    OR (
+                      p.classification = 'SPOILER'
+                      AND EXISTS (
+                        SELECT 1
+                        FROM access_grant g
+                        WHERE g.realm_id = p.realm_id
+                          AND g.policy_id = p.id
+                          AND g.membership_id = m.id
+                      )
+                    )
+                  )
+                ORDER BY p.classification, p.id
+                """)
+            .param("realmId", realmId)
+            .param("userId", userId)
+            .query(RealmJdbcRepository::mapPolicy)
+            .list();
+    }
+
     public void grantPolicy(UUID realmId, UUID policyId, UUID membershipId) {
         jdbcClient.sql("""
                 INSERT INTO access_grant (realm_id, policy_id, membership_id)

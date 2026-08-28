@@ -58,6 +58,7 @@ try {
     }
 
     Write-Host "API health:    http://localhost:8080/actuator/health"
+    Write-Host "Web UI:        http://localhost:5173"
     Write-Host "OpenAPI:       http://localhost:8080/swagger-ui.html"
     Write-Host "Keycloak:      http://localhost:8180"
     if ($WithObservability) {

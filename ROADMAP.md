@@ -18,7 +18,7 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 ## M1 — Walking skeleton
 
-**Status:** Implementation and Testcontainers acceptance complete; full Compose health pending local secrets
+**Status:** Complete
 
 **Goal:** A clean clone can build, test, and start a minimal service locally.
 
@@ -32,11 +32,11 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 
 **Exit criteria:** `./mvnw verify` succeeds, Docker Compose becomes healthy, and no secret is stored in the repository.
 
-**Current evidence:** `backend/`, `compose.yaml`, `infra/keycloak/`, `.github/workflows/ci.yml`, ADR-004, and the local development guide. The Java package build, module verification, Compose validation, secret guardrails, and PostgreSQL/pgvector Testcontainers suite pass locally. Starting the four-service Compose stack and observing every health check remains pending until local development passwords are supplied through `.env`.
+**Current evidence:** `backend/`, `compose.yaml`, `infra/keycloak/`, `.github/workflows/ci.yml`, ADR-004, and the local development guide. The Java package build, module verification, Compose validation, secret guardrails, PostgreSQL/pgvector Testcontainers suite, and full local service-health acceptance pass. M8 subsequently extends the healthy topology with the web service.
 
 ## M2 — Realms and authorization
 
-**Status:** Complete
+**Status:** Implementation complete; authenticated model-backed smoke pending
 
 **Goal:** Establish the security boundary before any lore can be retrieved.
 
@@ -149,6 +149,23 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 
 **Current evidence:** baseline v2 contains 22 Spanish cases over seven original sources; deterministic acceptance writes refusal, citation, groundedness, retrieval, and attack metrics; direct and indirect prompt injection fail closed; the existing authorization matrix remains PostgreSQL-backed; Spring Modulith generates module diagrams and canvases; and the optional observability overlay provisions pinned Prometheus/Grafana services and a content-safe dashboard. `scripts/demo.ps1`, the reviewer runbook, ADR-010, and the consolidated M7 report complete the handoff. The full suite passes 42 tests.
 
+## M8 — First web interface
+
+**Status:** Complete
+
+**Goal:** Expose the secure evidence-first path through a usable Spanish browser interface.
+
+- Add a React and TypeScript application under `frontend/` without splitting the product repository.
+- Authenticate with Keycloak Authorization Code flow and PKCE `S256`, retaining tokens only in memory.
+- Support first-realm creation and switching between authorized realms.
+- Let owners and editors create an access policy, upload Markdown or TXT sources, and inspect processing state.
+- Let every member ask questions and inspect exact citations, refusal state, and model provenance.
+- Serve the built SPA through a same-origin API proxy in Compose and verify it independently in CI.
+
+**Exit criteria:** a configured demo user can log in, select or create a realm, upload an authorized source, ask a grounded question, and inspect its citations without using Swagger; frontend lint, unit tests, production build, backend verification, and Compose validation pass.
+
+**Current evidence:** ADR-011, exact Keycloak web origins, the in-memory `keycloak-js` session adapter, typed API client, access-aware policy listing, responsive Spanish interface, Nginx/Vite API proxies, four frontend tests, and CI/Compose integration. All five containers reached healthy state, and a browser smoke confirmed an Authorization Code request with an `S256` challenge and the exact port-5173 redirect. Completing the interactive upload/question path remains intentionally pending a local demo-user password and the parked Ollama models.
+
 ## Later candidates, not commitments
 
 - PDF ingestion and OCR
@@ -158,7 +175,8 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 - Contradiction and timeline analysis
 - Session summarization
 - Neo4j or another knowledge-graph projection
-- Web UI
+- Realm membership and spoiler-grant administration UI
+- Lore catalogue UI
 - Browser-side model execution with WebLLM or LiteRT-LM
 - English demo corpus and multilingual evaluation
 

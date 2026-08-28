@@ -3,6 +3,12 @@
   "enabled": true,
   "displayName": "Codex of Realms",
   "sslRequired": "external",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "defaultLocale": "es",
   "registrationAllowed": false,
   "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,
@@ -28,15 +34,15 @@
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
       "protocol": "openid-connect",
-      "rootUrl": "http://localhost:3000",
+      "rootUrl": "http://localhost:5173",
       "baseUrl": "/",
       "redirectUris": [
-        "http://localhost:3000/*",
-        "http://127.0.0.1:3000/*"
+        "http://localhost:5173/*",
+        "http://127.0.0.1:5173/*"
       ],
       "webOrigins": [
-        "http://localhost:3000",
-        "http://127.0.0.1:3000"
+        "http://localhost:5173",
+        "http://127.0.0.1:5173"
       ],
       "protocolMappers": [
         {
