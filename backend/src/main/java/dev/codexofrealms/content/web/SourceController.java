@@ -1,6 +1,7 @@
 package dev.codexofrealms.content.web;
 
 import dev.codexofrealms.content.application.SourceDocumentView;
+import dev.codexofrealms.content.application.SourceContentView;
 import dev.codexofrealms.content.application.SourceIngestionService;
 import dev.codexofrealms.realm.RealmAccess;
 import java.io.IOException;
@@ -75,6 +76,16 @@ class SourceController {
         @PathVariable UUID documentId
     ) {
         return service.get(realmId, documentId, currentUser(jwt));
+    }
+
+    @GetMapping("/{documentId}/versions/{versionId}/content")
+    SourceContentView content(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId,
+        @PathVariable UUID documentId,
+        @PathVariable UUID versionId
+    ) {
+        return service.content(realmId, documentId, versionId, currentUser(jwt));
     }
 
     @DeleteMapping("/{documentId}")

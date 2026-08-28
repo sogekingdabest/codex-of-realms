@@ -19,9 +19,19 @@ function testApi(): CodexApi {
     }),
     createRealm: vi.fn(),
     listPolicies: vi.fn().mockResolvedValue([
-      { id: 'policy-1', realmId: 'realm-1', classification: 'PUBLIC' },
+      { id: 'policy-1', realmId: 'realm-1', classification: 'PUBLIC', name: 'Público', description: null },
     ]),
     createPolicy: vi.fn(),
+    listMemberships: vi.fn().mockResolvedValue([
+      { userId: 'user-1', displayName: 'Maestra del Meridiano', email: 'gm-demo@local.invalid', role: 'OWNER' },
+    ]),
+    listInvitations: vi.fn().mockResolvedValue([]),
+    inviteMember: vi.fn(),
+    revokeInvitation: vi.fn(),
+    removeMembership: vi.fn(),
+    listPolicyGrants: vi.fn().mockResolvedValue([]),
+    grantPolicy: vi.fn(),
+    revokePolicy: vi.fn(),
     listSources: vi.fn().mockResolvedValue([
       {
         id: 'source-1',
@@ -43,6 +53,14 @@ function testApi(): CodexApi {
       },
     ]),
     uploadSource: vi.fn(),
+    deleteSource: vi.fn(),
+    getSourceContent: vi.fn().mockResolvedValue({
+      documentId: 'source-1',
+      versionId: 'version-1',
+      title: 'Crónica de Lumbrevela',
+      originalFilename: 'lumbrevela.md',
+      content: '# La Aguja\nLa Aguja conserva una deuda antigua con el Meridiano.',
+    }),
     ask: vi.fn().mockResolvedValue({
       outcome: 'ANSWERED',
       answer: 'La Aguja conserva una deuda antigua con el Meridiano.',
@@ -66,6 +84,11 @@ function testApi(): CodexApi {
         chatProvider: 'ollama',
         chatModel: 'qwen3.5:4b',
       },
+      failureReason: null,
+    }),
+    getCapabilities: vi.fn().mockResolvedValue({
+      chat: { provider: 'ollama', model: 'qwen3.5:4b', available: true, status: 'READY', installedModels: [] },
+      embedding: { provider: 'ollama', model: 'bge-m3', available: true, status: 'READY', installedModels: [] },
     }),
   }
 }
@@ -101,5 +124,31 @@ describe('App', () => {
     ).toBeInTheDocument()
     expect(screen.getByText(/La Aguja · v2 · caracteres 40–126/)).toBeInTheDocument()
     expect(api.ask).toHaveBeenCalledWith('realm-1', '¿Qué deuda conserva la Aguja?')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir evidencia exacta' }))
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    expect(api.getSourceContent).toHaveBeenCalledWith('realm-1', 'source-1', 'version-1')
+  })
+
+  it('permite que un jugador cargue sus fuentes visibles y pregunte sin pedir políticas', async () => {
+    const api = testApi()
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: 'player-1',
+        issuer: 'http://localhost:8180/realms/codex-of-realms',
+        subject: 'player-subject',
+        displayName: 'Nara Valcor',
+        email: 'nara-demo@local.invalid',
+      },
+      realms: [{ id: 'realm-1', name: 'El Meridiano', role: 'PLAYER' }],
+    })
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
+    expect(api.listSources).toHaveBeenCalledWith('realm-1')
+    expect(api.listPolicies).not.toHaveBeenCalled()
+    expect(api.listMemberships).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
   })
 })

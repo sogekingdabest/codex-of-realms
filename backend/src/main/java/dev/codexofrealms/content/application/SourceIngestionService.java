@@ -79,6 +79,25 @@ public class SourceIngestionService {
         return metadata.get(realmId, documentId, userId);
     }
 
+    public SourceContentView content(
+        UUID realmId,
+        UUID documentId,
+        UUID versionId,
+        UUID userId
+    ) {
+        SourceVersionRecord version = metadata.accessibleVersion(
+            realmId, documentId, versionId, userId
+        );
+        byte[] bytes = storage.read(version.storageKey());
+        return new SourceContentView(
+            documentId,
+            versionId,
+            version.title(),
+            version.originalFilename(),
+            new String(bytes, StandardCharsets.UTF_8)
+        );
+    }
+
     public void delete(UUID realmId, UUID documentId, UUID userId) {
         metadata.retire(realmId, documentId, userId).forEach(storage::delete);
     }

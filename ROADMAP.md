@@ -151,7 +151,7 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 
 ## M8 — First web interface
 
-**Status:** Complete
+**Status:** Implementation complete; superseded by M8.1 product closure
 
 **Goal:** Expose the secure evidence-first path through a usable Spanish browser interface.
 
@@ -166,6 +166,30 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 
 **Current evidence:** ADR-011, exact Keycloak web origins, the in-memory `keycloak-js` session adapter, typed API client, access-aware policy listing, responsive Spanish interface, Nginx/Vite API proxies, four frontend tests, and CI/Compose integration. All five containers reached healthy state, and a browser smoke confirmed an Authorization Code request with an `S256` challenge and the exact port-5173 redirect. Completing the interactive upload/question path remains intentionally pending a local demo-user password and the parked Ollama models.
 
+## M8.1 — Multi-user product closure
+
+**Status:** Implementation complete; model-backed multi-account smoke pending
+
+**Goal:** Make the owner, editor, and player journey operable without Swagger, internal UUIDs, or disposable identity state.
+
+- Create named base policies with each realm and named spoiler groups on demand.
+- Invite members by email, accept pending invitations on first OIDC login, and administer memberships and spoiler grants.
+- Let players browse only visible sources and let every citation open its exact authorized source context.
+- Expose installed-model capabilities and distinguish runtime failure from insufficient evidence.
+- Persist Keycloak in PostgreSQL and provide coordinated backup and restore scripts.
+- Cover invitation acceptance, player source visibility, frontend player behavior, lint, and production build.
+
+**Exit criteria:** an owner can register, create a realm, invite two users, reveal a named spoiler to one player, upload
+a source, obtain role-dependent answers, and open citations entirely through the browser; identity and content survive
+container recreation and the complete deterministic suites pass.
+
+**Current evidence:** Flyway V6, ADR-012, email invitation acceptance during identity synchronization, named policies,
+member/grant APIs, access-aware source browsing, authorized source-version content, safe answer failure reasons,
+runtime capabilities, persistent Keycloak schema configuration, a successful coordinated backup, and the expanded
+Spanish web UI. Backend verification passes 43 tests; frontend lint, all 6 tests, and the production build pass. A live
+browser smoke verified Spanish registration and Authorization Code + PKCE `S256`, then a Keycloak container recreation
+proved the realm remained available. The final multi-account answer comparison remains parked with local model testing.
+
 ## Later candidates, not commitments
 
 - PDF ingestion and OCR
@@ -175,7 +199,6 @@ tests, ADR-009, and the passing PostgreSQL-backed catalogue acceptance case. The
 - Contradiction and timeline analysis
 - Session summarization
 - Neo4j or another knowledge-graph projection
-- Realm membership and spoiler-grant administration UI
 - Lore catalogue UI
 - Browser-side model execution with WebLLM or LiteRT-LM
 - English demo corpus and multilingual evaluation

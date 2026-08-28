@@ -5,6 +5,7 @@ import dev.codexofrealms.qa.GroundedAnswerDraft;
 import dev.codexofrealms.qa.GroundedAnswerModel;
 import dev.codexofrealms.qa.GroundedAnswerRequest;
 import dev.codexofrealms.qa.ModelDescriptor;
+import dev.codexofrealms.qa.ModelUnavailableException;
 import dev.codexofrealms.qa.application.QaProperties;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -70,20 +71,27 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
     @Override
     public GroundedAnswerDraft generate(GroundedAnswerRequest request) {
         ChatModel chatModel = modelProvider.getIfAvailable();
-        if (chatModel == null) return GroundedAnswerDraft.insufficient();
+        if (chatModel == null) {
+            throw new ModelUnavailableException("No chat model is configured.");
+        }
+        String userPayload = objectMapper.writeValueAsString(Map.of(
+            "question", request.question(),
+            "untrustedEvidence", request.evidence().stream().map(this::evidenceView).toList()
+        ));
+        Prompt prompt = new Prompt(
+            List.of(
+                new SystemMessage(systemInstructions),
+                new UserMessage(userPayload)
+            ),
+            requestOptions
+        );
+        ChatResponse response;
         try {
-            String userPayload = objectMapper.writeValueAsString(Map.of(
-                "question", request.question(),
-                "untrustedEvidence", request.evidence().stream().map(this::evidenceView).toList()
-            ));
-            Prompt prompt = new Prompt(
-                List.of(
-                    new SystemMessage(systemInstructions),
-                    new UserMessage(userPayload)
-                ),
-                requestOptions
-            );
-            ChatResponse response = chatModel.call(prompt);
+            response = chatModel.call(prompt);
+        } catch (RuntimeException exception) {
+            throw new ModelUnavailableException("The configured chat model is unavailable.", exception);
+        }
+        try {
             if (response == null || response.getResult() == null
                 || response.getResult().getOutput() == null) {
                 return GroundedAnswerDraft.insufficient();

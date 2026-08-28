@@ -24,6 +24,11 @@ services:
     environment:
       KC_BOOTSTRAP_ADMIN_USERNAME: admin
       KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Set KEYCLOAK_ADMIN_PASSWORD in .env}
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/codex_of_realms
+      KC_DB_SCHEMA: keycloak
+      KC_DB_USERNAME: codex
+      KC_DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
       KC_HEALTH_ENABLED: "true"
       KC_HOSTNAME: http://localhost:8180
       KC_HTTP_ENABLED: "true"
@@ -40,8 +45,25 @@ services:
       start_period: 20s
     ports:
       - "8180:8080"
+    depends_on:
+      keycloak-db-init:
+        condition: service_completed_successfully
     volumes:
       - ./infra/keycloak/codex-of-realms-realm.json:/opt/keycloak/data/import/codex-of-realms-realm.json:ro
+
+  keycloak-db-init:
+    image: postgres:18.1-trixie
+    environment:
+      PGPASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    command:
+      - psql
+      - --host=postgres
+      - --username=codex
+      - --dbname=codex_of_realms
+      - --command=CREATE SCHEMA IF NOT EXISTS keycloak AUTHORIZATION codex
+    depends_on:
+      postgres:
+        condition: service_healthy
 
   ollama:
     image: ollama/ollama:0.32.5

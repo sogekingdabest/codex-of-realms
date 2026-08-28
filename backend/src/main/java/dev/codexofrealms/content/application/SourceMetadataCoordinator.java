@@ -91,14 +91,26 @@ class SourceMetadataCoordinator {
 
     @Transactional(readOnly = true)
     List<SourceDocumentView> list(UUID realmId, UUID userId) {
-        realmAccess.requireEditor(realmId, userId);
-        return repository.listActive(realmId);
+        realmAccess.requireMember(realmId, userId);
+        return repository.listAccessible(realmId, userId);
     }
 
     @Transactional(readOnly = true)
     SourceDocumentView get(UUID realmId, UUID documentId, UUID userId) {
-        realmAccess.requireEditor(realmId, userId);
-        return repository.findActiveView(realmId, documentId)
+        realmAccess.requireMember(realmId, userId);
+        return repository.findAccessibleView(realmId, documentId, userId)
+            .orElseThrow(SourceNotFoundException::new);
+    }
+
+    @Transactional(readOnly = true)
+    SourceVersionRecord accessibleVersion(
+        UUID realmId,
+        UUID documentId,
+        UUID versionId,
+        UUID userId
+    ) {
+        realmAccess.requireMember(realmId, userId);
+        return repository.findAccessibleVersion(realmId, documentId, versionId, userId)
             .orElseThrow(SourceNotFoundException::new);
     }
 

@@ -1,12 +1,12 @@
 # Web UI
 
-M8 adds the first product interface under `frontend/`. It covers the complete browser path from Keycloak login to a grounded answer with exact source citations.
+M8.1 closes the multi-user browser path from Keycloak registration to invitations, spoiler grants, grounded answers,
+and exact source evidence.
 
 ## Prerequisites
 
 - Node.js 24 LTS for direct frontend development
 - The backend, PostgreSQL, Keycloak, and Ollama dependencies described in [Local development](LOCAL_DEVELOPMENT.md)
-- A temporary password assigned to one of the imported Keycloak users
 - `bge-m3` available before ingesting sources; a chat model is needed for answered questions
 
 ## Run with Docker Compose
@@ -21,25 +21,40 @@ Open <http://localhost:5173>. The browser redirects to the `codex-of-realms` Key
 
 The container serves static files with Nginx and proxies `/api/*` to the backend. Access and refresh tokens remain in `keycloak-js` memory and are not persisted by the application.
 
-If Keycloak was already started with the previous port-3000 client import, recreate only its disposable local container so it imports the new exact redirect URI:
+Keycloak stores its tables in the `keycloak` schema of the persistent PostgreSQL volume. Recreating the Keycloak
+container no longer removes users, passwords, or realm configuration.
+
+If upgrading an older checkout whose Keycloak container used disposable storage, recreate that container once so the
+new PostgreSQL-backed service imports the realm:
 
 ~~~powershell
 docker compose rm -sf keycloak
 docker compose up -d keycloak
 ~~~
 
-This does not delete the PostgreSQL, Ollama, or source named volumes. The local Keycloak service currently has no persistent named volume.
+This does not delete PostgreSQL, Ollama, or source data. Existing credentials from the old disposable Keycloak
+container cannot be migrated because they were never stored outside that container.
 
-## Assign a demo password
+## Register and invite users
 
-The imported users `gm-demo`, `nara-demo`, and `ivo-demo` deliberately contain no committed credentials. Open the local Keycloak administration console, sign in as `admin` with `KEYCLOAK_ADMIN_PASSWORD` from `.env`, select the **codex-of-realms** realm, open **Users**, choose a demo user, and set a temporary password under **Credentials**.
+Use **Register** on the Keycloak login page to create the first owner account. Registration creates only an identity;
+it never grants access to another user's realm. The first authenticated user creates a realm in the application and
+can then invite editors or players using the exact email with which they register.
+
+The imported users `gm-demo`, `nara-demo`, and `ivo-demo` remain credential-free fixtures. They can still be used by
+assigning local passwords through the Keycloak administration console, but they are no longer required for normal
+browser onboarding.
 
 `gm-demo` is only an OIDC identity until it first calls the API. After login:
 
-1. Create the first universe from the empty state.
-2. Create a visibility policy: **Pública**, **Solo dirección**, or **Spoiler con permiso**.
-3. Upload a UTF-8 Markdown or TXT source with a title and policy.
-4. Ask a question. An answered result includes the document, heading, immutable version, character offsets, and model provenance; unsupported questions return a deterministic insufficient-evidence state.
+1. Create the first universe; **Público** and **Solo dirección** policies are created automatically.
+2. Invite another registered or future user by email as **Editor** or **Jugador**.
+3. Create a named spoiler group and grant it to selected players when needed.
+4. Upload a UTF-8 Markdown or TXT source with a title and policy.
+5. Ask a question and open any citation to inspect the authorized source context.
+
+The header notice reports whether the configured embedding and chat models are installed. A model outage is shown as a
+runtime problem rather than being presented as missing lore.
 
 ## Run the frontend directly
 
@@ -71,7 +86,9 @@ npm run test
 npm run build
 ~~~
 
-The tests cover bearer-token API requests, safe multipart handling, realm/source presentation, and citation rendering. CI runs these checks independently of the deterministic Java suite.
+The tests cover bearer-token API requests, safe multipart handling, owner source presentation, citation rendering, and
+the player path that loads visible sources without requesting editor-only policy or membership data. CI runs these
+checks independently of the deterministic Java suite.
 
 ## Security boundary
 

@@ -21,6 +21,7 @@ describe('HttpCodexApi', () => {
             chatProvider: 'ollama',
             chatModel: 'qwen3.5:4b',
           },
+          failureReason: 'NO_EVIDENCE',
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
@@ -62,5 +63,13 @@ describe('HttpCodexApi', () => {
     expect(body.get('title')).toBe('Lumbrevela')
     expect(body.get('accessPolicyId')).toBe('policy-1')
     expect(body.get('file')).toBe(file)
+  })
+
+  it('acepta respuestas vacías en revocaciones y borrados', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+
+    await expect(api.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
   })
 })

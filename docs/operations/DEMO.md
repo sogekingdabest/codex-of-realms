@@ -47,4 +47,4 @@ Add `-WithObservability` to include Prometheus and Grafana. Add `-SkipVerificati
 5. Ask an unsupported or injection-style question and verify `INSUFFICIENT_EVIDENCE` has no answer or citations.
 6. Inspect `backend/target/portfolio-reports/`, `backend/target/spring-modulith-docs/`, and the optional Grafana dashboard.
 
-The normal CI path uses signed test JWTs and deterministic model doubles. Interactive user passwords are deliberately not stored in the imported realm; create or reset local test-user passwords in Keycloak when you want browser login rather than API fixtures.
+The normal CI path uses signed test JWTs and deterministic model doubles. For an interactive browser demo, register local users from the login page, or assign temporary passwords to the optional imported fixtures. No reusable user password is stored in the realm import.

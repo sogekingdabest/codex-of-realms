@@ -3,6 +3,7 @@ package dev.codexofrealms.qa.application;
 import dev.codexofrealms.lore.LoreSearch;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.qa.AnswerProvenance;
+import dev.codexofrealms.qa.AnswerFailureReason;
 import dev.codexofrealms.qa.GroundedAnswerDraft;
 import dev.codexofrealms.qa.GroundedAnswerModel;
 import dev.codexofrealms.qa.GroundedAnswerRequest;
@@ -52,14 +53,15 @@ public class LoreQuestionService {
             EvidenceGateDecision decision = evidenceGate.evaluate(retrieval.question(), retrieval.evidence());
             if (!decision.sufficient()) {
                 metrics.gateRejected(sample, decision.reason());
-                return LoreAnswer.insufficient(provenance);
+                return LoreAnswer.insufficient(provenance, gateFailure(decision.reason()));
             }
 
             GroundedAnswerDraft draft;
             try {
                 draft = model.generate(new GroundedAnswerRequest(retrieval.question(), decision.evidence()));
             } catch (RuntimeException modelFailure) {
-                draft = GroundedAnswerDraft.insufficient();
+                metrics.gateRejected(sample, "model_unavailable");
+                return LoreAnswer.insufficient(provenance, AnswerFailureReason.MODEL_UNAVAILABLE);
             }
             LoreAnswer answer = validator.validate(realmId, draft, decision.evidence(), provenance);
             metrics.completed(sample, answer.outcome());
@@ -68,5 +70,13 @@ public class LoreQuestionService {
             metrics.failed(sample);
             throw exception;
         }
+    }
+
+    private static AnswerFailureReason gateFailure(String reason) {
+        return switch (reason) {
+            case "direct_injection", "indirect_injection" -> AnswerFailureReason.UNSAFE_INPUT;
+            case "low_similarity", "low_question_coverage" -> AnswerFailureReason.LOW_RELEVANCE;
+            default -> AnswerFailureReason.NO_EVIDENCE;
+        };
     }
 }

@@ -68,4 +68,4 @@ Users must call **GET /api/v1/me** once before an owner can add their returned l
 
 ## Demonstration identities
 
-The Keycloak import contains **gm-demo**, **nara-demo**, and **ivo-demo**, without passwords or stored credentials. A local administrator sets temporary passwords through Keycloak before using the interactive authorization-code flow. Realm roles and memberships are then created through the Codex API, not in Keycloak.
+The Keycloak import contains **gm-demo**, **nara-demo**, and **ivo-demo**, without passwords or stored credentials, as optional fixtures. Normal local users can instead register from the login page. Registration proves identity only: realm roles, invitations, memberships, and spoiler grants remain application-owned and are administered through the Codex UI/API, never inferred from Keycloak roles.

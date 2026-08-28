@@ -118,6 +118,10 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(status().isOk());
         mockMvc.perform(get("/v3/api-docs"))
             .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/capabilities").with(identity("runtime-observer")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.chat.status").value("NOT_CONFIGURED"))
+            .andExpect(jsonPath("$.embedding.status").value("NOT_CONFIGURED"));
     }
 
     @Test
@@ -189,6 +193,88 @@ class RealmAuthorizationIntegrationTest {
     }
 
     @Test
+    void emailInvitationBecomesMembershipOnFirstLogin() throws Exception {
+        UUID realmId = createRealm("inviting-owner", "El Archivo Compartido");
+
+        String invitationResponse = mockMvc.perform(post(
+                    "/api/v1/realms/{realmId}/invitations", realmId
+                ).with(identity("inviting-owner"))
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {"email":"player@example.local","role":"PLAYER"}
+                    """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("PENDING"))
+            .andReturn().getResponse().getContentAsString();
+        UUID invitationId = UUID.fromString(
+            objectMapper.readTree(invitationResponse).get("id").asString()
+        );
+
+        String currentUserResponse = mockMvc.perform(get("/api/v1/me")
+                .with(identity("invited-player", "player@example.local")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.realms.length()").value(1))
+            .andExpect(jsonPath("$.realms[0].id").value(realmId.toString()))
+            .andExpect(jsonPath("$.realms[0].role").value("PLAYER"))
+            .andReturn().getResponse().getContentAsString();
+        UUID invitedUserId = UUID.fromString(
+            objectMapper.readTree(currentUserResponse).get("user").get("id").asString()
+        );
+
+        mockMvc.perform(get("/api/v1/realms/{realmId}/memberships", realmId)
+                .with(identity("inviting-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[1].userId").value(invitedUserId.toString()))
+            .andExpect(jsonPath("$[1].email").value("player@example.local"));
+
+        mockMvc.perform(get("/api/v1/realms/{realmId}/invitations", realmId)
+                .with(identity("inviting-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].id").value(invitationId.toString()))
+            .andExpect(jsonPath("$[0].status").value("ACCEPTED"));
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/invitations", realmId)
+                .with(identity("inviting-owner"))
+                .contentType(APPLICATION_JSON)
+                .content("""
+                    {"email":"player@example.local","role":"EDITOR"}
+                    """))
+            .andExpect(status().isConflict());
+
+        UUID publicPolicyId = jdbcClient.sql("""
+                SELECT id FROM access_policy
+                WHERE realm_id=:realmId AND classification='PUBLIC' AND active
+                ORDER BY created_at, id
+                LIMIT 1
+                """)
+            .param("realmId", realmId)
+            .query(UUID.class)
+            .single();
+        String sourceResponse = mockMvc.perform(multipart(
+                    "/api/v1/realms/{realmId}/sources", realmId
+                ).file(markdown("bienvenida.md", "# Bienvenida\n\nLa plaza está abierta a todos."))
+                .param("title", "Guía pública")
+                .param("accessPolicyId", publicPolicyId.toString())
+                .with(identity("inviting-owner")))
+            .andExpect(status().isCreated())
+            .andReturn().getResponse().getContentAsString();
+        UUID documentId = UUID.fromString(objectMapper.readTree(sourceResponse).get("id").asString());
+        UUID versionId = UUID.fromString(objectMapper.readTree(sourceResponse).get("versionId").asString());
+
+        mockMvc.perform(get("/api/v1/realms/{realmId}/sources", realmId)
+                .with(identity("invited-player", "player@example.local")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(1))
+            .andExpect(jsonPath("$[0].id").value(documentId.toString()));
+        mockMvc.perform(get(
+                    "/api/v1/realms/{realmId}/sources/{documentId}/versions/{versionId}/content",
+                    realmId, documentId, versionId
+                ).with(identity("invited-player", "player@example.local")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").value("# Bienvenida\n\nLa plaza está abierta a todos."));
+    }
+
+    @Test
     void policyMatrixGrantAndRevocationAreEnforcedBeforeReading() throws Exception {
         UUID editorId = synchronizeUser("editor");
         UUID revealedPlayerId = synchronizeUser("revealed-player");
@@ -206,12 +292,11 @@ class RealmAuthorizationIntegrationTest {
         mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
                 .with(identity("owner")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(3));
+            .andExpect(jsonPath("$.length()").value(5));
         mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
                 .with(identity("hidden-player")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].id").value(publicPolicy.toString()));
+            .andExpect(jsonPath("$.length()").value(2));
 
         expectPolicyVisible("owner", realmId, gmOnlyPolicy);
         expectPolicyVisible("editor", realmId, gmOnlyPolicy);
@@ -230,7 +315,7 @@ class RealmAuthorizationIntegrationTest {
         mockMvc.perform(get("/api/v1/realms/{realmId}/access-policies", realmId)
                 .with(identity("revealed-player")))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.length()").value(2));
+            .andExpect(jsonPath("$.length()").value(3));
 
         mockMvc.perform(put(
                     "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
@@ -873,11 +958,17 @@ class RealmAuthorizationIntegrationTest {
     }
 
     private RequestPostProcessor identity(String subject) {
-        return jwt().jwt(jwt -> jwt
-            .subject(subject)
-            .claim("iss", ISSUER)
-            .claim("preferred_username", subject)
-            .claim("aud", List.of("codex-api")));
+        return identity(subject, null);
+    }
+
+    private RequestPostProcessor identity(String subject, String email) {
+        return jwt().jwt(jwt -> {
+            jwt.subject(subject)
+                .claim("iss", ISSUER)
+                .claim("preferred_username", subject)
+                .claim("aud", List.of("codex-api"));
+            if (email != null) jwt.claim("email", email);
+        });
     }
 
     private MockMultipartFile markdown(String filename, String content) {

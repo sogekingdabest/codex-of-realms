@@ -6,9 +6,17 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M8 — First web interface** is implementation-complete. A user can authenticate through Keycloak Authorization Code + PKCE, create or select a realm, establish a visibility policy, upload sources, ask grounded questions, and inspect exact citations from a responsive Spanish interface at `http://localhost:5173`. The five-service Compose stack is healthy and the browser redirect has been verified; the final model-backed interactive smoke remains pending while local model testing is parked.
+**M8.1 — Multi-user product closure** is implementation-complete. A realm owner can register through Keycloak,
+create a realm with safe default policies, invite editors or players by email, create named spoiler groups, manage grants,
+upload sources, ask grounded questions, and open the exact authorized evidence behind every citation from the Spanish
+interface at `http://localhost:5173`. Keycloak now persists in PostgreSQL and coordinated backup/restore scripts cover
+the database and raw sources. The final model-backed interactive Compose smoke remains pending while local model testing
+is parked.
 
-The complete Maven verification passes 42 tests against Docker-backed PostgreSQL/pgvector, while the frontend adds four deterministic component and API-client tests plus lint and production-build checks. Baseline v2 covers 22 cases over seven original Spanish sources and reports 1.000 retrieval recall@10, refusal accuracy, citation correctness, validated grounded-answer rate, and security attack pass rate under deterministic CI. Interactive Compose acceptance still requires a temporary demo-user password and locally available Ollama models. M5.1 model promotion still requires the reviewed three-run candidate comparison.
+The deterministic backend suite includes PostgreSQL/pgvector acceptance of invitation activation, role and grant
+boundaries, player-visible source browsing, ingestion, retrieval, grounded answers, and catalogue invariants. The
+frontend adds owner/player component and API-client tests plus lint and production-build checks. Baseline v2 covers 22
+cases over seven original Spanish sources; real-model promotion still requires the reviewed M5.1 comparison.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
 
@@ -54,6 +62,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [Reviewer demo](docs/operations/DEMO.md)
 - [Local observability](docs/operations/OBSERVABILITY.md)
 - [Web UI](docs/operations/WEB_UI.md)
+- [Backup and restore](docs/operations/BACKUP_AND_RESTORE.md)
 - [Application modules](docs/architecture/MODULES.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)

@@ -84,7 +84,13 @@ Available endpoints:
 
 The optional Prometheus/Grafana overlay and its network-security constraints are documented in [Local observability](OBSERVABILITY.md).
 
-The imported Keycloak realm is **codex-of-realms**. The admin username is **admin**; its password comes only from **.env**. The import includes **gm-demo**, **nara-demo**, and **ivo-demo** without credentials. Set temporary passwords through the local Keycloak administration console before interactive use. Direct password grants remain disabled.
+The imported Keycloak realm is **codex-of-realms**. The admin username is **admin**; its password comes only from
+**.env**. Browser registration is enabled for normal onboarding, while realm membership remains invitation-controlled
+inside the application. The import also includes credential-free demo identities for optional scripted review. Direct
+password grants remain disabled. Keycloak persists in the dedicated `keycloak` schema of `postgres-data`.
+
+Back up and restore PostgreSQL plus raw sources together using the documented
+[backup workflow](BACKUP_AND_RESTORE.md).
 
 Stop services without deleting their data:
 

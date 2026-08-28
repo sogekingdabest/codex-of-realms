@@ -2,6 +2,7 @@ package dev.codexofrealms.qa.application;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
 import dev.codexofrealms.qa.AnswerOutcome;
+import dev.codexofrealms.qa.AnswerFailureReason;
 import dev.codexofrealms.qa.AnswerProvenance;
 import dev.codexofrealms.qa.Citation;
 import dev.codexofrealms.qa.DraftClaim;
@@ -30,11 +31,14 @@ class AnswerValidator {
         List<RetrievedEvidence> visibleEvidence,
         AnswerProvenance provenance
     ) {
-        if (draft == null || draft.outcome() != AnswerOutcome.ANSWERED) {
-            return LoreAnswer.insufficient(provenance);
+        if (draft == null) {
+            return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
+        }
+        if (draft.outcome() != AnswerOutcome.ANSWERED) {
+            return LoreAnswer.insufficient(provenance, AnswerFailureReason.NO_EVIDENCE);
         }
         if (draft.claims().isEmpty() || draft.claims().size() > properties.maxClaims()) {
-            return LoreAnswer.insufficient(provenance);
+            return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
         }
 
         Map<Integer, RetrievedEvidence> byRank = new LinkedHashMap<>();
@@ -45,24 +49,24 @@ class AnswerValidator {
 
         for (DraftClaim claim : draft.claims()) {
             if (!validText(claim.text()) || claim.citations().isEmpty() || claim.citations().size() > 3) {
-                return LoreAnswer.insufficient(provenance);
+                return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
             List<Integer> uniqueRanks = claim.citations().stream().distinct().sorted().toList();
             if (uniqueRanks.size() != claim.citations().size()
                 || uniqueRanks.stream().anyMatch(rank -> !byRank.containsKey(rank))) {
-                return LoreAnswer.insufficient(provenance);
+                return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
             String support = uniqueRanks.stream()
                 .map(byRank::get)
                 .map(RetrievedEvidence::content)
                 .reduce("", (left, right) -> left + "\n" + right);
             if (TextTerms.coverage(claim.text(), support) < properties.minimumClaimCoverage()) {
-                return LoreAnswer.insufficient(provenance);
+                return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
             String text = claim.text().strip().replaceAll("\\s+", " ");
             answerCharacters += text.length();
             if (answerCharacters > properties.maxAnswerCharacters()) {
-                return LoreAnswer.insufficient(provenance);
+                return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
             String markers = uniqueRanks.stream().map(rank -> "[" + rank + "]")
                 .reduce((left, right) -> left + " " + right).orElseThrow();

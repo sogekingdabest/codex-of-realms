@@ -6,6 +6,8 @@ import java.util.UUID;
 public record AccessPolicyView(
     UUID id,
     UUID realmId,
-    AccessClassification classification
+    AccessClassification classification,
+    String name,
+    String description
 ) {
 }

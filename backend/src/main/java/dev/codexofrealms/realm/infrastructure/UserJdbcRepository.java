@@ -47,6 +47,20 @@ public class UserJdbcRepository {
             .optional();
     }
 
+    public Optional<AuthenticatedUser> findByEmail(String email) {
+        return jdbcClient.sql("""
+                SELECT id, issuer, subject, display_name, email
+                FROM codex_user
+                WHERE email IS NOT NULL
+                  AND lower(email) = lower(:email)
+                ORDER BY created_at
+                LIMIT 1
+                """)
+            .param("email", email)
+            .query(UserJdbcRepository::mapUser)
+            .optional();
+    }
+
     private static AuthenticatedUser mapUser(java.sql.ResultSet resultSet, int rowNumber)
         throws java.sql.SQLException {
         return new AuthenticatedUser(

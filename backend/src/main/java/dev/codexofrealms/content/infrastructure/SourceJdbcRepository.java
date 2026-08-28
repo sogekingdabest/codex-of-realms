@@ -187,10 +187,122 @@ public class SourceJdbcRepository {
             .param("realmId", realmId).query(SourceJdbcRepository::mapView).list();
     }
 
+    public List<SourceDocumentView> listAccessible(UUID realmId, UUID userId) {
+        return jdbc.sql(accessibleViewSql() + """
+                WHERE d.realm_id=:realmId
+                  AND m.user_id=:userId
+                  AND d.active
+                  AND v.active
+                  AND v.processing_status='READY'
+                  AND p.active
+                  AND r.active
+                  AND (
+                    m.role IN ('OWNER', 'EDITOR')
+                    OR p.classification='PUBLIC'
+                    OR (
+                      p.classification='SPOILER'
+                      AND EXISTS (
+                        SELECT 1 FROM access_grant g
+                        WHERE g.realm_id=p.realm_id
+                          AND g.policy_id=p.id
+                          AND g.membership_id=m.id
+                      )
+                    )
+                  )
+                ORDER BY lower(d.title), d.id
+                """)
+            .param("realmId", realmId)
+            .param("userId", userId)
+            .query(SourceJdbcRepository::mapView)
+            .list();
+    }
+
     public Optional<SourceDocumentView> findActiveView(UUID realmId, UUID documentId) {
         return jdbc.sql(viewSql() + " WHERE d.realm_id=:realmId AND d.id=:documentId AND d.active AND v.active")
             .param("realmId", realmId).param("documentId", documentId)
             .query(SourceJdbcRepository::mapView).optional();
+    }
+
+    public Optional<SourceDocumentView> findAccessibleView(
+        UUID realmId,
+        UUID documentId,
+        UUID userId
+    ) {
+        return jdbc.sql(accessibleViewSql() + """
+                WHERE d.realm_id=:realmId
+                  AND d.id=:documentId
+                  AND m.user_id=:userId
+                  AND d.active
+                  AND v.active
+                  AND v.processing_status='READY'
+                  AND p.active
+                  AND r.active
+                  AND (
+                    m.role IN ('OWNER', 'EDITOR')
+                    OR p.classification='PUBLIC'
+                    OR (
+                      p.classification='SPOILER'
+                      AND EXISTS (
+                        SELECT 1 FROM access_grant g
+                        WHERE g.realm_id=p.realm_id
+                          AND g.policy_id=p.id
+                          AND g.membership_id=m.id
+                      )
+                    )
+                  )
+                """)
+            .param("realmId", realmId)
+            .param("documentId", documentId)
+            .param("userId", userId)
+            .query(SourceJdbcRepository::mapView)
+            .optional();
+    }
+
+    public Optional<SourceVersionRecord> findAccessibleVersion(
+        UUID realmId,
+        UUID documentId,
+        UUID versionId,
+        UUID userId
+    ) {
+        return jdbc.sql("""
+                SELECT d.id document_id, v.id version_id, v.version_number, d.title,
+                       v.original_filename, v.media_type, v.language, v.checksum_sha256,
+                       v.storage_key, v.access_policy_id, v.pipeline_fingerprint
+                FROM source_document d
+                JOIN document_version v
+                  ON v.document_id=d.id AND v.realm_id=d.realm_id
+                JOIN realm r
+                  ON r.id=d.realm_id AND r.active
+                JOIN access_policy p
+                  ON p.realm_id=v.realm_id AND p.id=v.access_policy_id AND p.active
+                JOIN realm_membership m
+                  ON m.realm_id=d.realm_id AND m.user_id=:userId AND m.active
+                WHERE d.realm_id=:realmId
+                  AND d.id=:documentId
+                  AND v.id=:versionId
+                  AND d.active
+                  AND v.active
+                  AND v.processing_status='READY'
+                  AND (
+                    m.role IN ('OWNER', 'EDITOR')
+                    OR p.classification='PUBLIC'
+                    OR (
+                      p.classification='SPOILER'
+                      AND EXISTS (
+                        SELECT 1 FROM access_grant g
+                        WHERE g.realm_id=p.realm_id
+                          AND g.policy_id=p.id
+                          AND g.membership_id=m.id
+                      )
+                    )
+                  )
+                """)
+            .param("realmId", realmId)
+            .param("documentId", documentId)
+            .param("versionId", versionId)
+            .param("userId", userId)
+            .query(SourceJdbcRepository::mapVersion)
+            .optional();
     }
 
     public List<String> retireDocument(UUID realmId, UUID documentId) {
@@ -213,6 +325,17 @@ public class SourceJdbcRepository {
                    v.embedding_model, v.embedding_dimension, d.created_at,
                    (SELECT count(*) FROM lore_chunk c WHERE c.document_version_id=v.id) chunk_count
             FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
+            """;
+    }
+
+    private static String accessibleViewSql() {
+        return viewSql() + """
+            JOIN access_policy p
+              ON p.realm_id=v.realm_id AND p.id=v.access_policy_id
+            JOIN realm r
+              ON r.id=d.realm_id
+            JOIN realm_membership m
+              ON m.realm_id=d.realm_id AND m.active
             """;
     }
 

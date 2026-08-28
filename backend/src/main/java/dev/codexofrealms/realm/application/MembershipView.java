@@ -6,6 +6,7 @@ import java.util.UUID;
 public record MembershipView(
     UUID userId,
     String displayName,
+    String email,
     RealmRole role
 ) {
 }

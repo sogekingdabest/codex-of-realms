@@ -25,6 +25,25 @@ export interface AccessPolicyView {
   id: string
   realmId: string
   classification: AccessClassification
+  name: string
+  description: string | null
+}
+
+export interface MembershipView {
+  userId: string
+  displayName: string
+  email: string | null
+  role: RealmRole
+}
+
+export interface InvitationView {
+  id: string
+  realmId: string
+  email: string
+  role: 'EDITOR' | 'PLAYER'
+  status: 'PENDING' | 'ACCEPTED' | 'REVOKED'
+  acceptedUserId: string | null
+  createdAt: string
 }
 
 export interface SourceDocumentView {
@@ -59,6 +78,27 @@ export interface Citation {
   endOffset: number
 }
 
+export interface SourceContentView {
+  documentId: string
+  versionId: string
+  title: string
+  originalFilename: string
+  content: string
+}
+
+export interface ModelCapability {
+  provider: string
+  model: string
+  available: boolean
+  status: 'READY' | 'MODEL_MISSING' | 'RUNTIME_UNAVAILABLE' | 'NOT_CONFIGURED'
+  installedModels: string[]
+}
+
+export interface RuntimeCapabilities {
+  chat: ModelCapability
+  embedding: ModelCapability
+}
+
 export interface AnswerProvenance {
   embeddingProvider: string
   embeddingModel: string
@@ -71,4 +111,11 @@ export interface LoreAnswer {
   answer: string | null
   citations: Citation[]
   provenance: AnswerProvenance
+  failureReason:
+    | 'NO_EVIDENCE'
+    | 'LOW_RELEVANCE'
+    | 'UNSAFE_INPUT'
+    | 'MODEL_UNAVAILABLE'
+    | 'VALIDATION_FAILED'
+    | null
 }

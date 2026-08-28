@@ -3,6 +3,7 @@ package dev.codexofrealms.realm.web;
 import dev.codexofrealms.realm.application.AccessPolicyView;
 import dev.codexofrealms.realm.application.AuthenticatedUser;
 import dev.codexofrealms.realm.application.AuthenticatedUserService;
+import dev.codexofrealms.realm.application.InvitationView;
 import dev.codexofrealms.realm.application.MembershipView;
 import dev.codexofrealms.realm.application.RealmService;
 import dev.codexofrealms.realm.application.RealmSummary;
@@ -10,6 +11,7 @@ import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.RealmRole;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.net.URI;
@@ -86,6 +88,50 @@ class RealmController {
         );
     }
 
+    @GetMapping("/{realmId}/memberships")
+    List<MembershipView> listMemberships(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        return realmService.listMemberships(realmId, user.id());
+    }
+
+    @PostMapping("/{realmId}/invitations")
+    ResponseEntity<InvitationView> inviteMember(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId,
+        @Valid @RequestBody InviteMemberRequest request
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        InvitationView invitation = realmService.inviteMember(
+            realmId, user.id(), request.email(), request.role()
+        );
+        return ResponseEntity.created(URI.create(
+            "/api/v1/realms/" + realmId + "/invitations/" + invitation.id()
+        )).body(invitation);
+    }
+
+    @GetMapping("/{realmId}/invitations")
+    List<InvitationView> listInvitations(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        return realmService.listInvitations(realmId, user.id());
+    }
+
+    @DeleteMapping("/{realmId}/invitations/{invitationId}")
+    ResponseEntity<Void> revokeInvitation(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId,
+        @PathVariable UUID invitationId
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        realmService.revokeInvitation(realmId, invitationId, user.id());
+        return ResponseEntity.noContent().build();
+    }
+
     @DeleteMapping("/{realmId}/memberships/{targetUserId}")
     ResponseEntity<Void> removeMembership(
         @AuthenticationPrincipal Jwt jwt,
@@ -107,7 +153,9 @@ class RealmController {
         AccessPolicyView policy = realmService.createAccessPolicy(
             realmId,
             user.id(),
-            request.classification()
+            request.classification(),
+            request.name(),
+            request.description()
         );
 
         return ResponseEntity
@@ -115,6 +163,16 @@ class RealmController {
                 "/api/v1/realms/" + realmId + "/access-policies/" + policy.id()
             ))
             .body(policy);
+    }
+
+    @GetMapping("/{realmId}/access-policies/{policyId}/grants")
+    List<MembershipView> listPolicyGrants(
+        @AuthenticationPrincipal Jwt jwt,
+        @PathVariable UUID realmId,
+        @PathVariable UUID policyId
+    ) {
+        AuthenticatedUser user = currentUser(jwt);
+        return realmService.listPolicyGrants(realmId, policyId, user.id());
     }
 
     @GetMapping("/{realmId}/access-policies")
@@ -184,8 +242,16 @@ class RealmController {
     ) {
     }
 
+    record InviteMemberRequest(
+        @NotBlank @Email @Size(max = 320) String email,
+        @NotNull RealmRole role
+    ) {
+    }
+
     record CreateAccessPolicyRequest(
-        @NotNull AccessClassification classification
+        @NotNull AccessClassification classification,
+        @Size(max = 120) String name,
+        @Size(max = 300) String description
     ) {
     }
 }

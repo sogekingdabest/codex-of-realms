@@ -1,6 +1,8 @@
 package dev.codexofrealms.realm.infrastructure;
 
 import dev.codexofrealms.realm.application.AccessPolicyView;
+import dev.codexofrealms.realm.application.InvitationStatus;
+import dev.codexofrealms.realm.application.InvitationView;
 import dev.codexofrealms.realm.application.MembershipView;
 import dev.codexofrealms.realm.application.RealmSummary;
 import dev.codexofrealms.realm.domain.AccessClassification;
@@ -117,7 +119,7 @@ public class RealmJdbcRepository {
 
     public Optional<MembershipView> findActiveMembership(UUID realmId, UUID userId) {
         return jdbcClient.sql("""
-                SELECT m.user_id, u.display_name, m.role
+                SELECT m.user_id, u.display_name, u.email, m.role
                 FROM realm_membership m
                 JOIN codex_user u ON u.id = m.user_id
                 WHERE m.realm_id = :realmId
@@ -128,6 +130,21 @@ public class RealmJdbcRepository {
             .param("userId", userId)
             .query(RealmJdbcRepository::mapMembership)
             .optional();
+    }
+
+    public List<MembershipView> listActiveMemberships(UUID realmId) {
+        return jdbcClient.sql("""
+                SELECT m.user_id, u.display_name, u.email, m.role
+                FROM realm_membership m
+                JOIN codex_user u ON u.id = m.user_id
+                WHERE m.realm_id = :realmId
+                  AND m.active
+                ORDER BY CASE m.role WHEN 'OWNER' THEN 0 WHEN 'EDITOR' THEN 1 ELSE 2 END,
+                         lower(u.display_name), m.user_id
+                """)
+            .param("realmId", realmId)
+            .query(RealmJdbcRepository::mapMembership)
+            .list();
     }
 
     public MembershipView upsertMembership(UUID realmId, UUID userId, RealmRole role) {
@@ -192,18 +209,37 @@ public class RealmJdbcRepository {
     public AccessPolicyView createAccessPolicy(
         UUID policyId,
         UUID realmId,
-        AccessClassification classification
+        AccessClassification classification,
+        String name,
+        String description
     ) {
         return jdbcClient.sql("""
-                INSERT INTO access_policy (id, realm_id, classification)
-                VALUES (:policyId, :realmId, :classification)
-                RETURNING id, realm_id, classification
+                INSERT INTO access_policy (id, realm_id, classification, name, description)
+                VALUES (:policyId, :realmId, :classification, :name, :description)
+                RETURNING id, realm_id, classification, name, description
                 """)
             .param("policyId", policyId)
             .param("realmId", realmId)
             .param("classification", classification.name())
+            .param("name", name)
+            .param("description", description, java.sql.Types.VARCHAR)
             .query(RealmJdbcRepository::mapPolicy)
             .single();
+    }
+
+    public boolean hasActivePolicyName(UUID realmId, String name) {
+        return Boolean.TRUE.equals(jdbcClient.sql("""
+                SELECT EXISTS (
+                    SELECT 1 FROM access_policy
+                    WHERE realm_id = :realmId
+                      AND active
+                      AND lower(name) = lower(:name)
+                )
+                """)
+            .param("realmId", realmId)
+            .param("name", name)
+            .query(Boolean.class)
+            .single());
     }
 
     public Optional<AccessPolicyView> findPolicyForEditor(
@@ -212,7 +248,7 @@ public class RealmJdbcRepository {
         UUID userId
     ) {
         return jdbcClient.sql("""
-                SELECT p.id, p.realm_id, p.classification
+                SELECT p.id, p.realm_id, p.classification, p.name, p.description
                 FROM access_policy p
                 JOIN realm r ON r.id = p.realm_id
                 JOIN realm_membership m
@@ -238,7 +274,7 @@ public class RealmJdbcRepository {
         UUID userId
     ) {
         return jdbcClient.sql("""
-                SELECT p.id, p.realm_id, p.classification
+                SELECT p.id, p.realm_id, p.classification, p.name, p.description
                 FROM access_policy p
                 JOIN realm r ON r.id = p.realm_id
                 JOIN realm_membership m
@@ -273,7 +309,7 @@ public class RealmJdbcRepository {
 
     public List<AccessPolicyView> findAccessiblePolicies(UUID realmId, UUID userId) {
         return jdbcClient.sql("""
-                SELECT p.id, p.realm_id, p.classification
+                SELECT p.id, p.realm_id, p.classification, p.name, p.description
                 FROM access_policy p
                 JOIN realm r ON r.id = p.realm_id
                 JOIN realm_membership m
@@ -297,7 +333,7 @@ public class RealmJdbcRepository {
                       )
                     )
                   )
-                ORDER BY p.classification, p.id
+                ORDER BY p.classification, lower(p.name), p.id
                 """)
             .param("realmId", realmId)
             .param("userId", userId)
@@ -344,6 +380,137 @@ public class RealmJdbcRepository {
             .optional();
     }
 
+    public List<MembershipView> listPolicyGrants(UUID realmId, UUID policyId) {
+        return jdbcClient.sql("""
+                SELECT m.user_id, u.display_name, u.email, m.role
+                FROM access_grant g
+                JOIN realm_membership m
+                  ON m.realm_id = g.realm_id
+                 AND m.id = g.membership_id
+                 AND m.active
+                JOIN codex_user u ON u.id = m.user_id
+                WHERE g.realm_id = :realmId
+                  AND g.policy_id = :policyId
+                ORDER BY lower(u.display_name), m.user_id
+                """)
+            .param("realmId", realmId)
+            .param("policyId", policyId)
+            .query(RealmJdbcRepository::mapMembership)
+            .list();
+    }
+
+    public boolean hasPendingInvitation(UUID realmId, String email) {
+        return Boolean.TRUE.equals(jdbcClient.sql("""
+                SELECT EXISTS (
+                    SELECT 1 FROM realm_invitation
+                    WHERE realm_id = :realmId
+                      AND lower(email) = lower(:email)
+                      AND accepted_at IS NULL
+                      AND revoked_at IS NULL
+                )
+                """)
+            .param("realmId", realmId)
+            .param("email", email)
+            .query(Boolean.class)
+            .single());
+    }
+
+    public InvitationView createInvitation(
+        UUID invitationId,
+        UUID realmId,
+        String email,
+        RealmRole role,
+        UUID invitedBy
+    ) {
+        jdbcClient.sql("""
+                INSERT INTO realm_invitation (id, realm_id, email, role, invited_by)
+                VALUES (:id, :realmId, :email, :role, :invitedBy)
+                """)
+            .param("id", invitationId)
+            .param("realmId", realmId)
+            .param("email", email)
+            .param("role", role.name())
+            .param("invitedBy", invitedBy)
+            .update();
+        return findInvitation(realmId, invitationId).orElseThrow();
+    }
+
+    public Optional<InvitationView> findInvitation(UUID realmId, UUID invitationId) {
+        return jdbcClient.sql(invitationSql() + " WHERE i.realm_id=:realmId AND i.id=:invitationId")
+            .param("realmId", realmId)
+            .param("invitationId", invitationId)
+            .query(RealmJdbcRepository::mapInvitation)
+            .optional();
+    }
+
+    public List<InvitationView> listInvitations(UUID realmId) {
+        return jdbcClient.sql(invitationSql() + " WHERE i.realm_id=:realmId ORDER BY i.created_at DESC, i.id")
+            .param("realmId", realmId)
+            .query(RealmJdbcRepository::mapInvitation)
+            .list();
+    }
+
+    public void acceptInvitation(UUID invitationId, UUID userId) {
+        jdbcClient.sql("""
+                UPDATE realm_invitation
+                SET accepted_by=:userId, accepted_at=CURRENT_TIMESTAMP
+                WHERE id=:invitationId
+                  AND accepted_at IS NULL
+                  AND revoked_at IS NULL
+                """)
+            .param("invitationId", invitationId)
+            .param("userId", userId)
+            .update();
+    }
+
+    public boolean revokeInvitation(UUID realmId, UUID invitationId) {
+        return jdbcClient.sql("""
+                UPDATE realm_invitation
+                SET revoked_at=CURRENT_TIMESTAMP
+                WHERE realm_id=:realmId
+                  AND id=:invitationId
+                  AND accepted_at IS NULL
+                  AND revoked_at IS NULL
+                """)
+            .param("realmId", realmId)
+            .param("invitationId", invitationId)
+            .update() == 1;
+    }
+
+    public void acceptPendingInvitations(UUID userId, String email) {
+        if (email == null || email.isBlank()) return;
+        jdbcClient.sql("""
+                INSERT INTO realm_membership (id, realm_id, user_id, role)
+                SELECT gen_random_uuid(), i.realm_id, :userId, i.role
+                FROM realm_invitation i
+                JOIN realm r ON r.id=i.realm_id AND r.active
+                WHERE lower(i.email)=lower(:email)
+                  AND i.accepted_at IS NULL
+                  AND i.revoked_at IS NULL
+                ON CONFLICT (realm_id, user_id) DO UPDATE
+                SET active=true,
+                    role=CASE
+                        WHEN realm_membership.role='OWNER' THEN 'OWNER'
+                        WHEN realm_membership.role='EDITOR' OR EXCLUDED.role='EDITOR' THEN 'EDITOR'
+                        ELSE 'PLAYER'
+                    END,
+                    updated_at=CURRENT_TIMESTAMP
+                """)
+            .param("userId", userId)
+            .param("email", email)
+            .update();
+        jdbcClient.sql("""
+                UPDATE realm_invitation
+                SET accepted_by=:userId, accepted_at=CURRENT_TIMESTAMP
+                WHERE lower(email)=lower(:email)
+                  AND accepted_at IS NULL
+                  AND revoked_at IS NULL
+                """)
+            .param("userId", userId)
+            .param("email", email)
+            .update();
+    }
+
     private static RealmSummary mapRealm(java.sql.ResultSet resultSet, int rowNumber)
         throws java.sql.SQLException {
         return new RealmSummary(
@@ -358,6 +525,7 @@ public class RealmJdbcRepository {
         return new MembershipView(
             resultSet.getObject("user_id", UUID.class),
             resultSet.getString("display_name"),
+            resultSet.getString("email"),
             RealmRole.valueOf(resultSet.getString("role"))
         );
     }
@@ -367,7 +535,34 @@ public class RealmJdbcRepository {
         return new AccessPolicyView(
             resultSet.getObject("id", UUID.class),
             resultSet.getObject("realm_id", UUID.class),
-            AccessClassification.valueOf(resultSet.getString("classification"))
+            AccessClassification.valueOf(resultSet.getString("classification")),
+            resultSet.getString("name"),
+            resultSet.getString("description")
+        );
+    }
+
+    private static String invitationSql() {
+        return """
+            SELECT i.id, i.realm_id, i.email, i.role, i.accepted_by, i.created_at,
+                   CASE
+                     WHEN i.accepted_at IS NOT NULL THEN 'ACCEPTED'
+                     WHEN i.revoked_at IS NOT NULL THEN 'REVOKED'
+                     ELSE 'PENDING'
+                   END status
+            FROM realm_invitation i
+            """;
+    }
+
+    private static InvitationView mapInvitation(java.sql.ResultSet resultSet, int rowNumber)
+        throws java.sql.SQLException {
+        return new InvitationView(
+            resultSet.getObject("id", UUID.class),
+            resultSet.getObject("realm_id", UUID.class),
+            resultSet.getString("email"),
+            RealmRole.valueOf(resultSet.getString("role")),
+            InvitationStatus.valueOf(resultSet.getString("status")),
+            resultSet.getObject("accepted_by", UUID.class),
+            resultSet.getTimestamp("created_at").toInstant()
         );
     }
 }

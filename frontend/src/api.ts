@@ -2,8 +2,12 @@ import type {
   AccessClassification,
   AccessPolicyView,
   CurrentUserView,
+  InvitationView,
   LoreAnswer,
+  MembershipView,
   RealmSummary,
+  RuntimeCapabilities,
+  SourceContentView,
   SourceDocumentView,
 } from './types'
 
@@ -14,7 +18,21 @@ export interface CodexApi {
   createPolicy(
     realmId: string,
     classification: AccessClassification,
+    name?: string,
+    description?: string,
   ): Promise<AccessPolicyView>
+  listMemberships(realmId: string): Promise<MembershipView[]>
+  listInvitations(realmId: string): Promise<InvitationView[]>
+  inviteMember(
+    realmId: string,
+    email: string,
+    role: 'EDITOR' | 'PLAYER',
+  ): Promise<InvitationView>
+  revokeInvitation(realmId: string, invitationId: string): Promise<void>
+  removeMembership(realmId: string, userId: string): Promise<void>
+  listPolicyGrants(realmId: string, policyId: string): Promise<MembershipView[]>
+  grantPolicy(realmId: string, policyId: string, userId: string): Promise<void>
+  revokePolicy(realmId: string, policyId: string, userId: string): Promise<void>
   listSources(realmId: string): Promise<SourceDocumentView[]>
   uploadSource(
     realmId: string,
@@ -22,7 +40,14 @@ export interface CodexApi {
     accessPolicyId: string,
     file: File,
   ): Promise<SourceDocumentView>
+  deleteSource(realmId: string, documentId: string): Promise<void>
+  getSourceContent(
+    realmId: string,
+    documentId: string,
+    versionId: string,
+  ): Promise<SourceContentView>
   ask(realmId: string, question: string): Promise<LoreAnswer>
+  getCapabilities(): Promise<RuntimeCapabilities>
 }
 
 export class ApiError extends Error {
@@ -62,13 +87,71 @@ export class HttpCodexApi implements CodexApi {
     )
   }
 
-  createPolicy(realmId: string, classification: AccessClassification) {
+  createPolicy(
+    realmId: string,
+    classification: AccessClassification,
+    name?: string,
+    description?: string,
+  ) {
     return this.request<AccessPolicyView>(
       `/realms/${encodeURIComponent(realmId)}/access-policies`,
       {
         method: 'POST',
-        body: JSON.stringify({ classification }),
+        body: JSON.stringify({ classification, name, description }),
       },
+    )
+  }
+
+  listMemberships(realmId: string) {
+    return this.request<MembershipView[]>(
+      `/realms/${encodeURIComponent(realmId)}/memberships`,
+    )
+  }
+
+  listInvitations(realmId: string) {
+    return this.request<InvitationView[]>(
+      `/realms/${encodeURIComponent(realmId)}/invitations`,
+    )
+  }
+
+  inviteMember(realmId: string, email: string, role: 'EDITOR' | 'PLAYER') {
+    return this.request<InvitationView>(
+      `/realms/${encodeURIComponent(realmId)}/invitations`,
+      { method: 'POST', body: JSON.stringify({ email, role }) },
+    )
+  }
+
+  revokeInvitation(realmId: string, invitationId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/invitations/${encodeURIComponent(invitationId)}`,
+      { method: 'DELETE' },
+    )
+  }
+
+  removeMembership(realmId: string, userId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/memberships/${encodeURIComponent(userId)}`,
+      { method: 'DELETE' },
+    )
+  }
+
+  listPolicyGrants(realmId: string, policyId: string) {
+    return this.request<MembershipView[]>(
+      `/realms/${encodeURIComponent(realmId)}/access-policies/${encodeURIComponent(policyId)}/grants`,
+    )
+  }
+
+  grantPolicy(realmId: string, policyId: string, userId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/access-policies/${encodeURIComponent(policyId)}/grants/${encodeURIComponent(userId)}`,
+      { method: 'PUT' },
+    )
+  }
+
+  revokePolicy(realmId: string, policyId: string, userId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/access-policies/${encodeURIComponent(policyId)}/grants/${encodeURIComponent(userId)}`,
+      { method: 'DELETE' },
     )
   }
 
@@ -95,6 +178,19 @@ export class HttpCodexApi implements CodexApi {
     )
   }
 
+  deleteSource(realmId: string, documentId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/sources/${encodeURIComponent(documentId)}`,
+      { method: 'DELETE' },
+    )
+  }
+
+  getSourceContent(realmId: string, documentId: string, versionId: string) {
+    return this.request<SourceContentView>(
+      `/realms/${encodeURIComponent(realmId)}/sources/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/content`,
+    )
+  }
+
   ask(realmId: string, question: string) {
     return this.request<LoreAnswer>(
       `/realms/${encodeURIComponent(realmId)}/questions`,
@@ -103,6 +199,10 @@ export class HttpCodexApi implements CodexApi {
         body: JSON.stringify({ question }),
       },
     )
+  }
+
+  getCapabilities() {
+    return this.request<RuntimeCapabilities>('/capabilities')
   }
 
   private async request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -118,6 +218,7 @@ export class HttpCodexApi implements CodexApi {
     if (!response.ok) {
       throw new ApiError(await readError(response), response.status)
     }
+    if (response.status === 204) return undefined as T
     return (await response.json()) as T
   }
 }

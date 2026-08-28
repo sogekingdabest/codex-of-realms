@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import dev.codexofrealms.lore.LoreSearch;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.qa.AnswerOutcome;
+import dev.codexofrealms.qa.AnswerFailureReason;
 import dev.codexofrealms.qa.DraftClaim;
 import dev.codexofrealms.qa.GroundedAnswerDraft;
 import dev.codexofrealms.qa.GroundedAnswerModel;
@@ -65,6 +66,7 @@ class LoreQuestionServiceTest {
 
         assertThat(answer.outcome()).isEqualTo(AnswerOutcome.INSUFFICIENT_EVIDENCE);
         assertThat(answer.answer()).isNull();
+        assertThat(answer.failureReason()).isEqualTo(AnswerFailureReason.MODEL_UNAVAILABLE);
     }
 
     private static LoreQuestionService service(LoreSearch search, GroundedAnswerModel model) {
