@@ -67,6 +67,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [Web UI](docs/operations/WEB_UI.md)
 - [Backup and restore](docs/operations/BACKUP_AND_RESTORE.md)
 - [M8.2 local product acceptance](docs/evaluation/M8_2_ACCEPTANCE.md)
+- [Code quality and SonarQube Cloud](docs/operations/CODE_QUALITY.md)
 - [Application modules](docs/architecture/MODULES.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
@@ -112,11 +113,11 @@ Verify the web application from **frontend**:
 ~~~powershell
 npm ci
 npm run lint
-npm run test
+npm run test:coverage
 npm run build
 ~~~
 
-Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers. See the [local development guide](docs/operations/LOCAL_DEVELOPMENT.md) for endpoints, non-Docker checks, and troubleshooting.
+Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers. See the [local development guide](docs/operations/LOCAL_DEVELOPMENT.md) for endpoints and troubleshooting, and the [code-quality guide](docs/operations/CODE_QUALITY.md) for coverage and SonarQube Cloud onboarding.
 
 Run the reviewer workflow from the repository root:
 

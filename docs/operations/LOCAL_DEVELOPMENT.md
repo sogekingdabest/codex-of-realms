@@ -47,6 +47,8 @@ cd backend
 
 The integration test starts an isolated PostgreSQL/pgvector container, applies Flyway, and verifies authorization, ingestion, retrieval, and grounded-answer outcomes with deterministic embedding and chat doubles. Docker must be running; Ollama is not used by tests.
 
+The same verification produces `target/site/jacoco/jacoco.xml`. Run `npm run test:coverage` from `frontend` to produce `coverage/lcov.info`. See [Code quality](CODE_QUALITY.md) for the SonarQube Cloud setup and gradual enforcement process.
+
 ## Prepare the M3 and M5 models
 
 The selected baseline is `bge-m3`: a multilingual 1024-dimensional embedding model whose Ollama package is about 1.2 GB. Model pulling is deliberately never performed during application startup.
