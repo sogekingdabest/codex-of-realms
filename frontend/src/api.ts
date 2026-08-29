@@ -326,7 +326,13 @@ export class HttpCodexApi implements CodexApi {
   }
 
   private requestUrl(path: string): string {
-    if (!/^\/(?:[A-Za-z0-9._~!$&'()*+,;=:@%-]+\/?)*$/.test(path)) {
+    if (
+      !path.startsWith('/')
+      || path.startsWith('//')
+      || path.includes('\\')
+      || path.includes('?')
+      || path.includes('#')
+    ) {
       throw new Error('La ruta solicitada no es válida.')
     }
 

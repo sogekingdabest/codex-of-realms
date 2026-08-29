@@ -885,9 +885,7 @@ function EvidenceDialog({ evidence, onClose }: Readonly<{
   onClose: () => void
 }>) {
   return (
-    <dialog aria-labelledby="source-dialog-title" className="source-dialog-backdrop" open onClick={(event) => {
-      if (event.target === event.currentTarget) onClose()
-    }}>
+    <dialog aria-labelledby="source-dialog-title" className="source-dialog-backdrop" open>
       <div className="source-dialog">
         <header>
           <div>
