@@ -43,12 +43,18 @@ public record RetrievalQuery(
     @Override
     public boolean equals(Object other) {
         return this == other
-            || other instanceof RetrievalQuery that
-            && limit == that.limit
-            && realmId.equals(that.realmId)
-            && userId.equals(that.userId)
-            && Arrays.equals(embedding, that.embedding)
-            && embeddingDescriptor.equals(that.embeddingDescriptor);
+            || other instanceof RetrievalQuery(
+                UUID thatRealmId,
+                UUID thatUserId,
+                float[] thatEmbedding,
+                EmbeddingDescriptor thatDescriptor,
+                int thatLimit
+            )
+            && limit == thatLimit
+            && realmId.equals(thatRealmId)
+            && userId.equals(thatUserId)
+            && Arrays.equals(embedding, thatEmbedding)
+            && embeddingDescriptor.equals(thatDescriptor);
     }
 
     @Override

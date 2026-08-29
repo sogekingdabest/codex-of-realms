@@ -50,10 +50,9 @@ public class SourceJdbcRepository {
     }
 
     public SourceVersionRecord createVersion(
-        UUID documentId, UUID versionId, UUID realmId, int versionNumber,
-        String title, String filename, String mediaType, String language,
-        String checksum, String storageKey, UUID policyId, String fingerprint,
-        UUID userId
+        UUID realmId,
+        UUID userId,
+        SourceVersionRecord version
     ) {
         jdbc.sql("""
                 INSERT INTO document_version (
@@ -66,14 +65,13 @@ public class SourceJdbcRepository {
                     'RECEIVED', :policyId, :fingerprint, :userId
                 )
                 """)
-            .param("versionId", versionId).param("realmId", realmId)
-            .param("documentId", documentId).param("versionNumber", versionNumber)
-            .param("checksum", checksum).param("filename", filename)
-            .param("mediaType", mediaType).param("language", language)
-            .param("storageKey", storageKey).param("policyId", policyId)
-            .param("fingerprint", fingerprint).param("userId", userId).update();
-        return new SourceVersionRecord(documentId, versionId, versionNumber, title,
-            filename, mediaType, language, checksum, storageKey, policyId, fingerprint);
+            .param("versionId", version.versionId()).param("realmId", realmId)
+            .param("documentId", version.documentId()).param("versionNumber", version.versionNumber())
+            .param("checksum", version.checksum()).param("filename", version.originalFilename())
+            .param("mediaType", version.mediaType()).param("language", version.language())
+            .param("storageKey", version.storageKey()).param("policyId", version.accessPolicyId())
+            .param("fingerprint", version.pipelineFingerprint()).param("userId", userId).update();
+        return version;
     }
 
     public int nextVersionNumber(UUID realmId, UUID documentId) {

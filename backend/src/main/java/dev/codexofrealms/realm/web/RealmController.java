@@ -14,7 +14,6 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.ResponseEntity;
@@ -28,12 +27,11 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 @RestController
 @RequestMapping("/api/v1/realms")
 class RealmController {
-
-    private static final String REALMS_API_PATH = "/api/v1/realms/";
 
     private final AuthenticatedUserService userService;
     private final RealmService realmService;
@@ -55,7 +53,7 @@ class RealmController {
         RealmSummary realm = realmService.createRealm(user.id(), request.name());
 
         return ResponseEntity
-            .created(URI.create(REALMS_API_PATH + realm.id()))
+            .created(childLocation(realm.id()))
             .body(realm);
     }
 
@@ -109,9 +107,7 @@ class RealmController {
         InvitationView invitation = realmService.inviteMember(
             realmId, user.id(), request.email(), request.role()
         );
-        return ResponseEntity.created(URI.create(
-            REALMS_API_PATH + realmId + "/invitations/" + invitation.id()
-        )).body(invitation);
+        return ResponseEntity.created(childLocation(invitation.id())).body(invitation);
     }
 
     @GetMapping("/{realmId}/invitations")
@@ -161,9 +157,7 @@ class RealmController {
         );
 
         return ResponseEntity
-            .created(URI.create(
-                REALMS_API_PATH + realmId + "/access-policies/" + policy.id()
-            ))
+            .created(childLocation(policy.id()))
             .body(policy);
     }
 
@@ -232,6 +226,13 @@ class RealmController {
 
     private AuthenticatedUser currentUser(Jwt jwt) {
         return userService.synchronize(OidcIdentityMapper.from(jwt));
+    }
+
+    private static java.net.URI childLocation(UUID id) {
+        return ServletUriComponentsBuilder.fromCurrentRequest()
+            .path("/{id}")
+            .buildAndExpand(id)
+            .toUri();
     }
 
     record CreateRealmRequest(

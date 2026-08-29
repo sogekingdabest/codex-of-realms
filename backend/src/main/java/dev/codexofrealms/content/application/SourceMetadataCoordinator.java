@@ -144,9 +144,12 @@ class SourceMetadataCoordinator {
         UUID versionId = UUID.randomUUID();
         String extension = source.mediaType().equals("text/plain") ? "txt" : "md";
         String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
-        return repository.createVersion(context.documentId(), versionId, context.realmId(), context.number(), context.title(),
+        SourceVersionRecord version = new SourceVersionRecord(
+            context.documentId(), versionId, context.number(), context.title(),
             source.originalFilename(), source.mediaType(), "es", source.checksum(), key,
-            context.policyId(), context.fingerprint(), context.userId());
+            context.policyId(), context.fingerprint()
+        );
+        return repository.createVersion(context.realmId(), context.userId(), version);
     }
 
     private SourceVersionRecord cloneVersion(
@@ -156,9 +159,12 @@ class SourceMetadataCoordinator {
         UUID versionId = UUID.randomUUID();
         String extension = active.mediaType().equals("text/plain") ? "txt" : "md";
         String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
-        return repository.createVersion(context.documentId(), versionId, context.realmId(), context.number(), context.title(),
+        SourceVersionRecord version = new SourceVersionRecord(
+            context.documentId(), versionId, context.number(), context.title(),
             active.originalFilename(), active.mediaType(), active.language(), active.checksum(),
-            key, context.policyId(), context.fingerprint(), context.userId());
+            key, context.policyId(), context.fingerprint()
+        );
+        return repository.createVersion(context.realmId(), context.userId(), version);
     }
 
     private void authorize(UUID realmId, UUID policyId, UUID userId) {

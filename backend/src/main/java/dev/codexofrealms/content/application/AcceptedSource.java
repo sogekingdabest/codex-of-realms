@@ -14,12 +14,18 @@ record AcceptedSource(
     @Override
     public boolean equals(Object other) {
         return this == other
-            || other instanceof AcceptedSource that
-            && Arrays.equals(bytes, that.bytes)
-            && Objects.equals(text, that.text)
-            && Objects.equals(originalFilename, that.originalFilename)
-            && Objects.equals(mediaType, that.mediaType)
-            && Objects.equals(checksum, that.checksum);
+            || other instanceof AcceptedSource(
+                byte[] thatBytes,
+                String thatText,
+                String thatOriginalFilename,
+                String thatMediaType,
+                String thatChecksum
+            )
+            && Arrays.equals(bytes, thatBytes)
+            && Objects.equals(text, thatText)
+            && Objects.equals(originalFilename, thatOriginalFilename)
+            && Objects.equals(mediaType, thatMediaType)
+            && Objects.equals(checksum, thatChecksum);
     }
 
     @Override
