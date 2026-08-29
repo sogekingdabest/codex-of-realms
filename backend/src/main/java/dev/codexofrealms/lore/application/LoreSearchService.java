@@ -65,7 +65,7 @@ public class LoreSearchService implements LoreSearch {
         if (question.isEmpty() || question.length() > 1000) {
             throw new IllegalArgumentException("Question must contain between 1 and 1000 characters.");
         }
-        if (question.chars().anyMatch(character -> Character.isISOControl(character))) {
+        if (question.chars().anyMatch(Character::isISOControl)) {
             throw new IllegalArgumentException("Question contains unsupported control characters.");
         }
         return question;

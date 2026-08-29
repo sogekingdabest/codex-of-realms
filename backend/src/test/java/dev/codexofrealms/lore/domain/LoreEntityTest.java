@@ -24,10 +24,12 @@ class LoreEntityTest {
 
     @Test
     void rejectsMissingOrOversizedValues() {
-        assertThatThrownBy(() -> new LoreEntity(EntityType.PLACE, " ", List.of(), ""))
+        List<String> noAliases = List.of();
+        List<String> oversizedAlias = List.of("x".repeat(121));
+        assertThatThrownBy(() -> new LoreEntity(EntityType.PLACE, " ", noAliases, ""))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new LoreEntity(
-            EntityType.PLACE, "Aguja", List.of("x".repeat(121)), ""
+            EntityType.PLACE, "Aguja", oversizedAlias, ""
         )).isInstanceOf(IllegalArgumentException.class);
     }
 }

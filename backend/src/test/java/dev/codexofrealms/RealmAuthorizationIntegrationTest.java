@@ -65,6 +65,7 @@ import tools.jackson.databind.ObjectMapper;
     "codex.qa.chat-provider=test",
     "codex.qa.chat-model=deterministic-v1"
 })
+@SuppressWarnings("java:S5961") // End-to-end scenarios assert several related authorization invariants.
 class RealmAuthorizationIntegrationTest {
 
     private static final String ISSUER =
@@ -782,6 +783,7 @@ class RealmAuthorizationIntegrationTest {
         report.put("corpusSources", 7);
         report.put("evaluationCases", caseCount);
         report.put("execution", "deterministic-ci");
+        report.put("answeredCasesPassed", answeredPassed);
         report.put("retrievalRecallAt10", recallAtTen);
         report.put("refusalAccuracy", refusalAccuracy);
         report.put("citationCorrectness", citationCorrectness);

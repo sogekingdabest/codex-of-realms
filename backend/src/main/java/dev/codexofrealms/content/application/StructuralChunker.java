@@ -2,10 +2,14 @@ package dev.codexofrealms.content.application;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
 @Component
 class StructuralChunker {
+
+    private static final Pattern HEADING = Pattern.compile("^#{1,6}[ \\t]++\\S.*$");
+    private static final Pattern HEADING_PREFIX = Pattern.compile("^#{1,6}[ \\t]++");
 
     private final IngestionProperties properties;
 
@@ -32,9 +36,9 @@ class StructuralChunker {
         int cursor = 0;
         for (String line : text.split("(?<=\\n)", -1)) {
             String clean = line.strip();
-            if (clean.matches("#{1,6}\\s+.+")) {
+            if (HEADING.matcher(clean).matches()) {
                 addSection(text, result, sectionStart, cursor, heading);
-                heading = clean.replaceFirst("^#{1,6}\\s+", "").strip();
+                heading = HEADING_PREFIX.matcher(clean).replaceFirst("").strip();
                 sectionStart = cursor;
             }
             cursor += line.length();
@@ -58,23 +62,34 @@ class StructuralChunker {
     private void splitSection(String text, Section section, List<SourceChunk> chunks) {
         int start = section.start();
         while (start < section.end()) {
-            int end = Math.min(start + properties.chunkMaxCharacters(), section.end());
-            if (end < section.end()) {
-                int boundary = Math.max(text.lastIndexOf("\n\n", end), text.lastIndexOf(' ', end));
-                if (boundary > start + properties.chunkMaxCharacters() / 2) end = boundary;
-            }
-            while (end > start && Character.isWhitespace(text.charAt(end - 1))) end--;
+            int end = chunkEnd(text, section.end(), start);
             if (end > start) {
                 chunks.add(new SourceChunk(
                     chunks.size(), section.heading(), text.substring(start, end), start, end
                 ));
             }
             if (end >= section.end()) break;
-            int next = Math.max(start + 1, end - properties.chunkOverlapCharacters());
-            while (next < end && !Character.isWhitespace(text.charAt(next))) next++;
-            while (next < section.end() && Character.isWhitespace(text.charAt(next))) next++;
-            start = next;
+            start = nextChunkStart(text, section.end(), start, end);
         }
+    }
+
+    private int chunkEnd(String text, int sectionEnd, int start) {
+        int end = Math.min(start + properties.chunkMaxCharacters(), sectionEnd);
+        if (end < sectionEnd) {
+            int boundary = Math.max(text.lastIndexOf("\n\n", end), text.lastIndexOf(' ', end));
+            if (boundary > start + properties.chunkMaxCharacters() / 2) {
+                end = boundary;
+            }
+        }
+        while (end > start && Character.isWhitespace(text.charAt(end - 1))) end--;
+        return end;
+    }
+
+    private int nextChunkStart(String text, int sectionEnd, int start, int end) {
+        int next = Math.max(start + 1, end - properties.chunkOverlapCharacters());
+        while (next < end && !Character.isWhitespace(text.charAt(next))) next++;
+        while (next < sectionEnd && Character.isWhitespace(text.charAt(next))) next++;
+        return next;
     }
 
     private record Section(int start, int end, String heading) {

@@ -10,6 +10,7 @@ import dev.codexofrealms.qa.GroundedAnswerRequest;
 import dev.codexofrealms.qa.LoreAnswer;
 import dev.codexofrealms.qa.ModelDescriptor;
 import io.micrometer.core.instrument.Timer;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
@@ -56,19 +57,29 @@ public class LoreQuestionService {
                 return LoreAnswer.insufficient(provenance, gateFailure(decision.reason()));
             }
 
-            GroundedAnswerDraft draft;
-            try {
-                draft = model.generate(new GroundedAnswerRequest(retrieval.question(), decision.evidence()));
-            } catch (RuntimeException modelFailure) {
+            Optional<GroundedAnswerDraft> draft = generate(
+                new GroundedAnswerRequest(retrieval.question(), decision.evidence())
+            );
+            if (draft.isEmpty()) {
                 metrics.gateRejected(sample, "model_unavailable");
                 return LoreAnswer.insufficient(provenance, AnswerFailureReason.MODEL_UNAVAILABLE);
             }
-            LoreAnswer answer = validator.validate(realmId, draft, decision.evidence(), provenance);
+            LoreAnswer answer = validator.validate(
+                realmId, draft.orElseThrow(), decision.evidence(), provenance
+            );
             metrics.completed(sample, answer.outcome());
             return answer;
         } catch (RuntimeException exception) {
             metrics.failed(sample);
             throw exception;
+        }
+    }
+
+    private Optional<GroundedAnswerDraft> generate(GroundedAnswerRequest request) {
+        try {
+            return Optional.ofNullable(model.generate(request));
+        } catch (RuntimeException modelFailure) {
+            return Optional.empty();
         }
     }
 

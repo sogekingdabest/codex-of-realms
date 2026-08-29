@@ -24,8 +24,10 @@ class SecurityConfiguration {
     };
 
     @Bean
-    SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+    @SuppressWarnings("java:S4502") // Stateless bearer-token APIs are not vulnerable to session-based CSRF.
+    SecurityFilterChain apiSecurity(HttpSecurity http) {
         return http
+            // This API authenticates every request with a bearer token and never uses a browser session.
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(authorize -> authorize

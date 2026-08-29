@@ -14,7 +14,25 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
 public class SourceJdbcRepository {
+
+    private static final String VIEW_SQL = """
+        SELECT d.id, d.realm_id, d.title, v.id version_id, v.version_number,
+               v.checksum_sha256, v.original_filename, v.media_type, v.language,
+               v.processing_status, v.access_policy_id, v.embedding_provider,
+               v.embedding_model, v.embedding_dimension, d.created_at,
+               (SELECT count(*) FROM lore_chunk c WHERE c.document_version_id=v.id) chunk_count
+        FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
+        """;
+    private static final String ACCESSIBLE_VIEW_SQL = VIEW_SQL + """
+        JOIN access_policy p
+          ON p.realm_id=v.realm_id AND p.id=v.access_policy_id
+        JOIN realm r
+          ON r.id=d.realm_id
+        JOIN realm_membership m
+          ON m.realm_id=d.realm_id AND m.active
+        """;
 
     private final JdbcClient jdbc;
 
@@ -217,12 +235,12 @@ public class SourceJdbcRepository {
     }
 
     public List<SourceDocumentView> listActive(UUID realmId) {
-        return jdbc.sql(viewSql() + " WHERE d.realm_id=:realmId AND d.active AND v.active ORDER BY lower(d.title), d.id")
+        return jdbc.sql(VIEW_SQL + " WHERE d.realm_id=:realmId AND d.active AND v.active ORDER BY lower(d.title), d.id")
             .param("realmId", realmId).query(SourceJdbcRepository::mapView).list();
     }
 
     public List<SourceDocumentView> listAccessible(UUID realmId, UUID userId) {
-        return jdbc.sql(accessibleViewSql() + """
+        return jdbc.sql(ACCESSIBLE_VIEW_SQL + """
                 WHERE d.realm_id=:realmId
                   AND m.user_id=:userId
                   AND d.active
@@ -252,7 +270,7 @@ public class SourceJdbcRepository {
     }
 
     public Optional<SourceDocumentView> findActiveView(UUID realmId, UUID documentId) {
-        return jdbc.sql(viewSql() + " WHERE d.realm_id=:realmId AND d.id=:documentId AND d.active AND v.active")
+        return jdbc.sql(VIEW_SQL + " WHERE d.realm_id=:realmId AND d.id=:documentId AND d.active AND v.active")
             .param("realmId", realmId).param("documentId", documentId)
             .query(SourceJdbcRepository::mapView).optional();
     }
@@ -262,7 +280,7 @@ public class SourceJdbcRepository {
         UUID documentId,
         UUID userId
     ) {
-        return jdbc.sql(accessibleViewSql() + """
+        return jdbc.sql(ACCESSIBLE_VIEW_SQL + """
                 WHERE d.realm_id=:realmId
                   AND d.id=:documentId
                   AND m.user_id=:userId
@@ -349,28 +367,6 @@ public class SourceJdbcRepository {
         jdbc.sql("UPDATE document_version SET active=false, processing_status='RETIRED' WHERE realm_id=:realmId AND document_id=:documentId")
             .param("realmId", realmId).param("documentId", documentId).update();
         return keys;
-    }
-
-    private static String viewSql() {
-        return """
-            SELECT d.id, d.realm_id, d.title, v.id version_id, v.version_number,
-                   v.checksum_sha256, v.original_filename, v.media_type, v.language,
-                   v.processing_status, v.access_policy_id, v.embedding_provider,
-                   v.embedding_model, v.embedding_dimension, d.created_at,
-                   (SELECT count(*) FROM lore_chunk c WHERE c.document_version_id=v.id) chunk_count
-            FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
-            """;
-    }
-
-    private static String accessibleViewSql() {
-        return viewSql() + """
-            JOIN access_policy p
-              ON p.realm_id=v.realm_id AND p.id=v.access_policy_id
-            JOIN realm r
-              ON r.id=d.realm_id
-            JOIN realm_membership m
-              ON m.realm_id=d.realm_id AND m.active
-            """;
     }
 
     private static SourceVersionRecord mapVersion(ResultSet rs, int row) throws SQLException {

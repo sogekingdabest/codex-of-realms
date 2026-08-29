@@ -14,10 +14,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
 @Component
 class AnswerValidator {
+
+    private static final Pattern WHITESPACE = Pattern.compile("\\s++");
 
     private final QaProperties properties;
 
@@ -63,7 +66,7 @@ class AnswerValidator {
             if (TextTerms.coverage(claim.text(), support) < properties.minimumClaimCoverage()) {
                 return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
-            String text = claim.text().strip().replaceAll("\\s+", " ");
+            String text = WHITESPACE.matcher(claim.text().strip()).replaceAll(" ");
             answerCharacters += text.length();
             if (answerCharacters > properties.maxAnswerCharacters()) {
                 return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);

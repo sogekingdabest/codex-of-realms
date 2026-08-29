@@ -2,9 +2,7 @@ package dev.codexofrealms.qa.application;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import dev.codexofrealms.lore.RetrievedEvidence;
 import java.util.List;
-import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 class EvidenceGateTest {

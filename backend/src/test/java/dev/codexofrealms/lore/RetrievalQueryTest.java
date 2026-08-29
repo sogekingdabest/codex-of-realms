@@ -27,11 +27,13 @@ class RetrievalQueryTest {
     @Test
     void rejectsEmptyEmbeddingsAndUnboundedLimits() {
         EmbeddingDescriptor descriptor = new EmbeddingDescriptor("test", "model");
+        UUID realmId = UUID.randomUUID();
+        UUID userId = UUID.randomUUID();
         assertThatThrownBy(() -> new RetrievalQuery(
-            UUID.randomUUID(), UUID.randomUUID(), new float[0], descriptor, 5
+            realmId, userId, new float[0], descriptor, 5
         )).isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new RetrievalQuery(
-            UUID.randomUUID(), UUID.randomUUID(), new float[] {1.0f}, descriptor, 21
+            realmId, userId, new float[] {1.0f}, descriptor, 21
         )).isInstanceOf(IllegalArgumentException.class);
     }
 }

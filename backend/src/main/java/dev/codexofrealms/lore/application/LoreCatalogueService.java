@@ -18,6 +18,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LoreCatalogueService {
 
+    private static final String COMMAND_REQUIRED = "command";
+    private static final String ACCESS_POLICY_REQUIRED = "accessPolicyId";
+
     private final RealmAccess realmAccess;
     private final SourceEvidenceAccess sourceEvidenceAccess;
     private final LoreCatalogueJdbcRepository repository;
@@ -34,8 +37,8 @@ public class LoreCatalogueService {
 
     @Transactional
     public LoreEntityView createEntity(UUID realmId, UUID userId, LoreEntityCommand command) {
-        Objects.requireNonNull(command, "command");
-        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), "accessPolicyId");
+        Objects.requireNonNull(command, COMMAND_REQUIRED);
+        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), ACCESS_POLICY_REQUIRED);
         LoreEntity entity = new LoreEntity(
             command.type(), command.displayName(), command.aliases(), command.description()
         );
@@ -73,8 +76,8 @@ public class LoreCatalogueService {
         UUID userId,
         LoreEntityCommand command
     ) {
-        Objects.requireNonNull(command, "command");
-        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), "accessPolicyId");
+        Objects.requireNonNull(command, COMMAND_REQUIRED);
+        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), ACCESS_POLICY_REQUIRED);
         LoreEntity entity = new LoreEntity(
             command.type(), command.displayName(), command.aliases(), command.description()
         );
@@ -121,8 +124,8 @@ public class LoreCatalogueService {
         UUID userId,
         CreateLoreRelationCommand command
     ) {
-        Objects.requireNonNull(command, "command");
-        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), "accessPolicyId");
+        Objects.requireNonNull(command, COMMAND_REQUIRED);
+        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), ACCESS_POLICY_REQUIRED);
         LoreRelation relation = new LoreRelation(
             command.sourceEntityId(), command.targetEntityId(),
             command.relationType(), command.description()
@@ -170,8 +173,8 @@ public class LoreCatalogueService {
         UUID userId,
         UpdateLoreRelationCommand command
     ) {
-        Objects.requireNonNull(command, "command");
-        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), "accessPolicyId");
+        Objects.requireNonNull(command, COMMAND_REQUIRED);
+        UUID policyId = Objects.requireNonNull(command.accessPolicyId(), ACCESS_POLICY_REQUIRED);
         authorizeMutation(realmId, policyId, userId);
         LoreRelationView existing = requireRelationForEditor(realmId, relationId);
         LoreRelation relation = new LoreRelation(

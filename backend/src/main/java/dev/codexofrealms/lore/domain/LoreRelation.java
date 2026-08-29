@@ -14,6 +14,8 @@ public record LoreRelation(
 ) {
 
     private static final Pattern TYPE = Pattern.compile("[A-Z][A-Z0-9_]{0,63}");
+    private static final Pattern DIACRITICS = Pattern.compile("\\p{M}++");
+    private static final Pattern NON_IDENTIFIER_CHARACTERS = Pattern.compile("[^A-Z0-9]++");
 
     public LoreRelation {
         Objects.requireNonNull(sourceEntityId, "sourceEntityId");
@@ -25,10 +27,10 @@ public record LoreRelation(
             throw new IllegalArgumentException("relationType is required.");
         }
         relationType = Normalizer.normalize(relationType.strip(), Normalizer.Form.NFD)
-            .replaceAll("\\p{M}+", "")
-            .toUpperCase(Locale.ROOT)
-            .replaceAll("[^A-Z0-9]+", "_")
-            .replaceAll("^_+|_+$", "");
+            .toUpperCase(Locale.ROOT);
+        relationType = DIACRITICS.matcher(relationType).replaceAll("");
+        relationType = NON_IDENTIFIER_CHARACTERS.matcher(relationType).replaceAll("_");
+        relationType = trimUnderscores(relationType);
         if (!TYPE.matcher(relationType).matches()) {
             throw new IllegalArgumentException("relationType must be a valid controlled identifier.");
         }
@@ -36,5 +38,13 @@ public record LoreRelation(
         if (description.length() > 2000) {
             throw new IllegalArgumentException("description is too long.");
         }
+    }
+
+    private static String trimUnderscores(String value) {
+        int start = 0;
+        int end = value.length();
+        while (start < end && value.charAt(start) == '_') start++;
+        while (end > start && value.charAt(end - 1) == '_') end--;
+        return value.substring(start, end);
     }
 }

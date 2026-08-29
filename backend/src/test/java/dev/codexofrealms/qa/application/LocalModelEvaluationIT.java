@@ -51,7 +51,7 @@ class LocalModelEvaluationIT {
     private static final UUID REALM_ID = UUID.fromString("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa");
     private static final UUID USER_ID = UUID.fromString("bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb");
     private static final Pattern FRONT_MATTER = Pattern.compile("(?s)^---\\R(.*?)\\R---\\R(.*)$");
-    private static final Pattern FIELD = Pattern.compile("(?m)^([a-z_]+):\\s*(.+?)\\s*$");
+    private static final Pattern FIELD = Pattern.compile("(?m)^([a-z_]+):([^\\r\\n]*)$");
     private static final DateTimeFormatter FILE_TIME = DateTimeFormatter
         .ofPattern("yyyyMMdd-HHmmss").withZone(ZoneOffset.UTC);
 
@@ -307,7 +307,7 @@ class LocalModelEvaluationIT {
                 if (!frontMatter.matches()) continue;
                 Map<String, String> fields = new LinkedHashMap<>();
                 Matcher matcher = FIELD.matcher(frontMatter.group(1));
-                while (matcher.find()) fields.put(matcher.group(1), matcher.group(2));
+                while (matcher.find()) fields.put(matcher.group(1), matcher.group(2).strip());
                 String sourceId = required(fields, "source_id", path);
                 sources.put(sourceId, new SourceFixture(
                     sourceId, required(fields, "title", path), required(fields, "classification", path),

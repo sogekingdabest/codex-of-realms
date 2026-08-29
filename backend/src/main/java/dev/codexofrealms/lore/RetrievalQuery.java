@@ -1,6 +1,8 @@
 package dev.codexofrealms.lore;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
+import java.util.Arrays;
+import java.util.Objects;
 import java.util.UUID;
 
 public record RetrievalQuery(
@@ -36,5 +38,32 @@ public record RetrievalQuery(
     @Override
     public float[] embedding() {
         return embedding.clone();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return this == other
+            || other instanceof RetrievalQuery that
+            && limit == that.limit
+            && realmId.equals(that.realmId)
+            && userId.equals(that.userId)
+            && Arrays.equals(embedding, that.embedding)
+            && embeddingDescriptor.equals(that.embeddingDescriptor);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+            realmId, userId, Arrays.hashCode(embedding), embeddingDescriptor, limit
+        );
+    }
+
+    @Override
+    public String toString() {
+        return "RetrievalQuery[realmId=" + realmId
+            + ", userId=" + userId
+            + ", embedding=" + Arrays.toString(embedding)
+            + ", embeddingDescriptor=" + embeddingDescriptor
+            + ", limit=" + limit + "]";
     }
 }

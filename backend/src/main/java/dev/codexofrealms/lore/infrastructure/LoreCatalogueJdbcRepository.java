@@ -18,7 +18,118 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
 public class LoreCatalogueJdbcRepository {
+
+    private static final String ENTITY_COLUMNS = """
+        SELECT e.id, e.realm_id, e.entity_type, e.display_name, e.description,
+               e.canon_status, e.access_policy_id, e.created_by, e.created_at,
+               e.updated_by, e.updated_at, e.promoted_by, e.promoted_at
+        """;
+    private static final String ENTITY_SELECT = ENTITY_COLUMNS + """
+        FROM lore_entity e
+        JOIN access_policy p ON p.realm_id=e.realm_id AND p.id=e.access_policy_id AND p.active
+        JOIN realm r ON r.id=e.realm_id
+        JOIN realm_membership m ON m.realm_id=e.realm_id AND m.user_id=:userId
+        """;
+    private static final String ENTITY_EDITOR_SELECT = ENTITY_COLUMNS + " FROM lore_entity e";
+    private static final String RELATION_COLUMNS = """
+        SELECT rel.id, rel.realm_id, rel.source_entity_id, source.display_name source_name,
+               rel.target_entity_id, target.display_name target_name, rel.relation_type,
+               rel.description, rel.canon_status, rel.access_policy_id,
+               rel.created_by, rel.created_at, rel.updated_by, rel.updated_at,
+               rel.promoted_by, rel.promoted_at
+        """;
+    private static final String RELATION_SELECT = RELATION_COLUMNS + """
+        FROM lore_relation rel
+        JOIN lore_entity source
+          ON source.realm_id=rel.realm_id AND source.id=rel.source_entity_id
+        JOIN lore_entity target
+          ON target.realm_id=rel.realm_id AND target.id=rel.target_entity_id
+        JOIN access_policy rp
+          ON rp.realm_id=rel.realm_id AND rp.id=rel.access_policy_id AND rp.active
+        JOIN access_policy sp
+          ON sp.realm_id=source.realm_id AND sp.id=source.access_policy_id AND sp.active
+        JOIN access_policy tp
+          ON tp.realm_id=target.realm_id AND tp.id=target.access_policy_id AND tp.active
+        JOIN realm r ON r.id=rel.realm_id
+        JOIN realm_membership m ON m.realm_id=rel.realm_id AND m.user_id=:userId
+        """;
+    private static final String RELATION_EDITOR_SELECT = RELATION_COLUMNS + """
+        FROM lore_relation rel
+        JOIN lore_entity source
+          ON source.realm_id=rel.realm_id AND source.id=rel.source_entity_id
+        JOIN lore_entity target
+          ON target.realm_id=rel.realm_id AND target.id=rel.target_entity_id
+        """;
+    private static final String P_ACCESSIBLE_POLICY = """
+        (
+            m.role IN ('OWNER', 'EDITOR')
+            OR p.classification='PUBLIC'
+            OR (p.classification='SPOILER' AND EXISTS (
+                SELECT 1 FROM access_grant g
+                WHERE g.realm_id=p.realm_id AND g.policy_id=p.id AND g.membership_id=m.id
+            ))
+        )
+        """;
+    private static final String RP_ACCESSIBLE_POLICY = """
+        (
+            m.role IN ('OWNER', 'EDITOR')
+            OR rp.classification='PUBLIC'
+            OR (rp.classification='SPOILER' AND EXISTS (
+                SELECT 1 FROM access_grant g
+                WHERE g.realm_id=rp.realm_id AND g.policy_id=rp.id AND g.membership_id=m.id
+            ))
+        )
+        """;
+    private static final String SP_ACCESSIBLE_POLICY = """
+        (
+            m.role IN ('OWNER', 'EDITOR')
+            OR sp.classification='PUBLIC'
+            OR (sp.classification='SPOILER' AND EXISTS (
+                SELECT 1 FROM access_grant g
+                WHERE g.realm_id=sp.realm_id AND g.policy_id=sp.id AND g.membership_id=m.id
+            ))
+        )
+        """;
+    private static final String TP_ACCESSIBLE_POLICY = """
+        (
+            m.role IN ('OWNER', 'EDITOR')
+            OR tp.classification='PUBLIC'
+            OR (tp.classification='SPOILER' AND EXISTS (
+                SELECT 1 FROM access_grant g
+                WHERE g.realm_id=tp.realm_id AND g.policy_id=tp.id AND g.membership_id=m.id
+            ))
+        )
+        """;
+    private static final String ENTITY_EVIDENCE_SQL = """
+        SELECT document_id, document_version_id, chunk_id, source_title,
+               checksum_sha256, heading, start_offset, end_offset
+        FROM lore_entity_source_evidence WHERE entity_id=:ownerId ORDER BY recorded_at, chunk_id
+        """;
+    private static final String RELATION_EVIDENCE_SQL = """
+        SELECT document_id, document_version_id, chunk_id, source_title,
+               checksum_sha256, heading, start_offset, end_offset
+        FROM lore_relation_source_evidence WHERE relation_id=:ownerId ORDER BY recorded_at, chunk_id
+        """;
+    private static final String ENTITY_EVIDENCE_INSERT_SQL = """
+        INSERT INTO lore_entity_source_evidence (
+            realm_id, entity_id, chunk_id, document_id, document_version_id,
+            source_title, checksum_sha256, heading, start_offset, end_offset
+        ) VALUES (
+            :realmId, :ownerId, :chunkId, :documentId, :versionId,
+            :sourceTitle, :checksum, :heading, :startOffset, :endOffset
+        )
+        """;
+    private static final String RELATION_EVIDENCE_INSERT_SQL = """
+        INSERT INTO lore_relation_source_evidence (
+            realm_id, relation_id, chunk_id, document_id, document_version_id,
+            source_title, checksum_sha256, heading, start_offset, end_offset
+        ) VALUES (
+            :realmId, :ownerId, :chunkId, :documentId, :versionId,
+            :sourceTitle, :checksum, :heading, :startOffset, :endOffset
+        )
+        """;
 
     private final JdbcClient jdbc;
 
@@ -97,9 +208,9 @@ public class LoreCatalogueJdbcRepository {
         EntityType type,
         CanonStatus canonStatus
     ) {
-        StringBuilder sql = new StringBuilder(entitySelect()).append("""
+        StringBuilder sql = new StringBuilder(ENTITY_SELECT).append("""
              WHERE e.realm_id=:realmId AND e.active AND r.active AND m.active
-               AND """).append(accessiblePolicy("p"));
+               AND """).append(P_ACCESSIBLE_POLICY);
         if (type != null) sql.append(" AND e.entity_type=:entityType");
         if (canonStatus != null) sql.append(" AND e.canon_status=:canonStatus");
         sql.append(" ORDER BY lower(e.display_name), e.id");
@@ -114,9 +225,9 @@ public class LoreCatalogueJdbcRepository {
     }
 
     public Optional<LoreEntityView> findAccessibleEntity(UUID realmId, UUID id, UUID userId) {
-        return jdbc.sql(entitySelect() + """
+        return jdbc.sql(ENTITY_SELECT + """
                  WHERE e.realm_id=:realmId AND e.id=:id AND e.active AND r.active AND m.active
-                   AND """ + accessiblePolicy("p"))
+                   AND """ + P_ACCESSIBLE_POLICY)
             .param("realmId", realmId)
             .param("id", id)
             .param("userId", userId)
@@ -126,7 +237,7 @@ public class LoreCatalogueJdbcRepository {
     }
 
     public Optional<LoreEntityView> findEntityForEditor(UUID realmId, UUID id) {
-        return jdbc.sql(entityEditorSelect() + " WHERE e.realm_id=:realmId AND e.id=:id AND e.active")
+        return jdbc.sql(ENTITY_EDITOR_SELECT + " WHERE e.realm_id=:realmId AND e.id=:id AND e.active")
             .param("realmId", realmId)
             .param("id", id)
             .query(LoreCatalogueJdbcRepository::mapEntityRow)
@@ -266,12 +377,12 @@ public class LoreCatalogueJdbcRepository {
         UUID entityId,
         CanonStatus canonStatus
     ) {
-        StringBuilder sql = new StringBuilder(relationSelect()).append("""
+        StringBuilder sql = new StringBuilder(RELATION_SELECT).append("""
              WHERE rel.realm_id=:realmId AND rel.active
-               AND source.active AND target.active AND r.active AND m.active
-               AND """).append(accessiblePolicy("rp"))
-            .append(" AND ").append(accessiblePolicy("sp"))
-            .append(" AND ").append(accessiblePolicy("tp"));
+             AND source.active AND target.active AND r.active AND m.active
+               AND """).append(RP_ACCESSIBLE_POLICY)
+            .append(" AND ").append(SP_ACCESSIBLE_POLICY)
+            .append(" AND ").append(TP_ACCESSIBLE_POLICY);
         if (entityId != null) {
             sql.append(" AND (rel.source_entity_id=:entityId OR rel.target_entity_id=:entityId)");
         }
@@ -288,12 +399,12 @@ public class LoreCatalogueJdbcRepository {
     }
 
     public Optional<LoreRelationView> findAccessibleRelation(UUID realmId, UUID id, UUID userId) {
-        return jdbc.sql(relationSelect() + """
+        return jdbc.sql(RELATION_SELECT + """
                  WHERE rel.realm_id=:realmId AND rel.id=:id AND rel.active
-                   AND source.active AND target.active AND r.active AND m.active
-                   AND """ + accessiblePolicy("rp")
-                + " AND " + accessiblePolicy("sp")
-                + " AND " + accessiblePolicy("tp"))
+                 AND source.active AND target.active AND r.active AND m.active
+                   AND """ + RP_ACCESSIBLE_POLICY
+                + " AND " + SP_ACCESSIBLE_POLICY
+                + " AND " + TP_ACCESSIBLE_POLICY)
             .param("realmId", realmId)
             .param("id", id)
             .param("userId", userId)
@@ -303,7 +414,7 @@ public class LoreCatalogueJdbcRepository {
     }
 
     public Optional<LoreRelationView> findRelationForEditor(UUID realmId, UUID id) {
-        return jdbc.sql(relationEditorSelect() + " WHERE rel.realm_id=:realmId AND rel.id=:id AND rel.active")
+        return jdbc.sql(RELATION_EDITOR_SELECT + " WHERE rel.realm_id=:realmId AND rel.id=:id AND rel.active")
             .param("realmId", realmId)
             .param("id", id)
             .query(LoreCatalogueJdbcRepository::mapRelationRow)
@@ -366,7 +477,7 @@ public class LoreCatalogueJdbcRepository {
         jdbc.sql("DELETE FROM lore_entity_source_evidence WHERE realm_id=:realmId AND entity_id=:entityId")
             .param("realmId", realmId).param("entityId", entityId).update();
         for (SourceEvidence item : evidence) {
-            insertEvidence("lore_entity_source_evidence", "entity_id", realmId, entityId, item);
+            insertEvidence(jdbc.sql(ENTITY_EVIDENCE_INSERT_SQL), realmId, entityId, item);
         }
     }
 
@@ -374,26 +485,17 @@ public class LoreCatalogueJdbcRepository {
         jdbc.sql("DELETE FROM lore_relation_source_evidence WHERE realm_id=:realmId AND relation_id=:relationId")
             .param("realmId", realmId).param("relationId", relationId).update();
         for (SourceEvidence item : evidence) {
-            insertEvidence("lore_relation_source_evidence", "relation_id", realmId, relationId, item);
+            insertEvidence(jdbc.sql(RELATION_EVIDENCE_INSERT_SQL), realmId, relationId, item);
         }
     }
 
     private void insertEvidence(
-        String table,
-        String ownerColumn,
+        JdbcClient.StatementSpec statement,
         UUID realmId,
         UUID ownerId,
         SourceEvidence evidence
     ) {
-        jdbc.sql("""
-                INSERT INTO %s (
-                    realm_id, %s, chunk_id, document_id, document_version_id,
-                    source_title, checksum_sha256, heading, start_offset, end_offset
-                ) VALUES (
-                    :realmId, :ownerId, :chunkId, :documentId, :versionId,
-                    :sourceTitle, :checksum, :heading, :startOffset, :endOffset
-                )
-                """.formatted(table, ownerColumn))
+        statement
             .param("realmId", realmId).param("ownerId", ownerId)
             .param("chunkId", evidence.chunkId()).param("documentId", evidence.documentId())
             .param("versionId", evidence.documentVersionId()).param("sourceTitle", evidence.sourceTitle())
@@ -427,12 +529,12 @@ public class LoreCatalogueJdbcRepository {
     }
 
     private List<SourceEvidence> entityEvidence(UUID entityId) {
-        return jdbc.sql(evidenceSql("lore_entity_source_evidence", "entity_id"))
+        return jdbc.sql(ENTITY_EVIDENCE_SQL)
             .param("ownerId", entityId).query(LoreCatalogueJdbcRepository::mapEvidence).list();
     }
 
     private List<SourceEvidence> relationEvidence(UUID relationId) {
-        return jdbc.sql(evidenceSql("lore_relation_source_evidence", "relation_id"))
+        return jdbc.sql(RELATION_EVIDENCE_SQL)
             .param("ownerId", relationId).query(LoreCatalogueJdbcRepository::mapEvidence).list();
     }
 
@@ -450,91 +552,6 @@ public class LoreCatalogueJdbcRepository {
                 WHERE relation_id=:ownerId ORDER BY promoted_at, id
                 """)
             .param("ownerId", relationId).query(LoreCatalogueJdbcRepository::mapPromotion).list();
-    }
-
-    private static String entitySelect() {
-        return entityColumns() + """
-            FROM lore_entity e
-            JOIN access_policy p ON p.realm_id=e.realm_id AND p.id=e.access_policy_id AND p.active
-            JOIN realm r ON r.id=e.realm_id
-            JOIN realm_membership m ON m.realm_id=e.realm_id AND m.user_id=:userId
-            """;
-    }
-
-    private static String entityEditorSelect() {
-        return entityColumns() + " FROM lore_entity e";
-    }
-
-    private static String entityColumns() {
-        return """
-            SELECT e.id, e.realm_id, e.entity_type, e.display_name, e.description,
-                   e.canon_status, e.access_policy_id, e.created_by, e.created_at,
-                   e.updated_by, e.updated_at, e.promoted_by, e.promoted_at
-            """;
-    }
-
-    private static String relationSelect() {
-        return relationColumns() + """
-            FROM lore_relation rel
-            JOIN lore_entity source
-              ON source.realm_id=rel.realm_id AND source.id=rel.source_entity_id
-            JOIN lore_entity target
-              ON target.realm_id=rel.realm_id AND target.id=rel.target_entity_id
-            JOIN access_policy rp
-              ON rp.realm_id=rel.realm_id AND rp.id=rel.access_policy_id AND rp.active
-            JOIN access_policy sp
-              ON sp.realm_id=source.realm_id AND sp.id=source.access_policy_id AND sp.active
-            JOIN access_policy tp
-              ON tp.realm_id=target.realm_id AND tp.id=target.access_policy_id AND tp.active
-            JOIN realm r ON r.id=rel.realm_id
-            JOIN realm_membership m ON m.realm_id=rel.realm_id AND m.user_id=:userId
-            """;
-    }
-
-    private static String relationEditorSelect() {
-        return relationColumns() + """
-            FROM lore_relation rel
-            JOIN lore_entity source
-              ON source.realm_id=rel.realm_id AND source.id=rel.source_entity_id
-            JOIN lore_entity target
-              ON target.realm_id=rel.realm_id AND target.id=rel.target_entity_id
-            """;
-    }
-
-    private static String relationColumns() {
-        return """
-            SELECT rel.id, rel.realm_id, rel.source_entity_id, source.display_name source_name,
-                   rel.target_entity_id, target.display_name target_name, rel.relation_type,
-                   rel.description, rel.canon_status, rel.access_policy_id,
-                   rel.created_by, rel.created_at, rel.updated_by, rel.updated_at,
-                   rel.promoted_by, rel.promoted_at
-            """;
-    }
-
-    private static String accessiblePolicy(String policyAlias) {
-        return """
-            (
-                m.role IN ('OWNER', 'EDITOR')
-                OR %1$s.classification='PUBLIC'
-                OR (
-                    %1$s.classification='SPOILER'
-                    AND EXISTS (
-                        SELECT 1 FROM access_grant g
-                        WHERE g.realm_id=%1$s.realm_id
-                          AND g.policy_id=%1$s.id
-                          AND g.membership_id=m.id
-                    )
-                )
-            )
-            """.formatted(policyAlias);
-    }
-
-    private static String evidenceSql(String table, String ownerColumn) {
-        return """
-            SELECT document_id, document_version_id, chunk_id, source_title,
-                   checksum_sha256, heading, start_offset, end_offset
-            FROM %s WHERE %s=:ownerId ORDER BY recorded_at, chunk_id
-            """.formatted(table, ownerColumn);
     }
 
     private static EntityRow mapEntityRow(ResultSet rs, int row) throws SQLException {

@@ -14,7 +14,42 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
+@SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
 public class RealmJdbcRepository {
+
+    private static final String ACTIVE_OWNER_SQL = """
+        SELECT EXISTS (
+            SELECT 1
+            FROM realm r
+            JOIN realm_membership m ON m.realm_id = r.id
+            WHERE r.id = :realmId
+              AND m.user_id = :userId
+              AND m.active
+              AND r.active
+              AND m.role = 'OWNER'
+        )
+        """;
+    private static final String ACTIVE_EDITOR_SQL = """
+        SELECT EXISTS (
+            SELECT 1
+            FROM realm r
+            JOIN realm_membership m ON m.realm_id = r.id
+            WHERE r.id = :realmId
+              AND m.user_id = :userId
+              AND m.active
+              AND r.active
+              AND m.role IN ('OWNER', 'EDITOR')
+        )
+        """;
+    private static final String INVITATION_SQL = """
+        SELECT i.id, i.realm_id, i.email, i.role, i.accepted_by, i.created_at,
+               CASE
+                 WHEN i.accepted_at IS NOT NULL THEN 'ACCEPTED'
+                 WHEN i.revoked_at IS NOT NULL THEN 'REVOKED'
+                 ELSE 'PENDING'
+               END status
+        FROM realm_invitation i
+        """;
 
     private final JdbcClient jdbcClient;
 
@@ -76,11 +111,19 @@ public class RealmJdbcRepository {
     }
 
     public boolean isActiveOwner(UUID realmId, UUID userId) {
-        return hasRole(realmId, userId, "m.role = 'OWNER'");
+        return Boolean.TRUE.equals(jdbcClient.sql(ACTIVE_OWNER_SQL)
+            .param("realmId", realmId)
+            .param("userId", userId)
+            .query(Boolean.class)
+            .single());
     }
 
     public boolean isActiveEditor(UUID realmId, UUID userId) {
-        return hasRole(realmId, userId, "m.role IN ('OWNER', 'EDITOR')");
+        return Boolean.TRUE.equals(jdbcClient.sql(ACTIVE_EDITOR_SQL)
+            .param("realmId", realmId)
+            .param("userId", userId)
+            .query(Boolean.class)
+            .single());
     }
 
     public void lockRealm(UUID realmId) {
@@ -94,27 +137,6 @@ public class RealmJdbcRepository {
             .query(UUID.class)
             .optional()
             .orElseThrow();
-    }
-
-    private boolean hasRole(UUID realmId, UUID userId, String rolePredicate) {
-        String sql = """
-            SELECT EXISTS (
-                SELECT 1
-                FROM realm r
-                JOIN realm_membership m ON m.realm_id = r.id
-                WHERE r.id = :realmId
-                  AND m.user_id = :userId
-                  AND m.active
-                  AND r.active
-                  AND %s
-            )
-            """.formatted(rolePredicate);
-
-        return Boolean.TRUE.equals(jdbcClient.sql(sql)
-            .param("realmId", realmId)
-            .param("userId", userId)
-            .query(Boolean.class)
-            .single());
     }
 
     public Optional<MembershipView> findActiveMembership(UUID realmId, UUID userId) {
@@ -436,7 +458,7 @@ public class RealmJdbcRepository {
     }
 
     public Optional<InvitationView> findInvitation(UUID realmId, UUID invitationId) {
-        return jdbcClient.sql(invitationSql() + " WHERE i.realm_id=:realmId AND i.id=:invitationId")
+        return jdbcClient.sql(INVITATION_SQL + " WHERE i.realm_id=:realmId AND i.id=:invitationId")
             .param("realmId", realmId)
             .param("invitationId", invitationId)
             .query(RealmJdbcRepository::mapInvitation)
@@ -444,7 +466,7 @@ public class RealmJdbcRepository {
     }
 
     public List<InvitationView> listInvitations(UUID realmId) {
-        return jdbcClient.sql(invitationSql() + " WHERE i.realm_id=:realmId ORDER BY i.created_at DESC, i.id")
+        return jdbcClient.sql(INVITATION_SQL + " WHERE i.realm_id=:realmId ORDER BY i.created_at DESC, i.id")
             .param("realmId", realmId)
             .query(RealmJdbcRepository::mapInvitation)
             .list();
@@ -539,18 +561,6 @@ public class RealmJdbcRepository {
             resultSet.getString("name"),
             resultSet.getString("description")
         );
-    }
-
-    private static String invitationSql() {
-        return """
-            SELECT i.id, i.realm_id, i.email, i.role, i.accepted_by, i.created_at,
-                   CASE
-                     WHEN i.accepted_at IS NOT NULL THEN 'ACCEPTED'
-                     WHEN i.revoked_at IS NOT NULL THEN 'REVOKED'
-                     ELSE 'PENDING'
-                   END status
-            FROM realm_invitation i
-            """;
     }
 
     private static InvitationView mapInvitation(java.sql.ResultSet resultSet, int rowNumber)

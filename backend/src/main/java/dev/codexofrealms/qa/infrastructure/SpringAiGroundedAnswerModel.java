@@ -92,13 +92,11 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
             throw new ModelUnavailableException("The configured chat model is unavailable.", exception);
         }
         try {
-            if (response == null || response.getResult() == null
-                || response.getResult().getOutput() == null) {
+            String text = response.getResult().getOutput().getText();
+            if (text == null || text.isBlank()) {
                 return GroundedAnswerDraft.insufficient();
             }
-            String text = response.getResult().getOutput().getText();
-            GroundedAnswerDraft converted = outputConverter.convert(text);
-            return converted == null ? GroundedAnswerDraft.insufficient() : converted;
+            return outputConverter.convert(text);
         } catch (RuntimeException exception) {
             return GroundedAnswerDraft.insufficient();
         }

@@ -11,6 +11,8 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserJdbcRepository {
 
+    private static final String EMAIL = "email";
+
     private final JdbcClient jdbcClient;
 
     public UserJdbcRepository(JdbcClient jdbcClient) {
@@ -31,7 +33,7 @@ public class UserJdbcRepository {
             .param("issuer", identity.issuer())
             .param("subject", identity.subject())
             .param("displayName", identity.displayName())
-            .param("email", identity.email(), Types.VARCHAR)
+            .param(EMAIL, identity.email(), Types.VARCHAR)
             .query(UserJdbcRepository::mapUser)
             .single();
     }
@@ -56,7 +58,7 @@ public class UserJdbcRepository {
                 ORDER BY created_at
                 LIMIT 1
                 """)
-            .param("email", email)
+            .param(EMAIL, email)
             .query(UserJdbcRepository::mapUser)
             .optional();
     }
@@ -68,7 +70,7 @@ public class UserJdbcRepository {
             resultSet.getString("issuer"),
             resultSet.getString("subject"),
             resultSet.getString("display_name"),
-            resultSet.getString("email")
+            resultSet.getString(EMAIL)
         );
     }
 }

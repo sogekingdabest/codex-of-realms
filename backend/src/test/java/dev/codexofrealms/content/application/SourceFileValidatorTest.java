@@ -26,8 +26,9 @@ class SourceFileValidatorTest {
 
     @Test
     void rejectsUnsupportedExtensionsEvenWhenMimeClaimsText() {
+        byte[] content = "lore".getBytes(StandardCharsets.UTF_8);
         assertThatThrownBy(() -> validator.validate(
-            "lore".getBytes(StandardCharsets.UTF_8), "lore.html", "text/plain"
+            content, "lore.html", "text/plain"
         )).isInstanceOf(InvalidSourceException.class);
     }
 

@@ -197,7 +197,7 @@ public class RealmService {
         UUID realmId,
         UUID currentUserId
     ) {
-        requireMemberAccess(realmId, currentUserId);
+        requireMember(realmId, currentUserId);
         return realmRepository.findAccessiblePolicies(realmId, currentUserId);
     }
 
@@ -208,6 +208,10 @@ public class RealmService {
 
     @Transactional(readOnly = true)
     public void requireMemberAccess(UUID realmId, UUID currentUserId) {
+        requireMember(realmId, currentUserId);
+    }
+
+    private void requireMember(UUID realmId, UUID currentUserId) {
         realmRepository.findActiveRealmForMember(realmId, currentUserId)
             .orElseThrow(ResourceNotFoundException::new);
     }

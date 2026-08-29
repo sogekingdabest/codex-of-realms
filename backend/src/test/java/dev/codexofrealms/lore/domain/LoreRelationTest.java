@@ -21,10 +21,12 @@ class LoreRelationTest {
     @Test
     void rejectsSelfRelationsAndEmptyTypes() {
         UUID entityId = UUID.randomUUID();
+        UUID sourceId = UUID.randomUUID();
+        UUID targetId = UUID.randomUUID();
         assertThatThrownBy(() -> new LoreRelation(entityId, entityId, "ALIADO_DE", ""))
             .isInstanceOf(IllegalArgumentException.class);
         assertThatThrownBy(() -> new LoreRelation(
-            UUID.randomUUID(), UUID.randomUUID(), "---", ""
+            sourceId, targetId, "---", ""
         )).isInstanceOf(IllegalArgumentException.class);
     }
 }

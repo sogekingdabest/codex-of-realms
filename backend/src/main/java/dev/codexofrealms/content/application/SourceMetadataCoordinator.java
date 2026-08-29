@@ -29,7 +29,10 @@ class SourceMetadataCoordinator {
         UUID documentId = UUID.randomUUID();
         repository.createDocument(documentId, realmId, normalizeTitle(title), userId);
         return PreparedVersion.created(createVersion(
-            realmId, documentId, userId, normalizeTitle(title), policyId, source, fingerprint, 1
+            new VersionContext(
+                realmId, documentId, userId, normalizeTitle(title), policyId, fingerprint, 1
+            ),
+            source
         ));
     }
 
@@ -48,7 +51,10 @@ class SourceMetadataCoordinator {
         }
         int number = repository.nextVersionNumber(realmId, documentId);
         return PreparedVersion.created(createVersion(
-            realmId, documentId, userId, active.title(), policyId, source, fingerprint, number
+            new VersionContext(
+                realmId, documentId, userId, active.title(), policyId, fingerprint, number
+            ),
+            source
         ));
     }
 
@@ -61,8 +67,11 @@ class SourceMetadataCoordinator {
             return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId).orElseThrow());
         }
         return PreparedVersion.created(cloneVersion(
-            realmId, documentId, userId, active.title(), active.accessPolicyId(),
-            fingerprint, repository.nextVersionNumber(realmId, documentId), active
+            new VersionContext(
+                realmId, documentId, userId, active.title(), active.accessPolicyId(),
+                fingerprint, repository.nextVersionNumber(realmId, documentId)
+            ),
+            active
         ));
     }
 
@@ -129,27 +138,27 @@ class SourceMetadataCoordinator {
     }
 
     private SourceVersionRecord createVersion(
-        UUID realmId, UUID documentId, UUID userId, String title, UUID policyId,
-        AcceptedSource source, String fingerprint, int number
+        VersionContext context,
+        AcceptedSource source
     ) {
         UUID versionId = UUID.randomUUID();
         String extension = source.mediaType().equals("text/plain") ? "txt" : "md";
-        String key = realmId + "/" + documentId + "/" + versionId + "." + extension;
-        return repository.createVersion(documentId, versionId, realmId, number, title,
+        String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
+        return repository.createVersion(context.documentId(), versionId, context.realmId(), context.number(), context.title(),
             source.originalFilename(), source.mediaType(), "es", source.checksum(), key,
-            policyId, fingerprint, userId);
+            context.policyId(), context.fingerprint(), context.userId());
     }
 
     private SourceVersionRecord cloneVersion(
-        UUID realmId, UUID documentId, UUID userId, String title, UUID policyId,
-        String fingerprint, int number, SourceVersionRecord active
+        VersionContext context,
+        SourceVersionRecord active
     ) {
         UUID versionId = UUID.randomUUID();
         String extension = active.mediaType().equals("text/plain") ? "txt" : "md";
-        String key = realmId + "/" + documentId + "/" + versionId + "." + extension;
-        return repository.createVersion(documentId, versionId, realmId, number, title,
+        String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
+        return repository.createVersion(context.documentId(), versionId, context.realmId(), context.number(), context.title(),
             active.originalFilename(), active.mediaType(), active.language(), active.checksum(),
-            key, policyId, fingerprint, userId);
+            key, context.policyId(), context.fingerprint(), context.userId());
     }
 
     private void authorize(UUID realmId, UUID policyId, UUID userId) {
@@ -162,5 +171,16 @@ class SourceMetadataCoordinator {
             throw new InvalidSourceException("The title must contain between 1 and 200 characters.");
         }
         return title.strip();
+    }
+
+    private record VersionContext(
+        UUID realmId,
+        UUID documentId,
+        UUID userId,
+        String title,
+        UUID policyId,
+        String fingerprint,
+        int number
+    ) {
     }
 }

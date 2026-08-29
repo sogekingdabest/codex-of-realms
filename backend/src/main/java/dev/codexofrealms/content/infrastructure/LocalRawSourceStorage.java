@@ -6,10 +6,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.regex.Pattern;
 import org.springframework.stereotype.Component;
 
 @Component
 class LocalRawSourceStorage implements RawSourceStorage {
+
+    private static final Pattern STORAGE_KEY = Pattern.compile(
+        "[0-9a-f-]++/[0-9a-f-]++/[0-9a-f-]++\\.(?:md|txt)"
+    );
 
     private final Path root;
 
@@ -24,11 +29,7 @@ class LocalRawSourceStorage implements RawSourceStorage {
         try {
             Files.createDirectories(target.getParent());
             Files.write(temporary, content);
-            try {
-                Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE);
-            } catch (IOException ignored) {
-                Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
-            }
+            moveIntoPlace(temporary, target);
         } catch (IOException exception) {
             throw new IllegalStateException("Could not persist the raw source.", exception);
         }
@@ -53,11 +54,19 @@ class LocalRawSourceStorage implements RawSourceStorage {
     }
 
     private Path resolve(String key) {
-        if (key == null || !key.matches("[0-9a-f-]+/[0-9a-f-]+/[0-9a-f-]+\\.(md|txt)")) {
+        if (key == null || !STORAGE_KEY.matcher(key).matches()) {
             throw new IllegalArgumentException("Invalid storage key.");
         }
         Path resolved = root.resolve(key).normalize();
         if (!resolved.startsWith(root)) throw new IllegalArgumentException("Invalid storage key.");
         return resolved;
+    }
+
+    private static void moveIntoPlace(Path temporary, Path target) throws IOException {
+        try {
+            Files.move(temporary, target, StandardCopyOption.ATOMIC_MOVE);
+        } catch (IOException ignored) {
+            Files.move(temporary, target, StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 }

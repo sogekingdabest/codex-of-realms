@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/v1/realms")
 class RealmController {
 
+    private static final String REALMS_API_PATH = "/api/v1/realms/";
+
     private final AuthenticatedUserService userService;
     private final RealmService realmService;
 
@@ -53,7 +55,7 @@ class RealmController {
         RealmSummary realm = realmService.createRealm(user.id(), request.name());
 
         return ResponseEntity
-            .created(URI.create("/api/v1/realms/" + realm.id()))
+            .created(URI.create(REALMS_API_PATH + realm.id()))
             .body(realm);
     }
 
@@ -108,7 +110,7 @@ class RealmController {
             realmId, user.id(), request.email(), request.role()
         );
         return ResponseEntity.created(URI.create(
-            "/api/v1/realms/" + realmId + "/invitations/" + invitation.id()
+            REALMS_API_PATH + realmId + "/invitations/" + invitation.id()
         )).body(invitation);
     }
 
@@ -160,7 +162,7 @@ class RealmController {
 
         return ResponseEntity
             .created(URI.create(
-                "/api/v1/realms/" + realmId + "/access-policies/" + policy.id()
+                REALMS_API_PATH + realmId + "/access-policies/" + policy.id()
             ))
             .body(policy);
     }
