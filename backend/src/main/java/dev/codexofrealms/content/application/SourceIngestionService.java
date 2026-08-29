@@ -79,6 +79,10 @@ public class SourceIngestionService {
         return metadata.get(realmId, documentId, userId);
     }
 
+    public List<SourceChunkView> chunks(UUID realmId, UUID documentId, UUID userId) {
+        return metadata.chunks(realmId, documentId, userId);
+    }
+
     public SourceContentView content(
         UUID realmId,
         UUID documentId,

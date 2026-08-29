@@ -443,8 +443,19 @@ class RealmAuthorizationIntegrationTest {
             .andReturn().getResponse().getContentAsString();
         UUID documentId = UUID.fromString(objectMapper.readTree(sourceResponse).get("id").asString());
         UUID versionId = UUID.fromString(objectMapper.readTree(sourceResponse).get("versionId").asString());
-        UUID chunkId = jdbcClient.sql("SELECT id FROM lore_chunk WHERE document_version_id=:versionId")
-            .param("versionId", versionId).query(UUID.class).single();
+        String chunkResponse = mockMvc.perform(get(
+                    "/api/v1/realms/{realmId}/sources/{documentId}/chunks", realmId, documentId
+                ).with(identity("catalogue-owner")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].documentVersionId").value(versionId.toString()))
+            .andExpect(jsonPath("$[0].sourceTitle").value("Atlas público"))
+            .andExpect(jsonPath("$[0].content").value(org.hamcrest.Matchers.containsString("Nara")))
+            .andReturn().getResponse().getContentAsString();
+        UUID chunkId = UUID.fromString(objectMapper.readTree(chunkResponse).get(0).get("id").asString());
+        mockMvc.perform(get(
+                    "/api/v1/realms/{realmId}/sources/{documentId}/chunks", realmId, documentId
+                ).with(identity("catalogue-player")))
+            .andExpect(status().isNotFound());
 
         UUID naraId = createCatalogueEntity(
             "catalogue-owner", realmId, "CHARACTER", "Nara Vey", publicPolicy, List.of(chunkId)

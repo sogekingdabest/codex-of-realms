@@ -1,7 +1,8 @@
 # Lore catalogue operations
 
-M6 exposes a manual structured catalogue under `/api/v1/realms/{realmId}/catalogue`. Bearer authentication and an
-active realm membership are always required. `OWNER` and `EDITOR` members mutate and promote records; `PLAYER`
+M6 exposes a manual structured catalogue under `/api/v1/realms/{realmId}/catalogue`; M9 makes it operable through the
+web **Atlas del canon**. Bearer authentication and an active realm membership are always required. `OWNER` and
+`EDITOR` members mutate and promote records; `PLAYER`
 members only read records allowed by their effective access.
 
 ## Entities
@@ -32,6 +33,11 @@ Example creation body:
 
 Aliases are trimmed, deduplicated case-insensitively, and cannot repeat the display name. Source evidence is
 optional. Every supplied chunk must be active, belong to the same realm, and use exactly the entity's access policy.
+
+Curators discover eligible evidence through
+`GET /api/v1/realms/{realmId}/sources/{documentId}/chunks`. The endpoint requires `OWNER` or `EDITOR`, returns chunks
+only from the active `READY` version, and never weakens catalogue visibility. The web client lists chunks only for
+sources whose policy matches the claim being edited.
 
 ## Relations
 
@@ -73,6 +79,9 @@ promotion history.
 title, checksum, heading, and offsets. It remains available if the original source is later retired or deleted. The
 creator/updater and promotion audit are human provenance even when no source evidence is attached.
 
+The evidence snapshot survives source retirement, but opening the complete raw source later still requires an active,
+authorized source version. The snapshot remains the durable audit record when that raw content is no longer available.
+
 Unknown, inaccessible, and cross-realm records all use the same non-disclosing `404` response. Deleting an entity
 with active relations returns `409`; delete the relations explicitly first.
 
@@ -87,3 +96,6 @@ From `backend` with Docker running:
 The catalogue acceptance case applies Flyway V5 to PostgreSQL and verifies role restrictions, endpoint visibility,
 cross-realm rejection, canon transitions, promotion history, evidence snapshots, deletion behavior, and OpenAPI
 discovery.
+
+Frontend component tests additionally verify the read-only player atlas, evidence-backed editor creation, and explicit
+human promotion. See [Canon workspace](CANON_WORKSPACE.md) for the browser workflow and product boundaries.

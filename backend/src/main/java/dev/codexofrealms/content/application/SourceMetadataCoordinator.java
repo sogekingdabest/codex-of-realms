@@ -103,6 +103,14 @@ class SourceMetadataCoordinator {
     }
 
     @Transactional(readOnly = true)
+    List<SourceChunkView> chunks(UUID realmId, UUID documentId, UUID userId) {
+        realmAccess.requireEditor(realmId, userId);
+        repository.findActiveView(realmId, documentId)
+            .orElseThrow(SourceNotFoundException::new);
+        return repository.listActiveChunks(realmId, documentId);
+    }
+
+    @Transactional(readOnly = true)
     SourceVersionRecord accessibleVersion(
         UUID realmId,
         UUID documentId,

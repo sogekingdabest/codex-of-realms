@@ -15,5 +15,6 @@
 | [ADR-011](ADR-011-first-party-web-client.md) | Accepted | Build the first-party React client in the monorepo with Authorization Code + PKCE. |
 | [ADR-012](ADR-012-multi-user-product-closure.md) | Accepted | Close invitations, named access, citation inspection, and durable local identity. |
 | [ADR-013](ADR-013-reproducible-local-release-gate.md) | Accepted | Make deterministic product acceptance and isolated restore verification the local release gate. |
+| [ADR-014](ADR-014-first-party-canon-workspace.md) | Accepted | Expose manual, access-aware canon curation in the existing web client. |
 
 New ADRs use the next sequential identifier and record context, decision, consequences, and rejected alternatives. Accepted ADRs are not rewritten to hide earlier reasoning; superseding decisions link to the record they replace.

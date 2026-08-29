@@ -4,10 +4,16 @@ import type {
   CurrentUserView,
   InvitationView,
   LoreAnswer,
+  LoreEntityInput,
+  LoreEntityView,
+  LoreRelationInput,
+  LoreRelationUpdateInput,
+  LoreRelationView,
   MembershipView,
   RealmSummary,
   RuntimeCapabilities,
   SourceContentView,
+  SourceChunkView,
   SourceDocumentView,
 } from './types'
 
@@ -46,6 +52,25 @@ export interface CodexApi {
     documentId: string,
     versionId: string,
   ): Promise<SourceContentView>
+  listSourceChunks(realmId: string, documentId: string): Promise<SourceChunkView[]>
+  listLoreEntities(realmId: string): Promise<LoreEntityView[]>
+  createLoreEntity(realmId: string, input: LoreEntityInput): Promise<LoreEntityView>
+  updateLoreEntity(
+    realmId: string,
+    entityId: string,
+    input: LoreEntityInput,
+  ): Promise<LoreEntityView>
+  promoteLoreEntity(realmId: string, entityId: string): Promise<LoreEntityView>
+  deleteLoreEntity(realmId: string, entityId: string): Promise<void>
+  listLoreRelations(realmId: string): Promise<LoreRelationView[]>
+  createLoreRelation(realmId: string, input: LoreRelationInput): Promise<LoreRelationView>
+  updateLoreRelation(
+    realmId: string,
+    relationId: string,
+    input: LoreRelationUpdateInput,
+  ): Promise<LoreRelationView>
+  promoteLoreRelation(realmId: string, relationId: string): Promise<LoreRelationView>
+  deleteLoreRelation(realmId: string, relationId: string): Promise<void>
   ask(realmId: string, question: string): Promise<LoreAnswer>
   getCapabilities(): Promise<RuntimeCapabilities>
 }
@@ -188,6 +213,84 @@ export class HttpCodexApi implements CodexApi {
   getSourceContent(realmId: string, documentId: string, versionId: string) {
     return this.request<SourceContentView>(
       `/realms/${encodeURIComponent(realmId)}/sources/${encodeURIComponent(documentId)}/versions/${encodeURIComponent(versionId)}/content`,
+    )
+  }
+
+  listSourceChunks(realmId: string, documentId: string) {
+    return this.request<SourceChunkView[]>(
+      `/realms/${encodeURIComponent(realmId)}/sources/${encodeURIComponent(documentId)}/chunks`,
+    )
+  }
+
+  listLoreEntities(realmId: string) {
+    return this.request<LoreEntityView[]>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/entities`,
+    )
+  }
+
+  createLoreEntity(realmId: string, input: LoreEntityInput) {
+    return this.request<LoreEntityView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/entities`,
+      { method: 'POST', body: JSON.stringify(input) },
+    )
+  }
+
+  updateLoreEntity(realmId: string, entityId: string, input: LoreEntityInput) {
+    return this.request<LoreEntityView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/entities/${encodeURIComponent(entityId)}`,
+      { method: 'PUT', body: JSON.stringify(input) },
+    )
+  }
+
+  promoteLoreEntity(realmId: string, entityId: string) {
+    return this.request<LoreEntityView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/entities/${encodeURIComponent(entityId)}/promotion`,
+      { method: 'POST' },
+    )
+  }
+
+  deleteLoreEntity(realmId: string, entityId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/entities/${encodeURIComponent(entityId)}`,
+      { method: 'DELETE' },
+    )
+  }
+
+  listLoreRelations(realmId: string) {
+    return this.request<LoreRelationView[]>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/relations`,
+    )
+  }
+
+  createLoreRelation(realmId: string, input: LoreRelationInput) {
+    return this.request<LoreRelationView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/relations`,
+      { method: 'POST', body: JSON.stringify(input) },
+    )
+  }
+
+  updateLoreRelation(
+    realmId: string,
+    relationId: string,
+    input: LoreRelationUpdateInput,
+  ) {
+    return this.request<LoreRelationView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/relations/${encodeURIComponent(relationId)}`,
+      { method: 'PUT', body: JSON.stringify(input) },
+    )
+  }
+
+  promoteLoreRelation(realmId: string, relationId: string) {
+    return this.request<LoreRelationView>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/relations/${encodeURIComponent(relationId)}/promotion`,
+      { method: 'POST' },
+    )
+  }
+
+  deleteLoreRelation(realmId: string, relationId: string) {
+    return this.request<void>(
+      `/realms/${encodeURIComponent(realmId)}/catalogue/relations/${encodeURIComponent(relationId)}`,
+      { method: 'DELETE' },
     )
   }
 

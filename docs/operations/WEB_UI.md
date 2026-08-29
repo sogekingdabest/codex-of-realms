@@ -1,7 +1,7 @@
 # Web UI
 
-M8.1 closes the multi-user browser path from Keycloak registration to invitations, spoiler grants, grounded answers,
-and exact source evidence.
+The web application covers the multi-user path from Keycloak registration to invitations, spoiler grants, grounded
+answers, exact source evidence, and the M9 canon workspace.
 
 ## Prerequisites
 
@@ -52,6 +52,10 @@ browser onboarding.
 3. Create a named spoiler group and grant it to selected players when needed.
 4. Upload a UTF-8 Markdown or TXT source with a title and policy.
 5. Ask a question and open any citation to inspect the authorized source context.
+6. Open **Atlas del canon** to create evidence-backed entities and relations, then promote reviewed proposals.
+
+Players see the same two workspaces, but the server returns only their authorized sources and catalogue records. The
+Atlas is read-only for them. Catalogue curation does not require a running chat model.
 
 The header notice reports whether the configured embedding and chat models are installed. A model outage is shown as a
 runtime problem rather than being presented as missing lore.
@@ -86,10 +90,10 @@ npm run test
 npm run build
 ~~~
 
-The tests cover bearer-token API requests, safe multipart handling, owner source presentation, citation rendering, and
-the player path that loads visible sources without requesting editor-only policy or membership data. They also pin the
-Authorization Code + PKCE `S256` configuration and the expired-token recovery path. CI runs these checks independently
-of the deterministic Java suite.
+The tests cover bearer-token API requests, safe multipart handling, owner source presentation, citation rendering,
+catalogue creation and promotion, and the player paths that load only visible sources and catalogue records. They also
+pin Authorization Code + PKCE `S256` and the expired-token recovery path. CI runs these checks independently of the
+deterministic Java suite.
 
 For the complete backend, frontend, running-stack, backup, and isolated-restore gate, use
 [`M8.2 local product acceptance`](../evaluation/M8_2_ACCEPTANCE.md).

@@ -212,6 +212,28 @@ such rather than presented as passed.
 suite, backup checksums and counts, the unpublished-port restore topology, and a successful restore of six Flyway
 migrations plus the persistent Keycloak realm. The M5.1 three-run benchmark remains a separate promotion gate.
 
+## M9 — Canon workspace
+
+**Status:** Complete
+
+**Goal:** Turn the manual catalogue into a useful, evidence-backed product surface for every realm member.
+
+- Add an **Atlas del canon** beside the existing archive and question workflow.
+- Let owners and editors create and revise typed entities and directional relations without internal identifiers.
+- Let curators select exact active source fragments whose access policy matches the catalogue claim.
+- Keep every change proposed until a human explicitly promotes it to canon.
+- Give players a read-only catalogue filtered by effective realm, policy, and endpoint access.
+- Keep catalogue operations in the existing frontend and modular monolith.
+
+**Exit criteria:** a curator can build and promote an evidence-backed entity and relation entirely through the web;
+a player sees only authorized catalogue records; source evidence remains traceable; and backend, frontend, and Compose
+verification pass without a live language model.
+
+**Current evidence:** ADR-014, the canon-workspace runbook, an editor-only active-chunk discovery endpoint, the typed
+frontend API, entity and relation workspaces, explicit promotion controls, authorized evidence inspection, and
+PostgreSQL-backed role/visibility/provenance tests. Backend verification passes 43 tests; frontend lint, all 13 tests,
+and the production build pass. A browser smoke confirms the Spanish Keycloak Authorization Code + PKCE entry path.
+
 ## Later candidates, not commitments
 
 - PDF ingestion and OCR
@@ -221,7 +243,6 @@ migrations plus the persistent Keycloak realm. The M5.1 three-run benchmark rema
 - Contradiction and timeline analysis
 - Session summarization
 - Neo4j or another knowledge-graph projection
-- Lore catalogue UI
 - Browser-side model execution with WebLLM or LiteRT-LM
 - English demo corpus and multilingual evaluation
 

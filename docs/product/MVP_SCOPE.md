@@ -35,6 +35,7 @@ This document is the scope contract for the first portfolio-ready release. A fea
 - Register and authenticate through Keycloak Authorization Code with PKCE `S256`.
 - Create and switch realms without exposing internal identifiers.
 - Administer invitations, spoiler groups, grants, sources, and questions in Spanish.
+- Navigate and curate the authorized lore catalogue without exposing internal identifiers.
 - Show only viewer-visible sources and distinguish insufficient evidence from model-runtime failure.
 - Keep access and refresh tokens in the Keycloak adapter's memory rather than browser persistence.
 
@@ -70,7 +71,6 @@ This document is the scope contract for the first portfolio-ready release. A fea
 - Neo4j or a separate graph database
 - GraphRAG
 - Automatic entity and relation extraction
-- Lore catalogue editing in the web interface
 - Reranking
 - Hybrid keyword/vector retrieval
 - Contradiction detection

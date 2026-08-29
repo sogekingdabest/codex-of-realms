@@ -72,4 +72,30 @@ describe('HttpCodexApi', () => {
 
     await expect(api.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
   })
+
+  it('envía las fichas del canon con evidencia como JSON tipado', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ id: 'entity-1' }), {
+        status: 201,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const input = {
+      type: 'CHARACTER' as const,
+      displayName: 'Nara Vey',
+      aliases: ['La Cartógrafa'],
+      description: 'Custodia el paso oriental.',
+      accessPolicyId: 'policy-1',
+      evidenceChunkIds: ['chunk-1'],
+    }
+
+    await api.createLoreEntity('realm 1', input)
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/v1/realms/realm%201/catalogue/entities')
+    expect(init.method).toBe('POST')
+    expect(init.body).toBe(JSON.stringify(input))
+  })
 })

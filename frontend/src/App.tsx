@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 
 import type { CodexApi } from './api'
 import type { AuthSession } from './auth'
+import { CatalogueWorkspace } from './CatalogueWorkspace'
 import type {
   AccessClassification,
   AccessPolicyView,
@@ -14,11 +15,21 @@ import type {
   RuntimeCapabilities,
   SourceContentView,
   SourceDocumentView,
+  SourceEvidence,
 } from './types'
 
 interface AppProps {
   api: CodexApi
   session: AuthSession
+}
+
+interface EvidenceReference {
+  documentId: string
+  versionId: string
+  heading: string | null
+  startOffset: number
+  endOffset: number
+  eyebrow: string
 }
 
 const classificationLabels: Record<AccessClassification, string> = {
@@ -51,9 +62,10 @@ export function App({ api, session }: AppProps) {
   const [grantsByPolicy, setGrantsByPolicy] = useState<Record<string, string[]>>({})
   const [capabilities, setCapabilities] = useState<RuntimeCapabilities | null>(null)
   const [selectedPolicyId, setSelectedPolicyId] = useState('')
+  const [workspaceSection, setWorkspaceSection] = useState<'archive' | 'canon'>('archive')
   const [answer, setAnswer] = useState<LoreAnswer | null>(null)
-  const [openCitation, setOpenCitation] = useState<{
-    citation: Citation
+  const [openEvidence, setOpenEvidence] = useState<{
+    reference: EvidenceReference
     source: SourceContentView
   } | null>(null)
   const [initialError, setInitialError] = useState<string | null>(null)
@@ -352,22 +364,44 @@ export function App({ api, session }: AppProps) {
     }
   }
 
-  async function inspectCitation(citation: Citation) {
+  async function inspectEvidence(reference: EvidenceReference) {
     if (!selectedRealmId) return
     setLoadingCitation(true)
     setRealmError(null)
     try {
       const source = await api.getSourceContent(
         selectedRealmId,
-        citation.sourceDocumentId,
-        citation.documentVersionId,
+        reference.documentId,
+        reference.versionId,
       )
-      setOpenCitation({ citation, source })
+      setOpenEvidence({ reference, source })
     } catch (error) {
       setRealmError(errorMessage(error))
     } finally {
       setLoadingCitation(false)
     }
+  }
+
+  function inspectCitation(citation: Citation) {
+    return inspectEvidence({
+      documentId: citation.sourceDocumentId,
+      versionId: citation.documentVersionId,
+      heading: citation.heading,
+      startOffset: citation.startOffset,
+      endOffset: citation.endOffset,
+      eyebrow: `Evidencia autorizada · versión ${citation.versionNumber}`,
+    })
+  }
+
+  function inspectCatalogueEvidence(evidence: SourceEvidence) {
+    return inspectEvidence({
+      documentId: evidence.documentId,
+      versionId: evidence.documentVersionId,
+      heading: evidence.heading,
+      startOffset: evidence.startOffset,
+      endOffset: evidence.endOffset,
+      eyebrow: `Procedencia del canon · ${evidence.checksumSha256.slice(0, 10)}`,
+    })
   }
 
   if (initialError) {
@@ -432,7 +466,7 @@ export function App({ api, session }: AppProps) {
                   setMembers([])
                   setInvitations([])
                   setGrantsByPolicy({})
-                  setOpenCitation(null)
+                  setOpenEvidence(null)
                   setSelectedRealmId(event.target.value)
                 }}
               >
@@ -445,7 +479,7 @@ export function App({ api, session }: AppProps) {
           )}
         </section>
 
-        {capabilities && !runtimeReady && (
+        {workspaceSection === 'archive' && capabilities && !runtimeReady && (
           <aside className="runtime-notice" role="status">
             <div>
               <strong>El runtime local necesita preparación</strong>
@@ -485,7 +519,26 @@ export function App({ api, session }: AppProps) {
             </div>
           </section>
         ) : (
-          <div className="content-grid" aria-busy={loadingRealm}>
+          <>
+            <nav className="workspace-navigation" aria-label="Espacio de trabajo">
+              <button
+                className={workspaceSection === 'archive' ? 'active' : ''}
+                type="button"
+                onClick={() => setWorkspaceSection('archive')}
+              >
+                Archivo y consultas
+              </button>
+              <button
+                className={workspaceSection === 'canon' ? 'active' : ''}
+                type="button"
+                onClick={() => setWorkspaceSection('canon')}
+              >
+                Atlas del canon
+              </button>
+            </nav>
+
+            {workspaceSection === 'archive' ? (
+              <div className="content-grid" aria-busy={loadingRealm}>
             <section className="panel sources-panel">
               <div className="panel-heading">
                 <span className="panel-number">01</span>
@@ -775,11 +828,23 @@ export function App({ api, session }: AppProps) {
                 </div>
               </section>
             )}
-          </div>
+              </div>
+            ) : (
+              <CatalogueWorkspace
+                api={api}
+                canEdit={Boolean(canEdit)}
+                key={selectedRealmId}
+                policies={policies}
+                realmId={selectedRealmId}
+                sources={sources}
+                onOpenEvidence={(evidence) => void inspectCatalogueEvidence(evidence)}
+              />
+            )}
+          </>
         )}
 
-        {openCitation && (
-          <div className="source-dialog-backdrop" role="presentation" onMouseDown={() => setOpenCitation(null)}>
+        {openEvidence && (
+          <div className="source-dialog-backdrop" role="presentation" onMouseDown={() => setOpenEvidence(null)}>
             <section
               aria-labelledby="source-dialog-title"
               aria-modal="true"
@@ -789,13 +854,13 @@ export function App({ api, session }: AppProps) {
             >
               <header>
                 <div>
-                  <p className="eyebrow">Evidencia autorizada · versión {openCitation.citation.versionNumber}</p>
-                  <h2 id="source-dialog-title">{openCitation.source.title}</h2>
-                  <span>{openCitation.source.originalFilename} · {openCitation.citation.heading || 'Documento'}</span>
+                  <p className="eyebrow">{openEvidence.reference.eyebrow}</p>
+                  <h2 id="source-dialog-title">{openEvidence.source.title}</h2>
+                  <span>{openEvidence.source.originalFilename} · {openEvidence.reference.heading || 'Documento'}</span>
                 </div>
-                <button type="button" aria-label="Cerrar evidencia" onClick={() => setOpenCitation(null)}>×</button>
+                <button type="button" aria-label="Cerrar evidencia" onClick={() => setOpenEvidence(null)}>×</button>
               </header>
-              <pre>{citationExcerpt(openCitation.source.content, openCitation.citation)}</pre>
+              <pre>{citationExcerpt(openEvidence.source.content, openEvidence.reference)}</pre>
             </section>
           </div>
         )}
@@ -816,9 +881,9 @@ function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Ha ocurrido un error inesperado.'
 }
 
-function citationExcerpt(content: string, citation: Citation) {
-  const start = Math.max(0, Math.min(citation.startOffset, content.length))
-  const end = Math.max(start, Math.min(citation.endOffset, content.length))
+function citationExcerpt(content: string, reference: Pick<EvidenceReference, 'startOffset' | 'endOffset'>) {
+  const start = Math.max(0, Math.min(reference.startOffset, content.length))
+  const end = Math.max(start, Math.min(reference.endOffset, content.length))
   const contextStart = Math.max(0, start - 320)
   const contextEnd = Math.min(content.length, end + 320)
   const prefix = contextStart > 0 ? '…' : ''

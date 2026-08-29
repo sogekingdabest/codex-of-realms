@@ -1,8 +1,8 @@
 # Product Charter
 
 - **Product:** Codex of Realms
-- **Status:** M8.2 validated local-product baseline
-- **Date:** 2026-08-28
+- **Status:** M9 evidence-backed canon workspace
+- **Date:** 2026-08-29
 
 ## Product definition
 
@@ -79,7 +79,8 @@ The MVP is successful when a reviewer can:
 5. Ask an unsupported question and receive `INSUFFICIENT_EVIDENCE`.
 6. Ask the same spoiler question as two players and receive different, authorized outcomes.
 7. Run the automated test and RAG evaluation suites.
-8. Inspect the architectural decisions, threat model, metrics, and known limitations.
+8. Build an evidence-backed catalogue and decide explicitly which proposals become canon.
+9. Inspect the architectural decisions, threat model, metrics, and known limitations.
 
 ## Quality targets
 

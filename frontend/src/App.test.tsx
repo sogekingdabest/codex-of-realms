@@ -61,6 +61,17 @@ function testApi(): CodexApi {
       originalFilename: 'lumbrevela.md',
       content: '# La Aguja\nLa Aguja conserva una deuda antigua con el Meridiano.',
     }),
+    listSourceChunks: vi.fn().mockResolvedValue([]),
+    listLoreEntities: vi.fn().mockResolvedValue([]),
+    createLoreEntity: vi.fn(),
+    updateLoreEntity: vi.fn(),
+    promoteLoreEntity: vi.fn(),
+    deleteLoreEntity: vi.fn(),
+    listLoreRelations: vi.fn().mockResolvedValue([]),
+    createLoreRelation: vi.fn(),
+    updateLoreRelation: vi.fn(),
+    promoteLoreRelation: vi.fn(),
+    deleteLoreRelation: vi.fn(),
     ask: vi.fn().mockResolvedValue({
       outcome: 'ANSWERED',
       answer: 'La Aguja conserva una deuda antigua con el Meridiano.',
@@ -150,5 +161,17 @@ describe('App', () => {
     expect(api.listPolicies).not.toHaveBeenCalled()
     expect(api.listMemberships).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
+  })
+
+  it('abre el atlas del canon desde la navegación principal', async () => {
+    const api = testApi()
+    render(<App api={api} session={session} />)
+    await screen.findByText('Crónica de Lumbrevela')
+
+    fireEvent.click(screen.getByRole('button', { name: 'Atlas del canon' }))
+
+    expect(await screen.findByRole('heading', { name: 'Atlas del canon' })).toBeInTheDocument()
+    expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1')
+    expect(api.listLoreRelations).toHaveBeenCalledWith('realm-1')
   })
 })

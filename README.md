@@ -6,16 +6,18 @@ The product is deliberately narrower than a general-purpose worldbuilding suite.
 
 ## Project status
 
-**M8.2 — Reproducible local product acceptance** is complete. A realm owner can register through Keycloak,
-create a realm with safe default policies, invite editors or players by email, create named spoiler groups, manage grants,
-upload sources, ask grounded questions, and open the exact authorized evidence behind every citation from the Spanish
-interface at `http://localhost:5173`. Keycloak now persists in PostgreSQL and coordinated backup/restore scripts cover
-the database and raw sources. M8.2 adds one deterministic release command and verifies recovery in isolated Docker
-volumes; the final model-backed comparison remains explicitly parked rather than blocking product development.
+**M9 — Canon workspace** is complete. The Spanish web application now joins the evidence-first archive with an
+access-aware **Atlas del canon**. Owners and editors can create characters, places, factions, objects, events, and
+directional relations; attach exact source fragments; edit proposals; and explicitly promote them to canon. Players
+receive the same navigable catalogue filtered by their effective access, without mutation controls.
+
+The earlier M8.2 release gate remains the reproducible local-product baseline: Keycloak identity persists in
+PostgreSQL, coordinated backup/restore covers the database and raw sources, and live-model comparison stays parked
+rather than blocking catalogue development.
 
 The deterministic backend suite includes PostgreSQL/pgvector acceptance of invitation activation, role and grant
 boundaries, player-visible source browsing, ingestion, retrieval, grounded answers, and catalogue invariants. The
-frontend adds owner/player component and API-client tests plus lint and production-build checks. Baseline v2 covers 22
+frontend adds owner/editor/player component and API-client tests plus lint and production-build checks. Baseline v2 covers 22
 cases over seven original Spanish sources; real-model promotion still requires the reviewed M5.1 comparison.
 
 The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
@@ -58,6 +60,7 @@ M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` 
 - [Local chat-model evaluation](docs/evaluation/LOCAL_MODEL_EVALUATION.md)
 - [Grounded-answer runbook](docs/operations/GROUNDED_ANSWERS.md)
 - [Lore catalogue runbook](docs/operations/LORE_CATALOGUE.md)
+- [Canon workspace](docs/operations/CANON_WORKSPACE.md)
 - [M7 deterministic quality report](docs/evaluation/PORTFOLIO_REPORT.md)
 - [Reviewer demo](docs/operations/DEMO.md)
 - [Local observability](docs/operations/OBSERVABILITY.md)
