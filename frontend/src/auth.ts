@@ -28,12 +28,12 @@ export async function createAuthSession(): Promise<AuthSession> {
   }
 
   const claims = keycloak.tokenParsed
-  const displayName =
-    typeof claims?.name === 'string'
-      ? claims.name
-      : typeof claims?.preferred_username === 'string'
-        ? claims.preferred_username
-        : 'Explorador'
+  let displayName = 'Explorador'
+  if (typeof claims?.name === 'string') {
+    displayName = claims.name
+  } else if (typeof claims?.preferred_username === 'string') {
+    displayName = claims.preferred_username
+  }
 
   return {
     displayName,

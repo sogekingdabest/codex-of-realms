@@ -98,4 +98,22 @@ describe('HttpCodexApi', () => {
     expect(init.method).toBe('POST')
     expect(init.body).toBe(JSON.stringify(input))
   })
+
+  it('mantiene los identificadores no confiables dentro de la ruta configurada', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ outcome: 'INSUFFICIENT_EVIDENCE' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+
+    await api.ask('../../outside?redirect=https://example.test', 'pregunta')
+
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe(
+      '/api/v1/realms/..%2F..%2Foutside%3Fredirect%3Dhttps%3A%2F%2Fexample.test/questions',
+    )
+  })
 })

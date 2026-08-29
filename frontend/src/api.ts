@@ -317,12 +317,27 @@ export class HttpCodexApi implements CodexApi {
       headers.set('Content-Type', 'application/json')
     }
 
-    const response = await fetch(`${this.baseUrl}${path}`, { ...init, headers })
+    const response = await fetch(this.requestUrl(path), { ...init, headers })
     if (!response.ok) {
       throw new ApiError(await readError(response), response.status)
     }
     if (response.status === 204) return undefined as T
     return (await response.json()) as T
+  }
+
+  private requestUrl(path: string): string {
+    if (!/^\/(?:[A-Za-z0-9._~!$&'()*+,;=:@%-]+\/?)*$/.test(path)) {
+      throw new Error('La ruta solicitada no es válida.')
+    }
+
+    const base = new URL(`${this.baseUrl}/`, window.location.origin)
+    const basePath = base.pathname.replace(/\/$/, '')
+    const url = new URL(`${basePath}${path}`, base.origin)
+    if (url.origin !== base.origin || !url.pathname.startsWith(`${basePath}/`)) {
+      throw new Error('La ruta solicitada queda fuera de la API configurada.')
+    }
+
+    return this.baseUrl.startsWith('/') ? url.pathname : url.toString()
   }
 }
 

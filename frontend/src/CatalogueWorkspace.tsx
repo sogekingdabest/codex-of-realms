@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type SubmitEvent } from 'react'
 
 import type { CodexApi } from './api'
 import type {
@@ -14,12 +14,12 @@ import type {
 } from './types'
 
 interface CatalogueWorkspaceProps {
-  api: CodexApi
-  realmId: string
-  canEdit: boolean
-  policies: AccessPolicyView[]
-  sources: SourceDocumentView[]
-  onOpenEvidence: (evidence: SourceEvidence) => void
+  readonly api: CodexApi
+  readonly realmId: string
+  readonly canEdit: boolean
+  readonly policies: AccessPolicyView[]
+  readonly sources: SourceDocumentView[]
+  readonly onOpenEvidence: (evidence: SourceEvidence) => void
 }
 
 const entityTypeLabels: Record<EntityType, string> = {
@@ -127,7 +127,7 @@ export function CatalogueWorkspace({
     ].some((value) => value.toLocaleLowerCase('es').includes(normalizedSearch))
   }), [canonFilter, normalizedSearch, relations])
 
-  async function saveEntity(event: FormEvent<HTMLFormElement>) {
+  async function saveEntity(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!effectiveEntityDraft.accessPolicyId) return
     setSaving(true)
@@ -146,7 +146,7 @@ export function CatalogueWorkspace({
     }
   }
 
-  async function saveRelation(event: FormEvent<HTMLFormElement>) {
+  async function saveRelation(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!effectiveRelationDraft.accessPolicyId || !effectiveRelationDraft.sourceEntityId || !effectiveRelationDraft.targetEntityId) return
     setSaving(true)
@@ -287,7 +287,7 @@ export function CatalogueWorkspace({
           </button>
         </div>
         <label>
-          Buscar
+          <span>Buscar</span>
           <input
             aria-label="Buscar en el canon"
             value={search}
@@ -297,7 +297,7 @@ export function CatalogueWorkspace({
         </label>
         {section === 'entities' && (
           <label>
-            Tipo
+            <span>Tipo</span>
             <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as EntityType | 'ALL')}>
               <option value="ALL">Todos</option>
               {Object.entries(entityTypeLabels).map(([value, label]) => (
@@ -307,7 +307,7 @@ export function CatalogueWorkspace({
           </label>
         )}
         <label>
-          Estado
+          <span>Estado</span>
           <select value={canonFilter} onChange={(event) => setCanonFilter(event.target.value as CanonStatus | 'ALL')}>
             <option value="ALL">Todos</option>
             <option value="CANON">Canon</option>
@@ -337,25 +337,17 @@ export function CatalogueWorkspace({
               onSubmit={saveEntity}
             />
           )}
-          <div className="catalogue-list">
-            {loading ? (
-              <p className="muted">Abriendo el atlas…</p>
-            ) : visibleEntities.length === 0 ? (
-              <CatalogueEmpty text="No hay fichas visibles con estos filtros." />
-            ) : visibleEntities.map((entity) => (
-              <EntityCard
-                canEdit={canEdit}
-                entity={entity}
-                key={entity.id}
-                policy={policies.find((policy) => policy.id === entity.accessPolicyId)}
-                saving={saving}
-                onDelete={() => void deleteEntity(entity)}
-                onEdit={() => editEntity(entity)}
-                onOpenEvidence={onOpenEvidence}
-                onPromote={() => void promoteEntity(entity)}
-              />
-            ))}
-          </div>
+          <EntityList
+            canEdit={canEdit}
+            entities={visibleEntities}
+            loading={loading}
+            policies={policies}
+            saving={saving}
+            onDelete={deleteEntity}
+            onEdit={editEntity}
+            onOpenEvidence={onOpenEvidence}
+            onPromote={promoteEntity}
+          />
         </div>
       ) : (
         <div className="catalogue-layout">
@@ -377,28 +369,18 @@ export function CatalogueWorkspace({
               onSubmit={saveRelation}
             />
           )}
-          <div className="catalogue-list">
-            {canEdit && entities.length < 2 && (
-              <CatalogueEmpty text="Crea al menos dos fichas para poder relacionarlas." />
-            )}
-            {loading ? (
-              <p className="muted">Trazando relaciones…</p>
-            ) : visibleRelations.length === 0 ? (
-              <CatalogueEmpty text="No hay relaciones visibles con estos filtros." />
-            ) : visibleRelations.map((relation) => (
-              <RelationCard
-                canEdit={canEdit}
-                key={relation.id}
-                policy={policies.find((policy) => policy.id === relation.accessPolicyId)}
-                relation={relation}
-                saving={saving}
-                onDelete={() => void deleteRelation(relation)}
-                onEdit={() => editRelation(relation)}
-                onOpenEvidence={onOpenEvidence}
-                onPromote={() => void promoteRelation(relation)}
-              />
-            ))}
-          </div>
+          <RelationList
+            canEdit={canEdit}
+            entityCount={entities.length}
+            loading={loading}
+            policies={policies}
+            relations={visibleRelations}
+            saving={saving}
+            onDelete={deleteRelation}
+            onEdit={editRelation}
+            onOpenEvidence={onOpenEvidence}
+            onPromote={promoteRelation}
+          />
         </div>
       )}
     </section>
@@ -406,16 +388,16 @@ export function CatalogueWorkspace({
 }
 
 interface EntityFormProps {
-  api: CodexApi
-  draft: LoreEntityInput
-  editing: boolean
-  policies: AccessPolicyView[]
-  realmId: string
-  saving: boolean
-  sources: SourceDocumentView[]
-  onCancel: () => void
-  onChange: (draft: LoreEntityInput) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  readonly api: CodexApi
+  readonly draft: LoreEntityInput
+  readonly editing: boolean
+  readonly policies: AccessPolicyView[]
+  readonly realmId: string
+  readonly saving: boolean
+  readonly sources: SourceDocumentView[]
+  readonly onCancel: () => void
+  readonly onChange: (draft: LoreEntityInput) => void
+  readonly onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }
 
 function EntityForm({ api, draft, editing, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: EntityFormProps) {
@@ -429,17 +411,17 @@ function EntityForm({ api, draft, editing, policies, realmId, saving, sources, o
         {editing && <button className="quiet-button" type="button" onClick={onCancel}>Cancelar</button>}
       </div>
       <label>
-        Tipo
+        <span>Tipo</span>
         <select value={draft.type} onChange={(event) => onChange({ ...draft, type: event.target.value as EntityType })}>
           {Object.entries(entityTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </label>
       <label>
-        Nombre
+        <span>Nombre</span>
         <input required maxLength={160} value={draft.displayName} onChange={(event) => onChange({ ...draft, displayName: event.target.value })} />
       </label>
       <label>
-        Alias separados por comas
+        <span>Alias separados por comas</span>
         <input
           maxLength={1200}
           value={draft.aliases.join(', ')}
@@ -450,7 +432,7 @@ function EntityForm({ api, draft, editing, policies, realmId, saving, sources, o
         />
       </label>
       <label>
-        Descripción
+        <span>Descripción</span>
         <textarea required rows={5} maxLength={4000} value={draft.description} onChange={(event) => onChange({ ...draft, description: event.target.value })} />
       </label>
       <PolicySelect policies={policies} value={draft.accessPolicyId} onChange={(accessPolicyId) => onChange({ ...draft, accessPolicyId, evidenceChunkIds: [] })} />
@@ -463,24 +445,24 @@ function EntityForm({ api, draft, editing, policies, realmId, saving, sources, o
         onChange={(evidenceChunkIds) => onChange({ ...draft, evidenceChunkIds })}
       />
       <button disabled={saving || !draft.accessPolicyId} type="submit">
-        {saving ? 'Guardando…' : editing ? 'Guardar y devolver a propuesto' : 'Crear como propuesta'}
+        {editorSubmitLabel(saving, editing)}
       </button>
     </form>
   )
 }
 
 interface RelationFormProps {
-  api: CodexApi
-  draft: LoreRelationInput
-  editing: boolean
-  entities: LoreEntityView[]
-  policies: AccessPolicyView[]
-  realmId: string
-  saving: boolean
-  sources: SourceDocumentView[]
-  onCancel: () => void
-  onChange: (draft: LoreRelationInput) => void
-  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  readonly api: CodexApi
+  readonly draft: LoreRelationInput
+  readonly editing: boolean
+  readonly entities: LoreEntityView[]
+  readonly policies: AccessPolicyView[]
+  readonly realmId: string
+  readonly saving: boolean
+  readonly sources: SourceDocumentView[]
+  readonly onCancel: () => void
+  readonly onChange: (draft: LoreRelationInput) => void
+  readonly onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }
 
 function RelationForm({ api, draft, editing, entities, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: RelationFormProps) {
@@ -494,13 +476,13 @@ function RelationForm({ api, draft, editing, entities, policies, realmId, saving
         {editing && <button className="quiet-button" type="button" onClick={onCancel}>Cancelar</button>}
       </div>
       <label>
-        Origen
+        <span>Origen</span>
         <select disabled={editing} value={draft.sourceEntityId} onChange={(event) => onChange({ ...draft, sourceEntityId: event.target.value })}>
           {entities.map((entity) => <option key={entity.id} value={entity.id}>{entity.displayName}</option>)}
         </select>
       </label>
       <label>
-        Destino
+        <span>Destino</span>
         <select disabled={editing} value={draft.targetEntityId} onChange={(event) => onChange({ ...draft, targetEntityId: event.target.value })}>
           {entities.filter((entity) => entity.id !== draft.sourceEntityId).map((entity) => (
             <option key={entity.id} value={entity.id}>{entity.displayName}</option>
@@ -508,11 +490,11 @@ function RelationForm({ api, draft, editing, entities, policies, realmId, saving
         </select>
       </label>
       <label>
-        Tipo de relación
+        <span>Tipo de relación</span>
         <input required maxLength={64} value={draft.relationType} onChange={(event) => onChange({ ...draft, relationType: event.target.value })} placeholder="Protege, vive en, pertenece a…" />
       </label>
       <label>
-        Descripción
+        <span>Descripción</span>
         <textarea required rows={4} maxLength={2000} value={draft.description} onChange={(event) => onChange({ ...draft, description: event.target.value })} />
       </label>
       <PolicySelect policies={policies} value={draft.accessPolicyId} onChange={(accessPolicyId) => onChange({ ...draft, accessPolicyId, evidenceChunkIds: [] })} />
@@ -525,16 +507,16 @@ function RelationForm({ api, draft, editing, entities, policies, realmId, saving
         onChange={(evidenceChunkIds) => onChange({ ...draft, evidenceChunkIds })}
       />
       <button disabled={saving || draft.sourceEntityId === draft.targetEntityId} type="submit">
-        {saving ? 'Guardando…' : editing ? 'Guardar y devolver a propuesto' : 'Crear como propuesta'}
+        {editorSubmitLabel(saving, editing)}
       </button>
     </form>
   )
 }
 
-function PolicySelect({ policies, value, onChange }: { policies: AccessPolicyView[]; value: string; onChange: (value: string) => void }) {
+function PolicySelect({ policies, value, onChange }: Readonly<{ policies: AccessPolicyView[]; value: string; onChange: (value: string) => void }>) {
   return (
     <label>
-      Visibilidad de la afirmación
+      <span>Visibilidad de la afirmación</span>
       <select required value={value} onChange={(event) => onChange(event.target.value)}>
         {policies.map((policy) => <option key={policy.id} value={policy.id}>{policy.name}</option>)}
       </select>
@@ -543,12 +525,12 @@ function PolicySelect({ policies, value, onChange }: { policies: AccessPolicyVie
 }
 
 interface EvidencePickerProps {
-  api: CodexApi
-  evidenceChunkIds: string[]
-  policyId: string
-  realmId: string
-  sources: SourceDocumentView[]
-  onChange: (ids: string[]) => void
+  readonly api: CodexApi
+  readonly evidenceChunkIds: string[]
+  readonly policyId: string
+  readonly realmId: string
+  readonly sources: SourceDocumentView[]
+  readonly onChange: (ids: string[]) => void
 }
 
 function EvidencePicker({ api, evidenceChunkIds, policyId, realmId, sources, onChange }: EvidencePickerProps) {
@@ -600,35 +582,132 @@ function EvidencePicker({ api, evidenceChunkIds, policyId, realmId, sources, onC
       ) : (
         <>
           <label>
-            Fuente
+            <span>Fuente</span>
             <select value={selectedDocumentId} onChange={(event) => setDocumentId(event.target.value)}>
               {eligibleSources.map((source) => <option key={source.id} value={source.id}>{source.title}</option>)}
             </select>
           </label>
           {error && <p className="field-error">{error}</p>}
-          <div className="chunk-options" aria-live="polite">
-            {loading ? <p>Abriendo fragmentos…</p> : chunks.map((chunk) => (
-              <label key={chunk.id}>
-                <input
-                  checked={evidenceChunkIds.includes(chunk.id)}
-                  disabled={!evidenceChunkIds.includes(chunk.id) && evidenceChunkIds.length >= 20}
-                  type="checkbox"
-                  onChange={() => toggle(chunk.id)}
-                />
-                <span>
-                  <strong>{chunk.heading || `Fragmento ${chunk.ordinal + 1}`}</strong>
-                  <small>{excerpt(chunk.content)}</small>
-                </span>
-              </label>
-            ))}
-          </div>
+          <ChunkOptions
+            chunks={chunks}
+            evidenceChunkIds={evidenceChunkIds}
+            loading={loading}
+            onToggle={toggle}
+          />
         </>
       )}
     </fieldset>
   )
 }
 
-function EntityCard({ entity, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence }: {
+function EntityList({ canEdit, entities, loading, policies, saving, onDelete, onEdit, onOpenEvidence, onPromote }: Readonly<{
+  canEdit: boolean
+  entities: LoreEntityView[]
+  loading: boolean
+  policies: AccessPolicyView[]
+  saving: boolean
+  onDelete: (entity: LoreEntityView) => Promise<void>
+  onEdit: (entity: LoreEntityView) => void
+  onOpenEvidence: (evidence: SourceEvidence) => void
+  onPromote: (entity: LoreEntityView) => Promise<void>
+}>) {
+  if (loading) return <div className="catalogue-list"><p className="muted">Abriendo el atlas…</p></div>
+  if (entities.length === 0) {
+    return <div className="catalogue-list"><CatalogueEmpty text="No hay fichas visibles con estos filtros." /></div>
+  }
+  return (
+    <div className="catalogue-list">
+      {entities.map((entity) => (
+        <EntityCard
+          canEdit={canEdit}
+          entity={entity}
+          key={entity.id}
+          policy={policies.find((policy) => policy.id === entity.accessPolicyId)}
+          saving={saving}
+          onDelete={() => void onDelete(entity)}
+          onEdit={() => onEdit(entity)}
+          onOpenEvidence={onOpenEvidence}
+          onPromote={() => void onPromote(entity)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, onPromote }: Readonly<{
+  canEdit: boolean
+  entityCount: number
+  loading: boolean
+  policies: AccessPolicyView[]
+  relations: LoreRelationView[]
+  saving: boolean
+  onDelete: (relation: LoreRelationView) => Promise<void>
+  onEdit: (relation: LoreRelationView) => void
+  onOpenEvidence: (evidence: SourceEvidence) => void
+  onPromote: (relation: LoreRelationView) => Promise<void>
+}>) {
+  if (loading) return <div className="catalogue-list"><p className="muted">Trazando relaciones…</p></div>
+  return (
+    <div className="catalogue-list">
+      {canEdit && entityCount < 2 && (
+        <CatalogueEmpty text="Crea al menos dos fichas para poder relacionarlas." />
+      )}
+      {relations.length === 0 ? (
+        <CatalogueEmpty text="No hay relaciones visibles con estos filtros." />
+      ) : relations.map((relation) => (
+        <RelationCard
+          canEdit={canEdit}
+          key={relation.id}
+          policy={policies.find((policy) => policy.id === relation.accessPolicyId)}
+          relation={relation}
+          saving={saving}
+          onDelete={() => void onDelete(relation)}
+          onEdit={() => onEdit(relation)}
+          onOpenEvidence={onOpenEvidence}
+          onPromote={() => void onPromote(relation)}
+        />
+      ))}
+    </div>
+  )
+}
+
+function ChunkOptions({ chunks, evidenceChunkIds, loading, onToggle }: Readonly<{
+  chunks: Awaited<ReturnType<CodexApi['listSourceChunks']>>
+  evidenceChunkIds: string[]
+  loading: boolean
+  onToggle: (chunkId: string) => void
+}>) {
+  if (loading) return <div className="chunk-options" aria-live="polite"><p>Abriendo fragmentos…</p></div>
+  return (
+    <div className="chunk-options" aria-live="polite">
+      {chunks.map((chunk) => {
+        const label = chunk.heading || `Fragmento ${chunk.ordinal + 1}`
+        return (
+          <label key={chunk.id}>
+            <input
+              aria-label={`Seleccionar ${label}`}
+              checked={evidenceChunkIds.includes(chunk.id)}
+              disabled={!evidenceChunkIds.includes(chunk.id) && evidenceChunkIds.length >= 20}
+              type="checkbox"
+              onChange={() => onToggle(chunk.id)}
+            />
+            <span>
+              <strong>{label}</strong>
+              <small>{excerpt(chunk.content)}</small>
+            </span>
+          </label>
+        )
+      })}
+    </div>
+  )
+}
+
+function editorSubmitLabel(saving: boolean, editing: boolean) {
+  if (saving) return 'Guardando…'
+  return editing ? 'Guardar y devolver a propuesto' : 'Crear como propuesta'
+}
+
+function EntityCard({ entity, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence }: Readonly<{
   entity: LoreEntityView
   policy?: AccessPolicyView
   canEdit: boolean
@@ -637,7 +716,7 @@ function EntityCard({ entity, policy, canEdit, saving, onEdit, onPromote, onDele
   onPromote: () => void
   onDelete: () => void
   onOpenEvidence: (evidence: SourceEvidence) => void
-}) {
+}>) {
   return (
     <article className="catalogue-card">
       <header>
@@ -664,7 +743,7 @@ function EntityCard({ entity, policy, canEdit, saving, onEdit, onPromote, onDele
   )
 }
 
-function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence }: {
+function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence }: Readonly<{
   relation: LoreRelationView
   policy?: AccessPolicyView
   canEdit: boolean
@@ -673,7 +752,7 @@ function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, on
   onPromote: () => void
   onDelete: () => void
   onOpenEvidence: (evidence: SourceEvidence) => void
-}) {
+}>) {
   return (
     <article className="catalogue-card relation-card">
       <header>
@@ -700,7 +779,7 @@ function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, on
   )
 }
 
-function CatalogueEvidence({ evidence, onOpen }: { evidence: SourceEvidence[]; onOpen: (evidence: SourceEvidence) => void }) {
+function CatalogueEvidence({ evidence, onOpen }: Readonly<{ evidence: SourceEvidence[]; onOpen: (evidence: SourceEvidence) => void }>) {
   if (evidence.length === 0) return <p className="no-evidence">Afirmación manual sin fuente vinculada.</p>
   return (
     <div className="catalogue-evidence">
@@ -714,11 +793,11 @@ function CatalogueEvidence({ evidence, onOpen }: { evidence: SourceEvidence[]; o
   )
 }
 
-function CanonBadge({ status }: { status: CanonStatus }) {
+function CanonBadge({ status }: Readonly<{ status: CanonStatus }>) {
   return <span className={`canon-badge canon-${status.toLocaleLowerCase('es')}`}>{status === 'CANON' ? 'Canon' : 'Propuesto'}</span>
 }
 
-function CatalogueEmpty({ text }: { text: string }) {
+function CatalogueEmpty({ text }: Readonly<{ text: string }>) {
   return <div className="catalogue-empty"><span aria-hidden="true">◇</span><p>{text}</p></div>
 }
 

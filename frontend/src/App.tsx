@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react'
 
 import type { CodexApi } from './api'
 import type { AuthSession } from './auth'
@@ -19,8 +19,8 @@ import type {
 } from './types'
 
 interface AppProps {
-  api: CodexApi
-  session: AuthSession
+  readonly api: CodexApi
+  readonly session: AuthSession
 }
 
 interface EvidenceReference {
@@ -167,11 +167,11 @@ export function App({ api, session }: AppProps) {
     }
   }, [api, canEdit, isOwner, selectedRealm, selectedRealmId])
 
-  async function createRealm(event: FormEvent<HTMLFormElement>) {
+  async function createRealm(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     const formElement = event.currentTarget
     const form = new FormData(formElement)
-    const name = String(form.get('realmName') ?? '').trim()
+    const name = formText(form, 'realmName')
     if (!name) return
 
     setCreatingRealm(true)
@@ -190,13 +190,13 @@ export function App({ api, session }: AppProps) {
     }
   }
 
-  async function createPolicy(event: FormEvent<HTMLFormElement>) {
+  async function createPolicy(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedRealmId) return
     const formElement = event.currentTarget
     const form = new FormData(formElement)
-    const name = String(form.get('policyName') ?? '').trim()
-    const description = String(form.get('policyDescription') ?? '').trim()
+    const name = formText(form, 'policyName')
+    const description = formText(form, 'policyDescription')
     if (!name) return
     setCreatingPolicy(true)
     setRealmError(null)
@@ -218,13 +218,13 @@ export function App({ api, session }: AppProps) {
     }
   }
 
-  async function inviteMember(event: FormEvent<HTMLFormElement>) {
+  async function inviteMember(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedRealmId) return
     const formElement = event.currentTarget
     const form = new FormData(formElement)
-    const email = String(form.get('memberEmail') ?? '').trim()
-    const role = String(form.get('memberRole') ?? 'PLAYER') as 'EDITOR' | 'PLAYER'
+    const email = formText(form, 'memberEmail')
+    const role = form.get('memberRole') === 'EDITOR' ? 'EDITOR' : 'PLAYER'
     if (!email) return
     setInviting(true)
     setRealmError(null)
@@ -304,13 +304,13 @@ export function App({ api, session }: AppProps) {
     }
   }
 
-  async function uploadSource(event: FormEvent<HTMLFormElement>) {
+  async function uploadSource(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedRealmId || !selectedPolicyId || !fileInput.current?.files?.[0]) return
 
     const formElement = event.currentTarget
     const form = new FormData(formElement)
-    const title = String(form.get('title') ?? '').trim()
+    const title = formText(form, 'title')
     const file = fileInput.current.files[0]
     if (!title) return
 
@@ -333,11 +333,11 @@ export function App({ api, session }: AppProps) {
     }
   }
 
-  async function askQuestion(event: FormEvent<HTMLFormElement>) {
+  async function askQuestion(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!selectedRealmId) return
     const form = new FormData(event.currentTarget)
-    const question = String(form.get('question') ?? '').trim()
+    const question = formText(form, 'question')
     if (!question) return
 
     setAsking(true)
@@ -480,44 +480,11 @@ export function App({ api, session }: AppProps) {
         </section>
 
         {workspaceSection === 'archive' && capabilities && !runtimeReady && (
-          <aside className="runtime-notice" role="status">
-            <div>
-              <strong>El runtime local necesita preparación</strong>
-              <span>
-                {!capabilities.embedding.available
-                  ? ` Embeddings: ${capabilities.embedding.model} (${capabilities.embedding.status}).`
-                  : ''}
-                {!capabilities.chat.available
-                  ? ` Respuestas: ${capabilities.chat.model} (${capabilities.chat.status}).`
-                  : ''}
-              </span>
-            </div>
-            <code>
-              ollama pull {!capabilities.embedding.available
-                ? capabilities.embedding.model
-                : capabilities.chat.model}
-            </code>
-          </aside>
+          <RuntimeNotice capabilities={capabilities} />
         )}
 
         {me.realms.length === 0 ? (
-          <section className="empty-realm panel">
-            <span className="panel-number">01</span>
-            <div>
-              <p className="eyebrow">Primer registro</p>
-              <h2>Crea un universo</h2>
-              <p>Será tu espacio aislado para fuentes, permisos y respuestas.</p>
-              <form onSubmit={(event) => void createRealm(event)}>
-                <label>
-                  Nombre del universo
-                  <input name="realmName" maxLength={120} required placeholder="El Meridiano" />
-                </label>
-                <button disabled={creatingRealm} type="submit">
-                  {creatingRealm ? 'Creando…' : 'Crear universo'}
-                </button>
-              </form>
-            </div>
-          </section>
+          <EmptyRealmPanel creating={creatingRealm} onSubmit={createRealm} />
         ) : (
           <>
             <nav className="workspace-navigation" aria-label="Espacio de trabajo">
@@ -539,294 +506,45 @@ export function App({ api, session }: AppProps) {
 
             {workspaceSection === 'archive' ? (
               <div className="content-grid" aria-busy={loadingRealm}>
-            <section className="panel sources-panel">
-              <div className="panel-heading">
-                <span className="panel-number">01</span>
-                <div>
-                  <p className="eyebrow">Biblioteca del realm</p>
-                  <h2>Fuentes</h2>
-                </div>
-                <span className="count">{sources.length}</span>
-              </div>
+            <SourcesPanel
+              canEdit={Boolean(canEdit)}
+              fileInput={fileInput}
+              loading={loadingRealm}
+              policies={policies}
+              selectedPolicyId={selectedPolicyId}
+              sources={sources}
+              uploading={uploading}
+              onDelete={deleteSource}
+              onPolicyChange={setSelectedPolicyId}
+              onUpload={uploadSource}
+            />
 
-              {canEdit && (
-                <div className="upload-card">
-                  <h3>Añadir conocimiento</h3>
-                  {policies.length > 0 ? (
-                    <form className="upload-form" onSubmit={(event) => void uploadSource(event)}>
-                      <label>
-                        Título
-                        <input name="title" maxLength={160} required placeholder="Crónica de Lumbrevela" />
-                      </label>
-                      <label>
-                        Visibilidad
-                        <select
-                          value={selectedPolicyId}
-                          onChange={(event) => setSelectedPolicyId(event.target.value)}
-                          required
-                        >
-                          {policies.map((policy) => (
-                            <option key={policy.id} value={policy.id}>
-                              {policy.name} · {classificationLabels[policy.classification]}
-                            </option>
-                          ))}
-                        </select>
-                      </label>
-                      <label className="file-field">
-                        Archivo Markdown o TXT
-                        <input ref={fileInput} name="file" type="file" accept=".md,.txt,text/markdown,text/plain" required />
-                      </label>
-                      <button disabled={uploading} type="submit">
-                        {uploading ? 'Procesando…' : 'Subir y procesar'}
-                      </button>
-                    </form>
-                  ) : (
-                    <p className="muted">Preparando las políticas base del universo…</p>
-                  )}
-                </div>
-              )}
-
-              <div className="source-list" aria-live="polite">
-                {loadingRealm ? (
-                  <p className="muted">Leyendo el catálogo…</p>
-                ) : sources.length === 0 ? (
-                  <div className="empty-state">
-                    <span aria-hidden="true">◇</span>
-                    <p>Todavía no hay fuentes visibles en este universo.</p>
-                  </div>
-                ) : (
-                  sources.map((source) => (
-                    <article className="source-item" key={source.id}>
-                      <div>
-                        <h3>{source.title}</h3>
-                        <p>{source.originalFilename} · versión {source.versionNumber}</p>
-                      </div>
-                      <div className="source-meta">
-                        <span className={`status status-${source.status.toLowerCase()}`}>
-                          {source.status === 'READY' ? 'Lista' : source.status === 'FAILED' ? 'Fallida' : 'Procesando'}
-                        </span>
-                        <small>{source.chunkCount} fragmentos</small>
-                        {canEdit && (
-                          <button
-                            className="text-danger"
-                            type="button"
-                            onClick={() => void deleteSource(source)}
-                          >
-                            Eliminar
-                          </button>
-                        )}
-                      </div>
-                    </article>
-                  ))
-                )}
-              </div>
-            </section>
-
-            <section className="panel question-panel">
-              <div className="panel-heading">
-                <span className="panel-number">02</span>
-                <div>
-                  <p className="eyebrow">Consulta fundamentada</p>
-                  <h2>Pregunta al archivo</h2>
-                </div>
-              </div>
-
-              <form className="question-form" onSubmit={(event) => void askQuestion(event)}>
-                <label htmlFor="question">¿Qué quieres saber?</label>
-                <textarea
-                  id="question"
-                  name="question"
-                  maxLength={1000}
-                  required
-                  placeholder="¿Por qué la Aguja conserva una deuda antigua?"
-                  rows={5}
-                />
-                <div className="question-footer">
-                  <small>Solo responderé con evidencia que puedas ver.</small>
-                  <button disabled={asking || loadingRealm} type="submit">
-                    {asking ? 'Buscando evidencia…' : 'Consultar'}
-                  </button>
-                </div>
-              </form>
-
-              <div className="answer-region" aria-live="polite">
-                {asking && (
-                  <div className="thinking">
-                    <span aria-hidden="true" />
-                    Contrastando fuentes y permisos…
-                  </div>
-                )}
-                {answer?.outcome === 'INSUFFICIENT_EVIDENCE' && (
-                  <article className="insufficient">
-                    <p className="eyebrow">
-                      {answer.failureReason === 'MODEL_UNAVAILABLE' ? 'Runtime no disponible' : 'Resultado seguro'}
-                    </p>
-                    <h3>
-                      {answer.failureReason === 'MODEL_UNAVAILABLE'
-                        ? 'No se pudo consultar el modelo'
-                        : 'No hay una respuesta verificable'}
-                    </h3>
-                    <p>{failureMessages[answer.failureReason ?? 'NO_EVIDENCE']}</p>
-                  </article>
-                )}
-                {answer?.outcome === 'ANSWERED' && (
-                  <article className="answer-card">
-                    <p className="eyebrow">Respuesta verificada</p>
-                    <div className="answer-copy">{answer.answer}</div>
-                    <div className="citations">
-                      <h3>Fuentes citadas</h3>
-                      <ol>
-                        {answer.citations.map((citation) => (
-                          <li key={citation.chunkId}>
-                            <span>{citation.rank}</span>
-                            <div>
-                              <strong>{citation.sourceTitle}</strong>
-                              <p>
-                                {citation.heading || 'Documento'} · v{citation.versionNumber} · caracteres {citation.startOffset}–{citation.endOffset}
-                              </p>
-                              <button
-                                className="citation-link"
-                                disabled={loadingCitation}
-                                type="button"
-                                onClick={() => void inspectCitation(citation)}
-                              >
-                                Abrir evidencia exacta
-                              </button>
-                            </div>
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                    <footer>
-                      {answer.provenance.chatProvider}/{answer.provenance.chatModel} · {answer.provenance.embeddingProvider}/{answer.provenance.embeddingModel}
-                    </footer>
-                  </article>
-                )}
-              </div>
-            </section>
+            <QuestionPanel
+              answer={answer}
+              asking={asking}
+              loadingCitation={loadingCitation}
+              loadingRealm={loadingRealm}
+              onInspectCitation={inspectCitation}
+              onSubmit={askQuestion}
+            />
 
             {canEdit && (
-              <section className="panel access-panel">
-                <div className="panel-heading">
-                  <span className="panel-number">03</span>
-                  <div>
-                    <p className="eyebrow">Colaboración sin spoilers</p>
-                    <h2>Miembros y revelaciones</h2>
-                  </div>
-                  <span className="count">{members.length}</span>
-                </div>
-
-                <div className="access-columns">
-                  <div className="access-section">
-                    <h3>Miembros</h3>
-                    {isOwner && (
-                      <form className="invite-form" onSubmit={(event) => void inviteMember(event)}>
-                        <label>
-                          Correo de Keycloak
-                          <input name="memberEmail" type="email" maxLength={320} required placeholder="jugador@ejemplo.local" />
-                        </label>
-                        <label>
-                          Rol
-                          <select name="memberRole" defaultValue="PLAYER">
-                            <option value="PLAYER">Jugador</option>
-                            <option value="EDITOR">Editor</option>
-                          </select>
-                        </label>
-                        <button disabled={inviting} type="submit">
-                          {inviting ? 'Invitando…' : 'Invitar'}
-                        </button>
-                      </form>
-                    )}
-                    <div className="member-list">
-                      {members.map((member) => (
-                        <article key={member.userId}>
-                          <div>
-                            <strong>{member.displayName}</strong>
-                            <span>{member.email || 'Sin correo'} · {roleLabels[member.role]}</span>
-                          </div>
-                          {isOwner && member.role !== 'OWNER' && (
-                            <button
-                              className="text-danger"
-                              disabled={updatingAccess}
-                              type="button"
-                              onClick={() => void removeMember(member)}
-                            >
-                              Quitar
-                            </button>
-                          )}
-                        </article>
-                      ))}
-                    </div>
-                    {isOwner && invitations.some((invitation) => invitation.status === 'PENDING') && (
-                      <div className="pending-list">
-                        <h4>Invitaciones pendientes</h4>
-                        {invitations.filter((invitation) => invitation.status === 'PENDING').map((invitation) => (
-                          <article key={invitation.id}>
-                            <span>{invitation.email} · {roleLabels[invitation.role]}</span>
-                            <button
-                              className="text-danger"
-                              disabled={updatingAccess}
-                              type="button"
-                              onClick={() => void revokeInvitation(invitation)}
-                            >
-                              Revocar
-                            </button>
-                          </article>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="access-section">
-                    <h3>Grupos de spoiler</h3>
-                    <form className="policy-form" onSubmit={(event) => void createPolicy(event)}>
-                      <label>
-                        Nombre
-                        <input name="policyName" maxLength={120} required placeholder="Secreto de la Aguja" />
-                      </label>
-                      <label>
-                        Descripción opcional
-                        <input name="policyDescription" maxLength={300} placeholder="Revelado tras el capítulo 4" />
-                      </label>
-                      <button disabled={creatingPolicy} type="submit">
-                        {creatingPolicy ? 'Creando…' : 'Crear grupo'}
-                      </button>
-                    </form>
-
-                    {spoilerPolicies.length === 0 ? (
-                      <p className="muted">Crea un grupo cuando una fuente deba revelarse solo a ciertos jugadores.</p>
-                    ) : (
-                      <div className="spoiler-list">
-                        {spoilerPolicies.map((policy) => (
-                          <article key={policy.id}>
-                            <div>
-                              <strong>{policy.name}</strong>
-                              {policy.description && <span>{policy.description}</span>}
-                            </div>
-                            {playerMembers.length === 0 ? (
-                              <small>Invita jugadores para conceder este conocimiento.</small>
-                            ) : (
-                              <div className="grant-list">
-                                {playerMembers.map((member) => (
-                                  <label key={member.userId}>
-                                    <input
-                                      type="checkbox"
-                                      disabled={updatingAccess}
-                                      checked={grantsByPolicy[policy.id]?.includes(member.userId) ?? false}
-                                      onChange={() => void toggleGrant(policy.id, member)}
-                                    />
-                                    {member.displayName}
-                                  </label>
-                                ))}
-                              </div>
-                            )}
-                          </article>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </section>
+              <AccessPanel
+                creatingPolicy={creatingPolicy}
+                grantsByPolicy={grantsByPolicy}
+                invitations={invitations}
+                inviting={inviting}
+                isOwner={Boolean(isOwner)}
+                members={members}
+                playerMembers={playerMembers}
+                spoilerPolicies={spoilerPolicies}
+                updating={updatingAccess}
+                onCreatePolicy={createPolicy}
+                onInvite={inviteMember}
+                onRemoveMember={removeMember}
+                onRevokeInvitation={revokeInvitation}
+                onToggleGrant={toggleGrant}
+              />
             )}
               </div>
             ) : (
@@ -844,41 +562,430 @@ export function App({ api, session }: AppProps) {
         )}
 
         {openEvidence && (
-          <div className="source-dialog-backdrop" role="presentation" onMouseDown={() => setOpenEvidence(null)}>
-            <section
-              aria-labelledby="source-dialog-title"
-              aria-modal="true"
-              className="source-dialog"
-              role="dialog"
-              onMouseDown={(event) => event.stopPropagation()}
-            >
-              <header>
-                <div>
-                  <p className="eyebrow">{openEvidence.reference.eyebrow}</p>
-                  <h2 id="source-dialog-title">{openEvidence.source.title}</h2>
-                  <span>{openEvidence.source.originalFilename} · {openEvidence.reference.heading || 'Documento'}</span>
-                </div>
-                <button type="button" aria-label="Cerrar evidencia" onClick={() => setOpenEvidence(null)}>×</button>
-              </header>
-              <pre>{citationExcerpt(openEvidence.source.content, openEvidence.reference)}</pre>
-            </section>
-          </div>
+          <EvidenceDialog evidence={openEvidence} onClose={() => setOpenEvidence(null)} />
         )}
 
         {realmError && (
-          <div className="error-toast" role="alert">
-            <strong>No se pudo completar la operación.</strong>
-            <span>{realmError}</span>
-            <button type="button" aria-label="Cerrar aviso" onClick={() => setRealmError(null)}>×</button>
-          </div>
+          <ErrorToast message={realmError} onClose={() => setRealmError(null)} />
         )}
       </main>
     </div>
   )
 }
 
+function RuntimeNotice({ capabilities }: Readonly<{ capabilities: RuntimeCapabilities }>) {
+  const modelToPull = capabilities.embedding.available
+    ? capabilities.chat.model
+    : capabilities.embedding.model
+  return (
+    <output className="runtime-notice">
+      <div>
+        <strong>El runtime local necesita preparación</strong>
+        <span>
+          {!capabilities.embedding.available && (
+            <> Embeddings: {capabilities.embedding.model} ({capabilities.embedding.status}).</>
+          )}
+          {!capabilities.chat.available && (
+            <> Respuestas: {capabilities.chat.model} ({capabilities.chat.status}).</>
+          )}
+        </span>
+      </div>
+      <code>ollama pull {modelToPull}</code>
+    </output>
+  )
+}
+
+function EmptyRealmPanel({ creating, onSubmit }: Readonly<{
+  creating: boolean
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+}>) {
+  return (
+    <section className="empty-realm panel">
+      <span className="panel-number">01</span>
+      <div>
+        <p className="eyebrow">Primer registro</p>
+        <h2>Crea un universo</h2>
+        <p>Será tu espacio aislado para fuentes, permisos y respuestas.</p>
+        <form onSubmit={(event) => void onSubmit(event)}>
+          <label>
+            <span>Nombre del universo</span>
+            <input name="realmName" maxLength={120} required placeholder="El Meridiano" />
+          </label>
+          <button disabled={creating} type="submit">
+            {creating ? 'Creando…' : 'Crear universo'}
+          </button>
+        </form>
+      </div>
+    </section>
+  )
+}
+
+function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPolicyId, sources, uploading, onDelete, onPolicyChange, onUpload }: Readonly<{
+  canEdit: boolean
+  fileInput: RefObject<HTMLInputElement | null>
+  loading: boolean
+  policies: AccessPolicyView[]
+  selectedPolicyId: string
+  sources: SourceDocumentView[]
+  uploading: boolean
+  onDelete: (source: SourceDocumentView) => Promise<void>
+  onPolicyChange: (policyId: string) => void
+  onUpload: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+}>) {
+  return (
+    <section className="panel sources-panel">
+      <div className="panel-heading">
+        <span className="panel-number">01</span>
+        <div>
+          <p className="eyebrow">Biblioteca del realm</p>
+          <h2>Fuentes</h2>
+        </div>
+        <span className="count">{sources.length}</span>
+      </div>
+      {canEdit && (
+        <div className="upload-card">
+          <h3>Añadir conocimiento</h3>
+          {policies.length > 0 ? (
+            <form className="upload-form" onSubmit={(event) => void onUpload(event)}>
+              <label>
+                <span>Título</span>
+                <input name="title" maxLength={160} required placeholder="Crónica de Lumbrevela" />
+              </label>
+              <label>
+                <span>Visibilidad</span>
+                <select value={selectedPolicyId} onChange={(event) => onPolicyChange(event.target.value)} required>
+                  {policies.map((policy) => (
+                    <option key={policy.id} value={policy.id}>
+                      {policy.name} · {classificationLabels[policy.classification]}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label className="file-field">
+                <span>Archivo Markdown o TXT</span>
+                <input ref={fileInput} name="file" type="file" accept=".md,.txt,text/markdown,text/plain" required />
+              </label>
+              <button disabled={uploading} type="submit">
+                {uploading ? 'Procesando…' : 'Subir y procesar'}
+              </button>
+            </form>
+          ) : (
+            <p className="muted">Preparando las políticas base del universo…</p>
+          )}
+        </div>
+      )}
+      <SourceList canEdit={canEdit} loading={loading} sources={sources} onDelete={onDelete} />
+    </section>
+  )
+}
+
+function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, onInspectCitation, onSubmit }: Readonly<{
+  answer: LoreAnswer | null
+  asking: boolean
+  loadingCitation: boolean
+  loadingRealm: boolean
+  onInspectCitation: (citation: Citation) => Promise<void>
+  onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+}>) {
+  return (
+    <section className="panel question-panel">
+      <div className="panel-heading">
+        <span className="panel-number">02</span>
+        <div>
+          <p className="eyebrow">Consulta fundamentada</p>
+          <h2>Pregunta al archivo</h2>
+        </div>
+      </div>
+      <form className="question-form" onSubmit={(event) => void onSubmit(event)}>
+        <label htmlFor="question">¿Qué quieres saber?</label>
+        <textarea id="question" name="question" maxLength={1000} required placeholder="¿Por qué la Aguja conserva una deuda antigua?" rows={5} />
+        <div className="question-footer">
+          <small>Solo responderé con evidencia que puedas ver.</small>
+          <button disabled={asking || loadingRealm} type="submit">
+            {asking ? 'Buscando evidencia…' : 'Consultar'}
+          </button>
+        </div>
+      </form>
+      <div className="answer-region" aria-live="polite">
+        {asking && <div className="thinking"><span aria-hidden="true" /><span>Contrastando fuentes y permisos…</span></div>}
+        {answer?.outcome === 'INSUFFICIENT_EVIDENCE' && (
+          <article className="insufficient">
+            <p className="eyebrow">{failureEyebrow(answer.failureReason)}</p>
+            <h3>{failureTitle(answer.failureReason)}</h3>
+            <p>{failureMessages[answer.failureReason ?? 'NO_EVIDENCE']}</p>
+          </article>
+        )}
+        {answer?.outcome === 'ANSWERED' && (
+          <article className="answer-card">
+            <p className="eyebrow">Respuesta verificada</p>
+            <div className="answer-copy">{answer.answer}</div>
+            <div className="citations">
+              <h3>Fuentes citadas</h3>
+              <ol>
+                {answer.citations.map((citation) => (
+                  <li key={citation.chunkId}>
+                    <span>{citation.rank}</span>
+                    <div>
+                      <strong>{citation.sourceTitle}</strong>
+                      <p>{citation.heading || 'Documento'} · v{citation.versionNumber} · caracteres {citation.startOffset}–{citation.endOffset}</p>
+                      <button className="citation-link" disabled={loadingCitation} type="button" onClick={() => void onInspectCitation(citation)}>
+                        Abrir evidencia exacta
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+            <footer>{answer.provenance.chatProvider}/{answer.provenance.chatModel} · {answer.provenance.embeddingProvider}/{answer.provenance.embeddingModel}</footer>
+          </article>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function AccessPanel(props: Readonly<{
+  creatingPolicy: boolean
+  grantsByPolicy: Record<string, string[]>
+  invitations: InvitationView[]
+  inviting: boolean
+  isOwner: boolean
+  members: MembershipView[]
+  playerMembers: MembershipView[]
+  spoilerPolicies: AccessPolicyView[]
+  updating: boolean
+  onCreatePolicy: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+  onInvite: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+  onRemoveMember: (member: MembershipView) => Promise<void>
+  onRevokeInvitation: (invitation: InvitationView) => Promise<void>
+  onToggleGrant: (policyId: string, member: MembershipView) => Promise<void>
+}>) {
+  return (
+    <section className="panel access-panel">
+      <div className="panel-heading">
+        <span className="panel-number">03</span>
+        <div><p className="eyebrow">Colaboración sin spoilers</p><h2>Miembros y revelaciones</h2></div>
+        <span className="count">{props.members.length}</span>
+      </div>
+      <div className="access-columns">
+        <MembersSection {...props} />
+        <SpoilerPoliciesSection {...props} />
+      </div>
+    </section>
+  )
+}
+
+function MembersSection({ invitations, inviting, isOwner, members, updating, onInvite, onRemoveMember, onRevokeInvitation }: Readonly<{
+  invitations: InvitationView[]
+  inviting: boolean
+  isOwner: boolean
+  members: MembershipView[]
+  updating: boolean
+  onInvite: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+  onRemoveMember: (member: MembershipView) => Promise<void>
+  onRevokeInvitation: (invitation: InvitationView) => Promise<void>
+}>) {
+  const pendingInvitations = invitations.filter((invitation) => invitation.status === 'PENDING')
+  return (
+    <div className="access-section">
+      <h3>Miembros</h3>
+      {isOwner && (
+        <form className="invite-form" onSubmit={(event) => void onInvite(event)}>
+          <label><span>Correo de Keycloak</span><input name="memberEmail" type="email" maxLength={320} required placeholder="jugador@ejemplo.local" /></label>
+          <label><span>Rol</span><select name="memberRole" defaultValue="PLAYER"><option value="PLAYER">Jugador</option><option value="EDITOR">Editor</option></select></label>
+          <button disabled={inviting} type="submit">{inviting ? 'Invitando…' : 'Invitar'}</button>
+        </form>
+      )}
+      <div className="member-list">
+        {members.map((member) => (
+          <article key={member.userId}>
+            <div><strong>{member.displayName}</strong><span>{member.email || 'Sin correo'} · {roleLabels[member.role]}</span></div>
+            {isOwner && member.role !== 'OWNER' && (
+              <button className="text-danger" disabled={updating} type="button" onClick={() => void onRemoveMember(member)}>Quitar</button>
+            )}
+          </article>
+        ))}
+      </div>
+      {isOwner && pendingInvitations.length > 0 && (
+        <div className="pending-list">
+          <h4>Invitaciones pendientes</h4>
+          {pendingInvitations.map((invitation) => (
+            <article key={invitation.id}>
+              <span>{invitation.email} · {roleLabels[invitation.role]}</span>
+              <button className="text-danger" disabled={updating} type="button" onClick={() => void onRevokeInvitation(invitation)}>Revocar</button>
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SpoilerPoliciesSection({ creatingPolicy, grantsByPolicy, playerMembers, spoilerPolicies, updating, onCreatePolicy, onToggleGrant }: Readonly<{
+  creatingPolicy: boolean
+  grantsByPolicy: Record<string, string[]>
+  playerMembers: MembershipView[]
+  spoilerPolicies: AccessPolicyView[]
+  updating: boolean
+  onCreatePolicy: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
+  onToggleGrant: (policyId: string, member: MembershipView) => Promise<void>
+}>) {
+  return (
+    <div className="access-section">
+      <h3>Grupos de spoiler</h3>
+      <form className="policy-form" onSubmit={(event) => void onCreatePolicy(event)}>
+        <label><span>Nombre</span><input name="policyName" maxLength={120} required placeholder="Secreto de la Aguja" /></label>
+        <label><span>Descripción opcional</span><input name="policyDescription" maxLength={300} placeholder="Revelado tras el capítulo 4" /></label>
+        <button disabled={creatingPolicy} type="submit">{creatingPolicy ? 'Creando…' : 'Crear grupo'}</button>
+      </form>
+      {spoilerPolicies.length === 0 ? (
+        <p className="muted">Crea un grupo cuando una fuente deba revelarse solo a ciertos jugadores.</p>
+      ) : (
+        <div className="spoiler-list">
+          {spoilerPolicies.map((policy) => (
+            <article key={policy.id}>
+              <div><strong>{policy.name}</strong>{policy.description && <span>{policy.description}</span>}</div>
+              <PolicyGrantList
+                grants={grantsByPolicy[policy.id] ?? []}
+                members={playerMembers}
+                policyId={policy.id}
+                updating={updating}
+                onToggle={onToggleGrant}
+              />
+            </article>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function PolicyGrantList({ grants, members, policyId, updating, onToggle }: Readonly<{
+  grants: string[]
+  members: MembershipView[]
+  policyId: string
+  updating: boolean
+  onToggle: (policyId: string, member: MembershipView) => Promise<void>
+}>) {
+  if (members.length === 0) return <small>Invita jugadores para conceder este conocimiento.</small>
+  return (
+    <div className="grant-list">
+      {members.map((member) => (
+        <label key={member.userId}>
+          <input type="checkbox" disabled={updating} checked={grants.includes(member.userId)} onChange={() => void onToggle(policyId, member)} />
+          <span>{member.displayName}</span>
+        </label>
+      ))}
+    </div>
+  )
+}
+
+function EvidenceDialog({ evidence, onClose }: Readonly<{
+  evidence: { reference: EvidenceReference; source: SourceContentView }
+  onClose: () => void
+}>) {
+  return (
+    <dialog aria-labelledby="source-dialog-title" className="source-dialog-backdrop" open onClick={(event) => {
+      if (event.target === event.currentTarget) onClose()
+    }}>
+      <div className="source-dialog">
+        <header>
+          <div>
+            <p className="eyebrow">{evidence.reference.eyebrow}</p>
+            <h2 id="source-dialog-title">{evidence.source.title}</h2>
+            <span>{evidence.source.originalFilename} · {evidence.reference.heading || 'Documento'}</span>
+          </div>
+          <button type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button>
+        </header>
+        <pre>{citationExcerpt(evidence.source.content, evidence.reference)}</pre>
+      </div>
+    </dialog>
+  )
+}
+
+function ErrorToast({ message, onClose }: Readonly<{ message: string; onClose: () => void }>) {
+  return (
+    <div className="error-toast" role="alert">
+      <strong>No se pudo completar la operación.</strong>
+      <span>{message}</span>
+      <button type="button" aria-label="Cerrar aviso" onClick={onClose}>×</button>
+    </div>
+  )
+}
+
 function errorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Ha ocurrido un error inesperado.'
+}
+
+function formText(form: FormData, field: string) {
+  const value = form.get(field)
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function failureEyebrow(reason: LoreAnswer['failureReason']) {
+  return reason === 'MODEL_UNAVAILABLE' ? 'Runtime no disponible' : 'Resultado seguro'
+}
+
+function failureTitle(reason: LoreAnswer['failureReason']) {
+  return reason === 'MODEL_UNAVAILABLE'
+    ? 'No se pudo consultar el modelo'
+    : 'No hay una respuesta verificable'
+}
+
+function sourceStatusLabel(status: SourceDocumentView['status']) {
+  if (status === 'READY') return 'Lista'
+  if (status === 'FAILED') return 'Fallida'
+  return 'Procesando'
+}
+
+function SourceList({ canEdit, loading, sources, onDelete }: Readonly<{
+  canEdit: boolean
+  loading: boolean
+  sources: SourceDocumentView[]
+  onDelete: (source: SourceDocumentView) => Promise<void>
+}>) {
+  if (loading) {
+    return <div className="source-list" aria-live="polite"><p className="muted">Leyendo el catálogo…</p></div>
+  }
+
+  if (sources.length === 0) {
+    return (
+      <div className="source-list" aria-live="polite">
+        <div className="empty-state">
+          <span aria-hidden="true">◇</span>
+          <p>Todavía no hay fuentes visibles en este universo.</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="source-list" aria-live="polite">
+      {sources.map((source) => (
+        <article className="source-item" key={source.id}>
+          <div>
+            <h3>{source.title}</h3>
+            <p>{source.originalFilename} · versión {source.versionNumber}</p>
+          </div>
+          <div className="source-meta">
+            <span className={`status status-${source.status.toLowerCase()}`}>
+              {sourceStatusLabel(source.status)}
+            </span>
+            <small>{source.chunkCount} fragmentos</small>
+            {canEdit && (
+              <button
+                className="text-danger"
+                type="button"
+                onClick={() => void onDelete(source)}
+              >
+                Eliminar
+              </button>
+            )}
+          </div>
+        </article>
+      ))}
+    </div>
+  )
 }
 
 function citationExcerpt(content: string, reference: Pick<EvidenceReference, 'startOffset' | 'endOffset'>) {

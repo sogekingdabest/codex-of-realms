@@ -1122,10 +1122,15 @@ input[type="file"]::file-selector-button {
 .source-dialog-backdrop {
   position: fixed;
   inset: 0;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  margin: 0;
   display: grid;
   place-items: center;
   padding: 1.5rem;
   background: rgba(5, 8, 7, 0.82);
+  border: 0;
   backdrop-filter: blur(7px);
   z-index: 20;
 }
