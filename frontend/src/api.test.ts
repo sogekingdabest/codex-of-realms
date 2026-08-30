@@ -116,4 +116,33 @@ describe('HttpCodexApi', () => {
       '/api/v1/realms/..%2F..%2Foutside%3Fredirect%3Dhttps%3A%2F%2Fexample.test/questions',
     )
   })
+
+  it('conserva el origen permitido cuando la API usa una URL absoluta', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ outcome: 'INSUFFICIENT_EVIDENCE' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('https://api.example.test/api/v1', async () => 'token')
+
+    await api.ask('realm-1', 'pregunta')
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.test/api/v1/realms/realm-1/questions',
+      expect.any(Object),
+    )
+  })
+
+  it('rechaza rutas absolutas o que escapen de la base configurada', async () => {
+    const api = new HttpCodexApi('/api/v1', async () => 'token') as unknown as {
+      request<T>(path: string): Promise<T>
+    }
+
+    await expect(api.request('//evil.example/path')).rejects.toThrow('La ruta solicitada no es válida.')
+    await expect(api.request('/../outside')).rejects.toThrow(
+      'La ruta solicitada queda fuera de la API configurada.',
+    )
+  })
 })

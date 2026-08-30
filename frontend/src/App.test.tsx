@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { CodexApi } from './api'
@@ -173,5 +173,155 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'Atlas del canon' })).toBeInTheDocument()
     expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1')
     expect(api.listLoreRelations).toHaveBeenCalledWith('realm-1')
+  })
+
+  it('crea el primer universo desde el estado vacío', async () => {
+    const api = testApi()
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: 'user-1',
+        issuer: 'http://localhost:8180/realms/codex-of-realms',
+        subject: 'subject-1',
+        displayName: 'Maestra del Meridiano',
+        email: 'gm-demo@local.invalid',
+      },
+      realms: [],
+    })
+    vi.mocked(api.createRealm).mockResolvedValue({
+      id: 'realm-new',
+      name: 'Nueva Frontera',
+      role: 'OWNER',
+    })
+
+    render(<App api={api} session={session} />)
+    fireEvent.change(await screen.findByLabelText('Nombre del universo'), {
+      target: { value: 'Nueva Frontera' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear universo' }))
+
+    await waitFor(() => expect(api.createRealm).toHaveBeenCalledWith('Nueva Frontera'))
+    expect(await screen.findByText('Nueva Frontera')).toBeInTheDocument()
+  })
+
+  it('muestra el runtime incompleto y una respuesta segura sin modelo', async () => {
+    const api = testApi()
+    vi.mocked(api.getCapabilities).mockResolvedValue({
+      chat: { provider: 'ollama', model: 'qwen3.5:4b', available: false, status: 'MODEL_MISSING', installedModels: [] },
+      embedding: { provider: 'ollama', model: 'bge-m3', available: false, status: 'MODEL_MISSING', installedModels: [] },
+    })
+    vi.mocked(api.ask).mockResolvedValue({
+      outcome: 'INSUFFICIENT_EVIDENCE',
+      answer: null,
+      citations: [],
+      provenance: {
+        embeddingProvider: 'ollama',
+        embeddingModel: 'bge-m3',
+        chatProvider: 'ollama',
+        chatModel: 'qwen3.5:4b',
+      },
+      failureReason: 'MODEL_UNAVAILABLE',
+    })
+
+    render(<App api={api} session={session} />)
+    expect(await screen.findByText('El runtime local necesita preparación')).toBeInTheDocument()
+    expect(screen.getByText(/ollama pull bge-m3/)).toBeInTheDocument()
+    await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
+      target: { value: '¿Qué ocurrió?' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
+
+    expect(await screen.findByText('No se pudo consultar el modelo')).toBeInTheDocument()
+    expect(screen.getByText('Runtime no disponible')).toBeInTheDocument()
+  })
+
+  it('gestiona invitaciones, políticas, miembros y permisos de spoiler', async () => {
+    const api = testApi()
+    const player = {
+      userId: 'player-1',
+      displayName: 'Nara Valcor',
+      email: null,
+      role: 'PLAYER' as const,
+    }
+    vi.mocked(api.listPolicies).mockResolvedValue([
+      { id: 'policy-1', realmId: 'realm-1', classification: 'PUBLIC', name: 'Público', description: null },
+      { id: 'policy-secret', realmId: 'realm-1', classification: 'SPOILER', name: 'La Aguja', description: 'Capítulo 4' },
+    ])
+    vi.mocked(api.listMemberships).mockResolvedValue([
+      { userId: 'user-1', displayName: 'Maestra del Meridiano', email: 'gm-demo@local.invalid', role: 'OWNER' },
+      player,
+    ])
+    vi.mocked(api.listInvitations).mockResolvedValue([
+      { id: 'invite-1', realmId: 'realm-1', email: 'pendiente@local.invalid', role: 'PLAYER', status: 'PENDING', acceptedUserId: null, createdAt: '2026-08-29T10:00:00Z' },
+    ])
+    vi.mocked(api.listPolicyGrants).mockResolvedValue([player])
+    vi.mocked(api.inviteMember).mockResolvedValue({
+      id: 'invite-2', realmId: 'realm-1', email: 'editor@local.invalid', role: 'EDITOR', status: 'PENDING', acceptedUserId: null, createdAt: '2026-08-30T10:00:00Z',
+    })
+    vi.mocked(api.createPolicy).mockResolvedValue({
+      id: 'policy-new', realmId: 'realm-1', classification: 'SPOILER', name: 'Nuevo secreto', description: 'Tras el prólogo',
+    })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(<App api={api} session={session} />)
+    expect(await screen.findByText('La Aguja')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Correo de Keycloak'), { target: { value: 'editor@local.invalid' } })
+    fireEvent.change(screen.getByLabelText('Rol'), { target: { value: 'EDITOR' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Invitar' }))
+    await waitFor(() => expect(api.inviteMember).toHaveBeenCalledWith('realm-1', 'editor@local.invalid', 'EDITOR'))
+
+    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Nuevo secreto' } })
+    fireEvent.change(screen.getByLabelText('Descripción opcional'), { target: { value: 'Tras el prólogo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear grupo' }))
+    await waitFor(() => expect(api.createPolicy).toHaveBeenCalledWith('realm-1', 'SPOILER', 'Nuevo secreto', 'Tras el prólogo'))
+
+    fireEvent.click(screen.getAllByLabelText('Nara Valcor')[0])
+    await waitFor(() => expect(api.revokePolicy).toHaveBeenCalledWith('realm-1', 'policy-secret', 'player-1'))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Revocar' })[0])
+    await waitFor(() => expect(api.revokeInvitation).toHaveBeenCalledWith('realm-1', 'invite-2'))
+    fireEvent.click(screen.getByRole('button', { name: 'Quitar' }))
+    await waitFor(() => expect(api.removeMembership).toHaveBeenCalledWith('realm-1', 'player-1'))
+    confirm.mockRestore()
+  })
+
+  it('sube y elimina fuentes, incluyendo estados fallido y en proceso', async () => {
+    const api = testApi()
+    const [baseSource] = await api.listSources('realm-1')
+    if (!baseSource) throw new Error('La fuente de prueba es obligatoria')
+    vi.mocked(api.listSources).mockResolvedValue([
+      { ...baseSource, id: 'failed', title: 'Fuente fallida', status: 'FAILED' },
+      { ...baseSource, id: 'processing', title: 'Fuente en proceso', status: 'PROCESSING' },
+    ])
+    vi.mocked(api.uploadSource).mockResolvedValue({ ...baseSource, id: 'uploaded', title: 'Nueva fuente' })
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(<App api={api} session={session} />)
+    expect(await screen.findByText('Fuente fallida')).toBeInTheDocument()
+    expect(screen.getByText('Fallida')).toBeInTheDocument()
+    expect(screen.getByText('Procesando')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Nueva fuente' } })
+    fireEvent.change(screen.getByLabelText('Archivo Markdown o TXT'), {
+      target: { files: [new File(['contenido'], 'nueva.md', { type: 'text/markdown' })] },
+    })
+    fireEvent.submit(screen.getByRole('button', { name: 'Subir y procesar' }).closest('form')!)
+    await waitFor(() => expect(api.uploadSource).toHaveBeenCalled())
+    fireEvent.click(screen.getAllByRole('button', { name: 'Eliminar' })[0])
+    await waitFor(() => expect(api.deleteSource).toHaveBeenCalledWith('realm-1', 'uploaded'))
+    confirm.mockRestore()
+  })
+
+  it('presenta y permite cerrar errores de operación', async () => {
+    const api = testApi()
+    vi.mocked(api.ask).mockRejectedValue(new Error('Servicio temporalmente no disponible'))
+    render(<App api={api} session={session} />)
+    await screen.findByText('Crónica de Lumbrevela')
+
+    fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: 'pregunta' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
+    expect(await screen.findByText('Servicio temporalmente no disponible')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }))
+    expect(screen.queryByText('Servicio temporalmente no disponible')).not.toBeInTheDocument()
   })
 })

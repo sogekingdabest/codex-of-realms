@@ -196,4 +196,43 @@ describe('CatalogueWorkspace', () => {
     await waitFor(() => expect(api.promoteLoreEntity).toHaveBeenCalledWith('realm-1', 'entity-1'))
     await waitFor(() => expect(screen.getAllByText('Canon').length).toBeGreaterThan(1))
   })
+
+  it('permite editar, promover y retirar fichas y relaciones visibles', async () => {
+    const proposedRelation = { ...relation(), canonStatus: 'PROPOSED' as const }
+    const promotedRelation = { ...proposedRelation, canonStatus: 'CANON' as const }
+    const api = catalogueApi(
+      [entity('entity-1', 'Nara Vey'), entity('entity-2', 'Lumbrevela')],
+      [proposedRelation],
+    )
+    vi.mocked(api.promoteLoreRelation).mockResolvedValue(promotedRelation)
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
+
+    render(
+      <CatalogueWorkspace
+        api={api}
+        canEdit
+        policies={[publicPolicy]}
+        realmId="realm-1"
+        sources={[]}
+        onOpenEvidence={vi.fn()}
+      />,
+    )
+
+    await screen.findByText('Nara Vey')
+    fireEvent.click(screen.getByRole('button', { name: 'Relaciones' }))
+    await screen.findByText('Nara vive en Lumbrevela.')
+    fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
+    expect(screen.getByRole('heading', { name: 'Editar relación' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Promover a canon' }))
+    await waitFor(() => expect(api.promoteLoreRelation).toHaveBeenCalledWith('realm-1', 'relation-1'))
+    fireEvent.click(screen.getByRole('button', { name: 'Retirar' }))
+    await waitFor(() => expect(api.deleteLoreRelation).toHaveBeenCalledWith('realm-1', 'relation-1'))
+
+    fireEvent.click(screen.getByRole('button', { name: 'Fichas' }))
+    fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0])
+    expect(screen.getByRole('heading', { name: 'Editar concepto' })).toBeInTheDocument()
+    fireEvent.click(screen.getAllByRole('button', { name: 'Retirar' })[0])
+    await waitFor(() => expect(api.deleteLoreEntity).toHaveBeenCalled())
+    confirm.mockRestore()
+  })
 })

@@ -83,4 +83,20 @@ describe('createAuthSession', () => {
     expect(keycloak.clearToken).toHaveBeenCalledOnce()
     expect(keycloak.login).toHaveBeenCalledWith({ redirectUri: window.location.href })
   })
+
+  it('usa el nombre de usuario preferido cuando no existe un nombre completo', async () => {
+    keycloak.tokenParsed = { preferred_username: 'cartografa' }
+
+    const session = await createAuthSession()
+
+    expect(session.displayName).toBe('cartografa')
+  })
+
+  it('usa un nombre neutral cuando el token no contiene identidad visible', async () => {
+    keycloak.tokenParsed = undefined
+
+    const session = await createAuthSession()
+
+    expect(session.displayName).toBe('Explorador')
+  })
 })
