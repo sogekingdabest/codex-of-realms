@@ -1,15 +1,14 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.relation;
 
 import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.content.SourceEvidenceAccess;
-import dev.codexofrealms.lore.application.port.LoreCatalogueRepository;
+import dev.codexofrealms.lore.application.port.LoreRelationRepository;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.LoreRelation;
 import dev.codexofrealms.realm.RealmAccess;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,12 +20,12 @@ public class LoreRelationService {
 
     private final RealmAccess realmAccess;
     private final SourceEvidenceAccess sourceEvidenceAccess;
-    private final LoreCatalogueRepository repository;
+    private final LoreRelationRepository repository;
 
     public LoreRelationService(
         RealmAccess realmAccess,
         SourceEvidenceAccess sourceEvidenceAccess,
-        LoreCatalogueRepository repository
+        LoreRelationRepository repository
     ) {
         this.realmAccess = realmAccess;
         this.sourceEvidenceAccess = sourceEvidenceAccess;
@@ -49,16 +48,15 @@ public class LoreRelationService {
         if (!repository.bothEntitiesActive(
             realmId, relation.sourceEntityId(), relation.targetEntityId()
         )) {
-            throw new CatalogueNotFoundException();
+            throw LoreRelationException.endpointUnavailable();
         }
         List<SourceEvidence> evidence = sourceEvidenceAccess.resolveActive(
             realmId, policyId, userId, command.evidenceChunkIds()
         );
         UUID id = UUID.randomUUID();
-        try {
-            repository.createRelation(id, realmId, relation, policyId, userId, evidence);
-        } catch (DuplicateKeyException exception) {
-            throw new CatalogueConflictException("That active lore relation already exists.");
+        if (repository.createRelation(id, realmId, relation, policyId, userId, evidence)
+            == LoreRelationRepository.CreateResult.DUPLICATE) {
+            throw LoreRelationException.duplicate();
         }
         return requireForEditor(realmId, id);
     }
@@ -78,7 +76,7 @@ public class LoreRelationService {
     public LoreRelationView get(UUID realmId, UUID relationId, UUID userId) {
         realmAccess.requireMember(realmId, userId);
         return repository.findAccessibleRelation(realmId, relationId, userId)
-            .orElseThrow(CatalogueNotFoundException::new);
+            .orElseThrow(LoreRelationException::unavailable);
     }
 
     @Transactional
@@ -99,15 +97,15 @@ public class LoreRelationService {
         List<SourceEvidence> evidence = sourceEvidenceAccess.resolveActive(
             realmId, policyId, userId, command.evidenceChunkIds()
         );
-        try {
-            if (!repository.updateRelation(
-                relationId, realmId, relation.relationType(), relation.description(),
-                policyId, userId, evidence
-            )) {
-                throw new CatalogueNotFoundException();
-            }
-        } catch (DuplicateKeyException exception) {
-            throw new CatalogueConflictException("That active lore relation already exists.");
+        LoreRelationRepository.UpdateResult result = repository.updateRelation(
+            relationId, realmId, relation.relationType(), relation.description(),
+            policyId, userId, evidence
+        );
+        if (result == LoreRelationRepository.UpdateResult.UNAVAILABLE) {
+            throw LoreRelationException.unavailable();
+        }
+        if (result == LoreRelationRepository.UpdateResult.DUPLICATE) {
+            throw LoreRelationException.duplicate();
         }
         return requireForEditor(realmId, relationId);
     }
@@ -129,7 +127,7 @@ public class LoreRelationService {
         LoreRelationView relation = requireForEditor(realmId, relationId);
         realmAccess.requireEditablePolicy(realmId, relation.accessPolicyId(), userId);
         if (!repository.deactivateRelation(realmId, relationId, userId)) {
-            throw new CatalogueNotFoundException();
+            throw LoreRelationException.unavailable();
         }
     }
 
@@ -140,6 +138,6 @@ public class LoreRelationService {
 
     private LoreRelationView requireForEditor(UUID realmId, UUID relationId) {
         return repository.findRelationForEditor(realmId, relationId)
-            .orElseThrow(CatalogueNotFoundException::new);
+            .orElseThrow(LoreRelationException::unavailable);
     }
 }

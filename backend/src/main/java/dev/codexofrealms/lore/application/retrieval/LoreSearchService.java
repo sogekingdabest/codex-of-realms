@@ -1,12 +1,12 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.retrieval;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
 import dev.codexofrealms.lore.LoreSearch;
-import dev.codexofrealms.lore.LoreRetriever;
-import dev.codexofrealms.lore.RetrievalQuery;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.lore.RetrievedEvidence;
+import dev.codexofrealms.lore.application.port.LoreRetriever;
+import dev.codexofrealms.lore.application.port.RetrievalQuery;
 import dev.codexofrealms.realm.RealmAccess;
 import io.micrometer.core.instrument.Timer;
 import java.util.List;

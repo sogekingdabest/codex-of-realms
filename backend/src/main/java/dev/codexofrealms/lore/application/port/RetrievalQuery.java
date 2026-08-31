@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore;
+package dev.codexofrealms.lore.application.port;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import java.util.Arrays;

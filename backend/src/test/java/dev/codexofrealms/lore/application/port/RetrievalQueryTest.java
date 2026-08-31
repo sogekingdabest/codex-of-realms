@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore;
+package dev.codexofrealms.lore.application.port;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

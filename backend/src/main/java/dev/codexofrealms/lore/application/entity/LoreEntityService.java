@@ -1,8 +1,8 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.entity;
 
 import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.content.SourceEvidenceAccess;
-import dev.codexofrealms.lore.application.port.LoreCatalogueRepository;
+import dev.codexofrealms.lore.application.port.LoreEntityRepository;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.EntityType;
 import dev.codexofrealms.lore.domain.LoreEntity;
@@ -21,12 +21,12 @@ public class LoreEntityService {
 
     private final RealmAccess realmAccess;
     private final SourceEvidenceAccess sourceEvidenceAccess;
-    private final LoreCatalogueRepository repository;
+    private final LoreEntityRepository repository;
 
     public LoreEntityService(
         RealmAccess realmAccess,
         SourceEvidenceAccess sourceEvidenceAccess,
-        LoreCatalogueRepository repository
+        LoreEntityRepository repository
     ) {
         this.realmAccess = realmAccess;
         this.sourceEvidenceAccess = sourceEvidenceAccess;
@@ -64,7 +64,7 @@ public class LoreEntityService {
     public LoreEntityView get(UUID realmId, UUID entityId, UUID userId) {
         realmAccess.requireMember(realmId, userId);
         return repository.findAccessibleEntity(realmId, entityId, userId)
-            .orElseThrow(CatalogueNotFoundException::new);
+            .orElseThrow(LoreEntityException::unavailable);
     }
 
     @Transactional
@@ -85,7 +85,7 @@ public class LoreEntityService {
             realmId, policyId, userId, command.evidenceChunkIds()
         );
         if (!repository.updateEntity(entityId, realmId, entity, policyId, userId, evidence)) {
-            throw new CatalogueNotFoundException();
+            throw LoreEntityException.unavailable();
         }
         return requireForEditor(realmId, entityId);
     }
@@ -107,12 +107,10 @@ public class LoreEntityService {
         LoreEntityView entity = requireForEditor(realmId, entityId);
         realmAccess.requireEditablePolicy(realmId, entity.accessPolicyId(), userId);
         if (repository.hasActiveRelations(realmId, entityId)) {
-            throw new CatalogueConflictException(
-                "Delete the entity's active relations before deleting the entity."
-            );
+            throw LoreEntityException.activeRelations();
         }
         if (!repository.deactivateEntity(realmId, entityId, userId)) {
-            throw new CatalogueNotFoundException();
+            throw LoreEntityException.unavailable();
         }
     }
 
@@ -123,6 +121,6 @@ public class LoreEntityService {
 
     private LoreEntityView requireForEditor(UUID realmId, UUID entityId) {
         return repository.findEntityForEditor(realmId, entityId)
-            .orElseThrow(CatalogueNotFoundException::new);
+            .orElseThrow(LoreEntityException::unavailable);
     }
 }

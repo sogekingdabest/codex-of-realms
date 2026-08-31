@@ -113,6 +113,32 @@ describe('HttpCodexApi', () => {
     expect(error).toMatchObject({ message: 'Error HTTP 502', status: 502, code: null })
   })
 
+  it('conserva los códigos de conflicto del catálogo de lore', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          type: 'urn:codex-of-realms:problem:lore_entity.active_relations',
+          title: 'Lore entity conflict',
+          status: 409,
+          detail: "Delete the entity's active relations before deleting the entity.",
+          code: 'lore_entity.active_relations',
+        }),
+        { status: 409, headers: { 'Content-Type': 'application/problem+json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+
+    const error = await api.deleteLoreEntity('realm-1', 'entity-1')
+      .catch((reason: unknown) => reason)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({
+      status: 409,
+      code: 'lore_entity.active_relations',
+    })
+  })
+
   it('envía las fichas del canon con evidencia como JSON tipado', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(JSON.stringify({ id: 'entity-1' }), {

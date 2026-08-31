@@ -494,7 +494,8 @@ class RealmAuthorizationIntegrationTest {
                 .content(objectMapper.writeValueAsString(entityPayload(
                     "EVENT", "Evidencia degradada", spoilerPolicy, List.of(chunkId)
                 ))))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("source_evidence.unavailable"));
 
         mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities", realmId)
                 .with(identity("catalogue-player")))
@@ -502,7 +503,8 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(jsonPath("$.length()").value(2));
         mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, secretId)
                 .with(identity("catalogue-player")))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("lore_entity.unavailable"));
 
         UUID hiddenEndpointRelation = createCatalogueRelation(
             "catalogue-owner", realmId, naraId, secretId, "CUSTODIA", publicPolicy, List.of()
@@ -510,6 +512,14 @@ class RealmAuthorizationIntegrationTest {
         UUID visibleRelation = createCatalogueRelation(
             "catalogue-owner", realmId, naraId, cityId, "VIVE EN", publicPolicy, List.of(chunkId)
         );
+        mockMvc.perform(post("/api/v1/realms/{realmId}/catalogue/relations", realmId)
+                .with(identity("catalogue-owner"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(relationPayload(
+                    naraId, cityId, "VIVE EN", publicPolicy, List.of()
+                ))))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("lore_relation.duplicate"));
         mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/relations", realmId)
                 .with(identity("catalogue-player")))
             .andExpect(status().isOk())
@@ -568,7 +578,8 @@ class RealmAuthorizationIntegrationTest {
                 .content(objectMapper.writeValueAsString(entityPayload(
                     "EVENT", "Intento", publicPolicy, List.of()
                 ))))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("realm.unavailable"));
 
         UUID otherRealm = createRealm("other-catalogue-owner", "Atlas ajeno");
         UUID otherPolicy = createPolicy("other-catalogue-owner", otherRealm, "PUBLIC");
@@ -581,11 +592,13 @@ class RealmAuthorizationIntegrationTest {
                 .content(objectMapper.writeValueAsString(relationPayload(
                     naraId, otherEntity, "CONOCE_A", publicPolicy, List.of()
                 ))))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("lore_relation.endpoint_unavailable"));
 
         mockMvc.perform(delete("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, naraId)
                 .with(identity("catalogue-owner")))
-            .andExpect(status().isConflict());
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.code").value("lore_entity.active_relations"));
 
         mockMvc.perform(delete("/api/v1/realms/{realmId}/sources/{documentId}", realmId, documentId)
                 .with(identity("catalogue-owner")))
@@ -689,7 +702,8 @@ class RealmAuthorizationIntegrationTest {
                 .content("""
                     {"question":"¿Qué es el Meridiano?","limit":5}
                     """))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("realm.unavailable"));
 
         assertThat(meterRegistry.find("codex.retrieval.duration").timers()).isNotEmpty();
         assertThat(meterRegistry.find("codex.retrieval.results").summary()).isNotNull();

@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.relation;
 
 import java.util.List;
 import java.util.UUID;

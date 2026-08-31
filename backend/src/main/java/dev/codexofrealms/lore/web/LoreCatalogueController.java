@@ -1,17 +1,21 @@
 package dev.codexofrealms.lore.web;
 
-import dev.codexofrealms.lore.application.CreateLoreRelationCommand;
-import dev.codexofrealms.lore.application.LoreEntityService;
-import dev.codexofrealms.lore.application.LoreEntityCommand;
-import dev.codexofrealms.lore.application.LoreEntityView;
-import dev.codexofrealms.lore.application.LoreRelationService;
-import dev.codexofrealms.lore.application.LoreRelationView;
-import dev.codexofrealms.lore.application.UpdateLoreRelationCommand;
+import dev.codexofrealms.lore.application.entity.LoreEntityCommand;
+import dev.codexofrealms.lore.application.entity.LoreEntityService;
+import dev.codexofrealms.lore.application.entity.LoreEntityView;
+import dev.codexofrealms.lore.application.relation.CreateLoreRelationCommand;
+import dev.codexofrealms.lore.application.relation.LoreRelationService;
+import dev.codexofrealms.lore.application.relation.LoreRelationView;
+import dev.codexofrealms.lore.application.relation.UpdateLoreRelationCommand;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.EntityType;
 import dev.codexofrealms.realm.RealmAccess;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
@@ -52,7 +56,7 @@ class LoreCatalogueController {
     ResponseEntity<LoreEntityView> createEntity(
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable UUID realmId,
-        @RequestBody EntityRequest request
+        @Valid @RequestBody EntityRequest request
     ) {
         LoreEntityView entity = entities.create(
             realmId, currentUser(jwt), request.toCommand()
@@ -87,7 +91,7 @@ class LoreCatalogueController {
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable UUID realmId,
         @PathVariable UUID entityId,
-        @RequestBody EntityRequest request
+        @Valid @RequestBody EntityRequest request
     ) {
         return entities.update(realmId, entityId, currentUser(jwt), request.toCommand());
     }
@@ -118,7 +122,7 @@ class LoreCatalogueController {
     ResponseEntity<LoreRelationView> createRelation(
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable UUID realmId,
-        @RequestBody RelationRequest request
+        @Valid @RequestBody RelationRequest request
     ) {
         LoreRelationView relation = relations.create(
             realmId, currentUser(jwt), request.toCreateCommand()
@@ -153,7 +157,7 @@ class LoreCatalogueController {
         @AuthenticationPrincipal Jwt jwt,
         @PathVariable UUID realmId,
         @PathVariable UUID relationId,
-        @RequestBody RelationUpdateRequest request
+        @Valid @RequestBody RelationUpdateRequest request
     ) {
         return relations.update(
             realmId, relationId, currentUser(jwt), request.toCommand()
@@ -209,12 +213,12 @@ class LoreCatalogueController {
     }
 
     private record EntityRequest(
-        EntityType type,
-        String displayName,
-        List<String> aliases,
-        String description,
-        UUID accessPolicyId,
-        List<UUID> evidenceChunkIds
+        @NotNull EntityType type,
+        @NotBlank @Size(max = 160) String displayName,
+        @Size(max = 20) List<@NotBlank @Size(max = 120) String> aliases,
+        @Size(max = 4000) String description,
+        @NotNull UUID accessPolicyId,
+        @Size(max = 20) List<@NotNull UUID> evidenceChunkIds
     ) {
         LoreEntityCommand toCommand() {
             return new LoreEntityCommand(
@@ -224,12 +228,12 @@ class LoreCatalogueController {
     }
 
     private record RelationRequest(
-        UUID sourceEntityId,
-        UUID targetEntityId,
-        String relationType,
-        String description,
-        UUID accessPolicyId,
-        List<UUID> evidenceChunkIds
+        @NotNull UUID sourceEntityId,
+        @NotNull UUID targetEntityId,
+        @NotBlank @Size(max = 64) String relationType,
+        @Size(max = 2000) String description,
+        @NotNull UUID accessPolicyId,
+        @Size(max = 20) List<@NotNull UUID> evidenceChunkIds
     ) {
         CreateLoreRelationCommand toCreateCommand() {
             return new CreateLoreRelationCommand(
@@ -240,10 +244,10 @@ class LoreCatalogueController {
     }
 
     private record RelationUpdateRequest(
-        String relationType,
-        String description,
-        UUID accessPolicyId,
-        List<UUID> evidenceChunkIds
+        @NotBlank @Size(max = 64) String relationType,
+        @Size(max = 2000) String description,
+        @NotNull UUID accessPolicyId,
+        @Size(max = 20) List<@NotNull UUID> evidenceChunkIds
     ) {
         UpdateLoreRelationCommand toCommand() {
             return new UpdateLoreRelationCommand(

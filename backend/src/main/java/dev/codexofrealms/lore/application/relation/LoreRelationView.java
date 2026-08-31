@@ -1,18 +1,20 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.relation;
 
 import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.lore.domain.CanonStatus;
-import dev.codexofrealms.lore.domain.EntityType;
+import dev.codexofrealms.lore.domain.CataloguePromotion;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-public record LoreEntityView(
+public record LoreRelationView(
     UUID id,
     UUID realmId,
-    EntityType type,
-    String displayName,
-    List<String> aliases,
+    UUID sourceEntityId,
+    String sourceEntityName,
+    UUID targetEntityId,
+    String targetEntityName,
+    String relationType,
     String description,
     CanonStatus canonStatus,
     UUID accessPolicyId,
@@ -23,6 +25,6 @@ public record LoreEntityView(
     Instant updatedAt,
     UUID promotedBy,
     Instant promotedAt,
-    List<CataloguePromotionView> promotionHistory
+    List<CataloguePromotion> promotionHistory
 ) {
 }

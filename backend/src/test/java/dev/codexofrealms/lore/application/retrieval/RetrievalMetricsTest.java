@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.retrieval;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

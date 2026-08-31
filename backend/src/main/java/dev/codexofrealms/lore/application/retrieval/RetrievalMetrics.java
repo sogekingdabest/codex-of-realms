@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.retrieval;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
 import io.micrometer.core.instrument.DistributionSummary;

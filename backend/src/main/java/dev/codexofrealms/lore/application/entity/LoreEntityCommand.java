@@ -1,4 +1,4 @@
-package dev.codexofrealms.lore.application;
+package dev.codexofrealms.lore.application.entity;
 
 import dev.codexofrealms.lore.domain.EntityType;
 import java.util.List;

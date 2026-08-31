@@ -1,8 +1,8 @@
-package dev.codexofrealms.lore.infrastructure;
+package dev.codexofrealms.lore.infrastructure.retrieval;
 
-import dev.codexofrealms.lore.LoreRetriever;
-import dev.codexofrealms.lore.RetrievalQuery;
 import dev.codexofrealms.lore.RetrievedEvidence;
+import dev.codexofrealms.lore.application.port.LoreRetriever;
+import dev.codexofrealms.lore.application.port.RetrievalQuery;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
