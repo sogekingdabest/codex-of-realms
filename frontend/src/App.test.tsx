@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest'
 import type { CodexApi } from './api'
 import { App } from './App'
 import type { AuthSession } from './auth'
+import type { LoreAnswer } from './types'
 
 function testApi(): CodexApi {
   return {
@@ -234,6 +235,40 @@ describe('App', () => {
     expect(await screen.findByText('No se pudo consultar el modelo')).toBeInTheDocument()
     expect(screen.getByText('Runtime no disponible')).toBeInTheDocument()
   })
+
+  it.each([
+    ['NO_EVIDENCE', 'El archivo no contiene información visible que permita responder con garantías.'],
+    ['LOW_RELEVANCE', 'Hay contenido relacionado, pero no es suficientemente preciso para sostener una respuesta.'],
+    ['UNSAFE_INPUT', 'La consulta o la evidencia contiene instrucciones inseguras y se ha rechazado.'],
+    ['MODEL_UNAVAILABLE', 'El modelo de respuesta no está disponible. Revisa el estado del runtime local.'],
+    ['VALIDATION_FAILED', 'El modelo respondió, pero la respuesta no superó la validación de evidencia y citas.'],
+  ] satisfies Array<[NonNullable<LoreAnswer['failureReason']>, string]>) (
+    'presenta el motivo seguro %s devuelto por qa',
+    async (failureReason, expectedMessage) => {
+      const api = testApi()
+      vi.mocked(api.ask).mockResolvedValue({
+        outcome: 'INSUFFICIENT_EVIDENCE',
+        answer: null,
+        citations: [],
+        provenance: {
+          embeddingProvider: 'ollama',
+          embeddingModel: 'bge-m3',
+          chatProvider: 'ollama',
+          chatModel: 'qwen3.5:4b',
+        },
+        failureReason,
+      })
+
+      render(<App api={api} session={session} />)
+      await screen.findByText('Crónica de Lumbrevela')
+      fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
+        target: { value: '¿Qué ocurrió?' },
+      })
+      fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
+
+      expect(await screen.findByText(expectedMessage)).toBeInTheDocument()
+    },
+  )
 
   it('gestiona invitaciones, políticas, miembros y permisos de spoiler', async () => {
     const api = testApi()
