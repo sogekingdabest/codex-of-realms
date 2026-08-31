@@ -1,4 +1,4 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.application.access;
 
 import dev.codexofrealms.realm.domain.AccessClassification;
 import java.util.UUID;

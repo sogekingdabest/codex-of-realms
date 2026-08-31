@@ -1,4 +1,4 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.application.identity;
 
 import java.util.Objects;
 

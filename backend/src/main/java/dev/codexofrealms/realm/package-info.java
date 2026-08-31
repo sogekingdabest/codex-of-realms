@@ -1,2 +1,5 @@
-@org.springframework.modulith.ApplicationModule(displayName = "Realm and access")
+@org.springframework.modulith.ApplicationModule(
+    displayName = "Realm and access",
+    allowedDependencies = {}
+)
 package dev.codexofrealms.realm;

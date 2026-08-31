@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { HttpCodexApi } from './api'
+import { ApiError, HttpCodexApi } from './api'
 
 describe('HttpCodexApi', () => {
   afterEach(() => {
@@ -71,6 +71,46 @@ describe('HttpCodexApi', () => {
     const api = new HttpCodexApi('/api/v1', async () => 'token')
 
     await expect(api.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
+  })
+
+  it('expone el código estable de los errores ProblemDetail', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          type: 'urn:codex-of-realms:problem:invitation.pending_exists',
+          title: 'Invitation conflict',
+          status: 409,
+          detail: 'A pending invitation already exists for this email.',
+          code: 'invitation.pending_exists',
+        }),
+        { status: 409, headers: { 'Content-Type': 'application/problem+json' } },
+      ),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+
+    const error = await api.inviteMember('realm-1', 'player@example.test', 'PLAYER')
+      .catch((reason: unknown) => reason)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({
+      message: 'A pending invitation already exists for this email.',
+      status: 409,
+      code: 'invitation.pending_exists',
+    })
+  })
+
+  it('tolera errores antiguos o no JSON sin código', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response('upstream failure', { status: 502 }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = new HttpCodexApi('/api/v1', async () => 'token')
+
+    const error = await api.getCurrentUser().catch((reason: unknown) => reason)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ message: 'Error HTTP 502', status: 502, code: null })
   })
 
   it('envía las fichas del canon con evidencia como JSON tipado', async () => {

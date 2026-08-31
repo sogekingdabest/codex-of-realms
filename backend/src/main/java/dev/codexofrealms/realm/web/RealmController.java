@@ -1,12 +1,15 @@
 package dev.codexofrealms.realm.web;
 
-import dev.codexofrealms.realm.application.AccessPolicyView;
-import dev.codexofrealms.realm.application.AuthenticatedUser;
-import dev.codexofrealms.realm.application.AuthenticatedUserService;
-import dev.codexofrealms.realm.application.InvitationView;
-import dev.codexofrealms.realm.application.MembershipView;
-import dev.codexofrealms.realm.application.RealmService;
-import dev.codexofrealms.realm.application.RealmSummary;
+import dev.codexofrealms.realm.application.access.AccessPolicyService;
+import dev.codexofrealms.realm.application.access.AccessPolicyView;
+import dev.codexofrealms.realm.application.identity.AuthenticatedUser;
+import dev.codexofrealms.realm.application.identity.AuthenticatedUserService;
+import dev.codexofrealms.realm.application.invitation.InvitationService;
+import dev.codexofrealms.realm.application.invitation.InvitationView;
+import dev.codexofrealms.realm.application.lifecycle.RealmLifecycleService;
+import dev.codexofrealms.realm.application.lifecycle.RealmSummary;
+import dev.codexofrealms.realm.application.membership.MembershipService;
+import dev.codexofrealms.realm.application.membership.MembershipView;
 import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.RealmRole;
 import jakarta.validation.Valid;
@@ -34,14 +37,23 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 class RealmController {
 
     private final AuthenticatedUserService userService;
-    private final RealmService realmService;
+    private final RealmLifecycleService lifecycleService;
+    private final MembershipService membershipService;
+    private final InvitationService invitationService;
+    private final AccessPolicyService accessPolicyService;
 
     RealmController(
         AuthenticatedUserService userService,
-        RealmService realmService
+        RealmLifecycleService lifecycleService,
+        MembershipService membershipService,
+        InvitationService invitationService,
+        AccessPolicyService accessPolicyService
     ) {
         this.userService = userService;
-        this.realmService = realmService;
+        this.lifecycleService = lifecycleService;
+        this.membershipService = membershipService;
+        this.invitationService = invitationService;
+        this.accessPolicyService = accessPolicyService;
     }
 
     @PostMapping
@@ -50,7 +62,7 @@ class RealmController {
         @Valid @RequestBody CreateRealmRequest request
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        RealmSummary realm = realmService.createRealm(user.id(), request.name());
+        RealmSummary realm = lifecycleService.createRealm(user.id(), request.name());
 
         return ResponseEntity
             .created(childLocation(realm.id()))
@@ -60,7 +72,7 @@ class RealmController {
     @GetMapping
     List<RealmSummary> listRealms(@AuthenticationPrincipal Jwt jwt) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.listRealms(user.id());
+        return lifecycleService.listRealms(user.id());
     }
 
     @GetMapping("/{realmId}")
@@ -69,7 +81,7 @@ class RealmController {
         @PathVariable UUID realmId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.getRealm(realmId, user.id());
+        return lifecycleService.getRealm(realmId, user.id());
     }
 
     @PutMapping("/{realmId}/memberships/{targetUserId}")
@@ -80,7 +92,7 @@ class RealmController {
         @Valid @RequestBody UpsertMembershipRequest request
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.upsertMembership(
+        return membershipService.upsertMembership(
             realmId,
             user.id(),
             targetUserId,
@@ -94,7 +106,7 @@ class RealmController {
         @PathVariable UUID realmId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.listMemberships(realmId, user.id());
+        return membershipService.listMemberships(realmId, user.id());
     }
 
     @PostMapping("/{realmId}/invitations")
@@ -104,7 +116,7 @@ class RealmController {
         @Valid @RequestBody InviteMemberRequest request
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        InvitationView invitation = realmService.inviteMember(
+        InvitationView invitation = invitationService.inviteMember(
             realmId, user.id(), request.email(), request.role()
         );
         return ResponseEntity.created(childLocation(invitation.id())).body(invitation);
@@ -116,7 +128,7 @@ class RealmController {
         @PathVariable UUID realmId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.listInvitations(realmId, user.id());
+        return invitationService.listInvitations(realmId, user.id());
     }
 
     @DeleteMapping("/{realmId}/invitations/{invitationId}")
@@ -126,7 +138,7 @@ class RealmController {
         @PathVariable UUID invitationId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        realmService.revokeInvitation(realmId, invitationId, user.id());
+        invitationService.revokeInvitation(realmId, invitationId, user.id());
         return ResponseEntity.noContent().build();
     }
 
@@ -137,7 +149,7 @@ class RealmController {
         @PathVariable UUID targetUserId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        realmService.removeMembership(realmId, user.id(), targetUserId);
+        membershipService.removeMembership(realmId, user.id(), targetUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -148,7 +160,7 @@ class RealmController {
         @Valid @RequestBody CreateAccessPolicyRequest request
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        AccessPolicyView policy = realmService.createAccessPolicy(
+        AccessPolicyView policy = accessPolicyService.createAccessPolicy(
             realmId,
             user.id(),
             request.classification(),
@@ -168,7 +180,7 @@ class RealmController {
         @PathVariable UUID policyId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.listPolicyGrants(realmId, policyId, user.id());
+        return accessPolicyService.listPolicyGrants(realmId, policyId, user.id());
     }
 
     @GetMapping("/{realmId}/access-policies")
@@ -177,7 +189,7 @@ class RealmController {
         @PathVariable UUID realmId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.listAccessiblePolicies(realmId, user.id());
+        return accessPolicyService.listAccessiblePolicies(realmId, user.id());
     }
 
     @GetMapping("/{realmId}/access-policies/{policyId}")
@@ -187,7 +199,7 @@ class RealmController {
         @PathVariable UUID policyId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        return realmService.getAccessiblePolicy(realmId, policyId, user.id());
+        return accessPolicyService.getAccessiblePolicy(realmId, policyId, user.id());
     }
 
     @PutMapping("/{realmId}/access-policies/{policyId}/grants/{targetUserId}")
@@ -198,7 +210,7 @@ class RealmController {
         @PathVariable UUID targetUserId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        realmService.grantSpoilerAccess(
+        accessPolicyService.grantSpoilerAccess(
             realmId,
             policyId,
             user.id(),
@@ -215,7 +227,7 @@ class RealmController {
         @PathVariable UUID targetUserId
     ) {
         AuthenticatedUser user = currentUser(jwt);
-        realmService.revokeSpoilerAccess(
+        accessPolicyService.revokeSpoilerAccess(
             realmId,
             policyId,
             user.id(),

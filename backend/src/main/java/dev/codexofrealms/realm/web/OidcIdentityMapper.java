@@ -1,6 +1,6 @@
 package dev.codexofrealms.realm.web;
 
-import dev.codexofrealms.realm.application.ExternalIdentity;
+import dev.codexofrealms.realm.application.identity.ExternalIdentity;
 import org.springframework.security.oauth2.jwt.Jwt;
 
 final class OidcIdentityMapper {

@@ -1,5 +1,6 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.application.invitation;
 
+import dev.codexofrealms.realm.domain.InvitationStatus;
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.time.Instant;
 import java.util.UUID;

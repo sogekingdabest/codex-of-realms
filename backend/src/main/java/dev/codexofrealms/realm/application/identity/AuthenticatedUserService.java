@@ -1,19 +1,19 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.application.identity;
 
-import dev.codexofrealms.realm.infrastructure.UserJdbcRepository;
-import dev.codexofrealms.realm.infrastructure.RealmJdbcRepository;
+import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthenticatedUserService {
 
-    private final UserJdbcRepository userRepository;
-    private final RealmJdbcRepository realmRepository;
+    private final UserRepository userRepository;
+    private final RealmRepository realmRepository;
 
     public AuthenticatedUserService(
-        UserJdbcRepository userRepository,
-        RealmJdbcRepository realmRepository
+        UserRepository userRepository,
+        RealmRepository realmRepository
     ) {
         this.userRepository = userRepository;
         this.realmRepository = realmRepository;

@@ -1,4 +1,4 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.domain;
 
 public enum InvitationStatus {
     PENDING,

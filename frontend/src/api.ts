@@ -79,6 +79,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
+    readonly code: string | null = null,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -319,7 +320,8 @@ export class HttpCodexApi implements CodexApi {
 
     const response = await fetch(this.requestUrl(path), { ...init, headers })
     if (!response.ok) {
-      throw new ApiError(await readError(response), response.status)
+      const problem = await readError(response)
+      throw new ApiError(problem.message, response.status, problem.code)
     }
     if (response.status === 204) return undefined as T
     return (await response.json()) as T
@@ -347,15 +349,21 @@ export class HttpCodexApi implements CodexApi {
   }
 }
 
-async function readError(response: Response): Promise<string> {
+async function readError(
+  response: Response,
+): Promise<{ message: string; code: string | null }> {
   try {
     const body = (await response.json()) as {
+      code?: string
       detail?: string
       title?: string
       message?: string
     }
-    return body.detail ?? body.message ?? body.title ?? `Error HTTP ${response.status}`
+    return {
+      message: body.detail ?? body.message ?? body.title ?? `Error HTTP ${response.status}`,
+      code: typeof body.code === 'string' ? body.code : null,
+    }
   } catch {
-    return `Error HTTP ${response.status}`
+    return { message: `Error HTTP ${response.status}`, code: null }
   }
 }

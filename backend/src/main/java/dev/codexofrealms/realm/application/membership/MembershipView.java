@@ -1,4 +1,4 @@
-package dev.codexofrealms.realm.application;
+package dev.codexofrealms.realm.application.membership;
 
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.util.UUID;

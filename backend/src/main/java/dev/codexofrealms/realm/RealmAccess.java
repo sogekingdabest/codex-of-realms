@@ -1,8 +1,8 @@
 package dev.codexofrealms.realm;
 
-import dev.codexofrealms.realm.application.AuthenticatedUserService;
-import dev.codexofrealms.realm.application.ExternalIdentity;
-import dev.codexofrealms.realm.application.RealmService;
+import dev.codexofrealms.realm.application.access.RealmAuthorizationService;
+import dev.codexofrealms.realm.application.identity.AuthenticatedUserService;
+import dev.codexofrealms.realm.application.identity.ExternalIdentity;
 import java.util.UUID;
 import org.springframework.stereotype.Component;
 
@@ -11,11 +11,14 @@ import org.springframework.stereotype.Component;
 public class RealmAccess {
 
     private final AuthenticatedUserService userService;
-    private final RealmService realmService;
+    private final RealmAuthorizationService authorizationService;
 
-    public RealmAccess(AuthenticatedUserService userService, RealmService realmService) {
+    public RealmAccess(
+        AuthenticatedUserService userService,
+        RealmAuthorizationService authorizationService
+    ) {
         this.userService = userService;
-        this.realmService = realmService;
+        this.authorizationService = authorizationService;
     }
 
     public UUID synchronizeIdentity(
@@ -30,14 +33,14 @@ public class RealmAccess {
     }
 
     public void requireEditor(UUID realmId, UUID userId) {
-        realmService.requireEditorAccess(realmId, userId);
+        authorizationService.requireEditor(realmId, userId);
     }
 
     public void requireMember(UUID realmId, UUID userId) {
-        realmService.requireMemberAccess(realmId, userId);
+        authorizationService.requireMember(realmId, userId);
     }
 
     public void requireEditablePolicy(UUID realmId, UUID policyId, UUID userId) {
-        realmService.requireEditablePolicyAccess(realmId, policyId, userId);
+        authorizationService.requireEditablePolicy(realmId, policyId, userId);
     }
 }

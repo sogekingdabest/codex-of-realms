@@ -1,7 +1,8 @@
 package dev.codexofrealms.realm.infrastructure;
 
-import dev.codexofrealms.realm.application.AuthenticatedUser;
-import dev.codexofrealms.realm.application.ExternalIdentity;
+import dev.codexofrealms.realm.application.identity.AuthenticatedUser;
+import dev.codexofrealms.realm.application.identity.ExternalIdentity;
+import dev.codexofrealms.realm.application.port.UserRepository;
 import java.sql.Types;
 import java.util.Optional;
 import java.util.UUID;
@@ -9,7 +10,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class UserJdbcRepository {
+public class UserJdbcRepository implements UserRepository {
 
     private static final String EMAIL = "email";
 

@@ -1,11 +1,12 @@
 package dev.codexofrealms.realm.infrastructure;
 
-import dev.codexofrealms.realm.application.AccessPolicyView;
-import dev.codexofrealms.realm.application.InvitationStatus;
-import dev.codexofrealms.realm.application.InvitationView;
-import dev.codexofrealms.realm.application.MembershipView;
-import dev.codexofrealms.realm.application.RealmSummary;
+import dev.codexofrealms.realm.application.access.AccessPolicyView;
+import dev.codexofrealms.realm.application.invitation.InvitationView;
+import dev.codexofrealms.realm.application.lifecycle.RealmSummary;
+import dev.codexofrealms.realm.application.membership.MembershipView;
+import dev.codexofrealms.realm.application.port.RealmRepository;
 import dev.codexofrealms.realm.domain.AccessClassification;
+import dev.codexofrealms.realm.domain.InvitationStatus;
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.util.List;
 import java.util.Optional;
@@ -15,7 +16,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
-public class RealmJdbcRepository {
+public class RealmJdbcRepository implements RealmRepository {
 
     private static final String ACTIVE_OWNER_SQL = """
         SELECT EXISTS (
