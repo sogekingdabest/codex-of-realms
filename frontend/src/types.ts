@@ -180,11 +180,17 @@ export type LoreRelationUpdateInput = Omit<
   'sourceEntityId' | 'targetEntityId'
 >
 
+export type ModelCapabilityStatus =
+  | 'READY'
+  | 'MODEL_MISSING'
+  | 'RUNTIME_UNAVAILABLE'
+  | 'NOT_CONFIGURED'
+
 export interface ModelCapability {
   provider: string
   model: string
   available: boolean
-  status: 'READY' | 'MODEL_MISSING' | 'RUNTIME_UNAVAILABLE' | 'NOT_CONFIGURED'
+  status: ModelCapabilityStatus
   installedModels: string[]
 }
 

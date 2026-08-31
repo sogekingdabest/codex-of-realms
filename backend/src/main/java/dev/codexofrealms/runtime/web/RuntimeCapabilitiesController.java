@@ -1,7 +1,7 @@
 package dev.codexofrealms.runtime.web;
 
-import dev.codexofrealms.runtime.application.RuntimeCapabilities;
-import dev.codexofrealms.runtime.application.RuntimeCapabilitiesService;
+import dev.codexofrealms.runtime.RuntimeCapabilities;
+import dev.codexofrealms.runtime.application.capabilities.RuntimeCapabilitiesService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

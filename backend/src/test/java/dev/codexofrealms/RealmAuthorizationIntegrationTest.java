@@ -123,8 +123,16 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(status().isOk());
         mockMvc.perform(get("/api/v1/capabilities").with(identity("runtime-observer")))
             .andExpect(status().isOk())
+            .andExpect(jsonPath("$.chat.provider").value("none"))
+            .andExpect(jsonPath("$.chat.model").value("qwen3:4b"))
+            .andExpect(jsonPath("$.chat.available").value(false))
             .andExpect(jsonPath("$.chat.status").value("NOT_CONFIGURED"))
-            .andExpect(jsonPath("$.embedding.status").value("NOT_CONFIGURED"));
+            .andExpect(jsonPath("$.chat.installedModels").isEmpty())
+            .andExpect(jsonPath("$.embedding.provider").value("none"))
+            .andExpect(jsonPath("$.embedding.model").value("bge-m3"))
+            .andExpect(jsonPath("$.embedding.available").value(false))
+            .andExpect(jsonPath("$.embedding.status").value("NOT_CONFIGURED"))
+            .andExpect(jsonPath("$.embedding.installedModels").isEmpty());
     }
 
     @Test

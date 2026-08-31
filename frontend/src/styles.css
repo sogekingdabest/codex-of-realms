@@ -994,6 +994,10 @@ input[type="file"]::file-selector-button {
   white-space: nowrap;
 }
 
+.runtime-notice .runtime-commands {
+  justify-items: end;
+}
+
 .text-danger,
 .citation-link {
   padding: 0;
@@ -1212,6 +1216,7 @@ input[type="file"]::file-selector-button {
   .empty-realm form { grid-template-columns: 1fr; }
   .runtime-notice { align-items: stretch; flex-direction: column; }
   .runtime-notice code { white-space: normal; }
+  .runtime-notice .runtime-commands { justify-items: start; }
   .workspace-navigation { width: 100%; }
   .workspace-navigation button { flex: 1; }
   .catalogue-header { padding: 1.4rem; }

@@ -1,6 +1,6 @@
-package dev.codexofrealms.runtime.infrastructure;
+package dev.codexofrealms.runtime.infrastructure.ollama;
 
-import dev.codexofrealms.runtime.application.ModelRuntimeProbe;
+import dev.codexofrealms.runtime.application.port.ModelRuntimeProbe;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.ai.ollama.api.OllamaApi;
@@ -19,12 +19,18 @@ public class OllamaModelRuntimeProbe implements ModelRuntimeProbe {
     @Override
     public Optional<List<String>> installedModels() {
         OllamaApi api = ollamaApi.getIfAvailable();
-        if (api == null) return Optional.empty();
+        if (api == null) {
+            return Optional.empty();
+        }
         try {
-            return Optional.of(api.listModels().models().stream()
+            List<String> installed = api.listModels().models().stream()
                 .map(model -> model.name() == null ? model.model() : model.name())
+                .filter(name -> name != null && !name.isBlank())
+                .map(String::trim)
+                .distinct()
                 .sorted()
-                .toList());
+                .toList();
+            return Optional.of(installed);
         } catch (RuntimeException exception) {
             return Optional.empty();
         }

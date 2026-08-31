@@ -225,7 +225,8 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
     expect(await screen.findByText('El runtime local necesita preparación')).toBeInTheDocument()
-    expect(screen.getByText(/ollama pull bge-m3/)).toBeInTheDocument()
+    expect(screen.getByText('ollama pull bge-m3')).toBeInTheDocument()
+    expect(screen.getByText('ollama pull qwen3.5:4b')).toBeInTheDocument()
     await screen.findByText('Crónica de Lumbrevela')
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
       target: { value: '¿Qué ocurrió?' },
@@ -234,6 +235,50 @@ describe('App', () => {
 
     expect(await screen.findByText('No se pudo consultar el modelo')).toBeInTheDocument()
     expect(screen.getByText('Runtime no disponible')).toBeInTheDocument()
+  })
+
+  it('explica que Ollama no responde sin recomendar descargar modelos', async () => {
+    const api = testApi()
+    vi.mocked(api.getCapabilities).mockResolvedValue({
+      chat: { provider: 'ollama', model: 'qwen3.5:4b', available: false, status: 'RUNTIME_UNAVAILABLE', installedModels: [] },
+      embedding: { provider: 'ollama', model: 'bge-m3', available: false, status: 'RUNTIME_UNAVAILABLE', installedModels: [] },
+    })
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Ollama no responde. Inicia o revisa el runtime local.')).toBeInTheDocument()
+    expect(screen.queryByText(/ollama pull/)).not.toBeInTheDocument()
+  })
+
+  it('explica una configuración incompleta sin mostrar comandos engañosos', async () => {
+    const api = testApi()
+    vi.mocked(api.getCapabilities).mockResolvedValue({
+      chat: { provider: 'none', model: 'qwen3.5:4b', available: false, status: 'NOT_CONFIGURED', installedModels: [] },
+      embedding: { provider: 'none', model: 'bge-m3', available: false, status: 'NOT_CONFIGURED', installedModels: [] },
+    })
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText(
+      'Configura el proveedor y el modelo correspondientes antes de continuar.',
+    )).toBeInTheDocument()
+    expect(screen.queryByText(/ollama pull/)).not.toBeInTheDocument()
+  })
+
+  it('resuelve estados mixtos por capacidad y evita comandos duplicados', async () => {
+    const api = testApi()
+    vi.mocked(api.getCapabilities).mockResolvedValue({
+      chat: { provider: 'none', model: 'shared-model', available: false, status: 'NOT_CONFIGURED', installedModels: [] },
+      embedding: { provider: 'ollama', model: 'shared-model', available: false, status: 'MODEL_MISSING', installedModels: [] },
+    })
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Respuestas: shared-model (sin configurar).')).toBeInTheDocument()
+    expect(screen.getAllByText('ollama pull shared-model')).toHaveLength(1)
+    expect(screen.getByText(
+      'Configura el proveedor y el modelo correspondientes antes de continuar.',
+    )).toBeInTheDocument()
   })
 
   it.each([
