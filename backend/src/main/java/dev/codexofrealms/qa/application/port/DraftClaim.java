@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa;
+package dev.codexofrealms.qa.application.port;
 
 import java.util.List;
 

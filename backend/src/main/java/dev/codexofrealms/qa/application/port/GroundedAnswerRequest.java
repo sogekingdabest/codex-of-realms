@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa;
+package dev.codexofrealms.qa.application.port;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
 import java.util.List;

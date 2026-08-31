@@ -1,7 +1,7 @@
-package dev.codexofrealms.qa.infrastructure;
+package dev.codexofrealms.qa.infrastructure.model;
 
-import dev.codexofrealms.qa.GroundedAnswerModel;
-import dev.codexofrealms.qa.application.QaProperties;
+import dev.codexofrealms.qa.application.answering.AnsweringProperties;
+import dev.codexofrealms.qa.application.port.GroundedAnswerModel;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +26,11 @@ public final class LocalOllamaGroundedAnswerModel {
     private LocalOllamaGroundedAnswerModel() {
     }
 
-    public static Session connect(Configuration configuration, QaProperties properties) {
+    public static Session connect(
+        Configuration configuration,
+        AnsweringProperties answeringProperties,
+        ChatModelProperties modelProperties
+    ) {
         ReactorClientHttpRequestFactory requestFactory = new ReactorClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofSeconds(10));
         requestFactory.setReadTimeout(configuration.readTimeout());
@@ -60,8 +64,9 @@ public final class LocalOllamaGroundedAnswerModel {
 
         DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
         beans.registerSingleton("chatModel", instrumented);
-        GroundedAnswerModel model = new SpringAiGroundedAnswerModel(
-            beans.getBeanProvider(ChatModel.class), JsonMapper.builder().build(), properties
+        GroundedAnswerModel model = new OllamaGroundedAnswerModel(
+            beans.getBeanProvider(ChatModel.class), JsonMapper.builder().build(),
+            answeringProperties, modelProperties
         );
         return new Session(model, instrumented);
     }

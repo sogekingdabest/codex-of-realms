@@ -1,8 +1,10 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import dev.codexofrealms.qa.AnswerOutcome;
+import dev.codexofrealms.qa.LoreAnswer;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Timer;
+import java.util.Locale;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -22,15 +24,18 @@ class QaMetrics {
         return Timer.start(registry);
     }
 
-    void gateRejected(Timer.Sample sample, String reason) {
-        registry.counter("codex.qa.outcomes", OUTCOME_TAG, "insufficient_evidence", "stage", "gate").increment();
+    void refused(Timer.Sample sample, String stage, String reason) {
+        registry.counter("codex.qa.outcomes", OUTCOME_TAG, "insufficient_evidence", "stage", stage).increment();
         sample.stop(registry.timer(DURATION_METRIC, OUTCOME_TAG, "insufficient_evidence", REASON_TAG, reason));
     }
 
-    void completed(Timer.Sample sample, AnswerOutcome outcome) {
-        String value = outcome.name().toLowerCase(java.util.Locale.ROOT);
-        registry.counter("codex.qa.outcomes", OUTCOME_TAG, value, "stage", "validation").increment();
-        sample.stop(registry.timer(DURATION_METRIC, OUTCOME_TAG, value, REASON_TAG, "none"));
+    void completed(Timer.Sample sample, LoreAnswer answer) {
+        String outcome = answer.outcome().name().toLowerCase(Locale.ROOT);
+        String reason = answer.outcome() == AnswerOutcome.ANSWERED
+            ? "none"
+            : answer.failureReason().name().toLowerCase(Locale.ROOT);
+        registry.counter("codex.qa.outcomes", OUTCOME_TAG, outcome, "stage", "validation").increment();
+        sample.stop(registry.timer(DURATION_METRIC, OUTCOME_TAG, outcome, REASON_TAG, reason));
     }
 
     void failed(Timer.Sample sample) {

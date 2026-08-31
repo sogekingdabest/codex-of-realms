@@ -1,5 +1,6 @@
-package dev.codexofrealms.qa;
+package dev.codexofrealms.qa.application.port;
 
+import dev.codexofrealms.qa.AnswerOutcome;
 import java.util.List;
 
 public record GroundedAnswerDraft(AnswerOutcome outcome, List<DraftClaim> claims) {

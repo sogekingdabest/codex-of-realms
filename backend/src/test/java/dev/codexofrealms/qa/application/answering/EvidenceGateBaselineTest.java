@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

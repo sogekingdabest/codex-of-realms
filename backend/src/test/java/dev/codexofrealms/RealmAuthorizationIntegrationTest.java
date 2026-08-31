@@ -17,17 +17,19 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
 import dev.codexofrealms.qa.AnswerOutcome;
-import dev.codexofrealms.qa.DraftClaim;
-import dev.codexofrealms.qa.GroundedAnswerDraft;
-import dev.codexofrealms.qa.GroundedAnswerModel;
-import dev.codexofrealms.qa.GroundedAnswerRequest;
-import dev.codexofrealms.qa.ModelDescriptor;
+import dev.codexofrealms.qa.application.port.AnswerModelUnavailableException;
+import dev.codexofrealms.qa.application.port.DraftClaim;
+import dev.codexofrealms.qa.application.port.GroundedAnswerDraft;
+import dev.codexofrealms.qa.application.port.GroundedAnswerModel;
+import dev.codexofrealms.qa.application.port.GroundedAnswerRequest;
+import dev.codexofrealms.qa.application.port.ModelDescriptor;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -705,6 +707,41 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(status().isNotFound())
             .andExpect(jsonPath("$.code").value("realm.unavailable"));
 
+        mockMvc.perform(post("/api/v1/realms/{realmId}/questions", realmId)
+                .with(identity("outsider_nuno"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                    new QuestionRequest("¿Qué es el Meridiano?")
+                )))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("realm.unavailable"));
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/questions", realmId)
+                .with(identity("gm_ines"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new QuestionRequest(" "))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("request.invalid"));
+
+        mockMvc.perform(post("/api/v1/realms/{realmId}/questions", realmId)
+                .with(identity("gm_ines"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new QuestionRequest("x".repeat(1001)))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("request.invalid"));
+
+        TestChatConfiguration.failNextGeneration();
+        mockMvc.perform(post("/api/v1/realms/{realmId}/questions", realmId)
+                .with(identity("gm_ines"))
+                .contentType(APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new QuestionRequest(
+                    "¿En qué año apareció el Meridiano de Ceniza y qué año es ahora?"
+                ))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.outcome").value("INSUFFICIENT_EVIDENCE"))
+            .andExpect(jsonPath("$.failureReason").value("MODEL_UNAVAILABLE"))
+            .andExpect(jsonPath("$.citations").isEmpty());
+
         assertThat(meterRegistry.find("codex.retrieval.duration").timers()).isNotEmpty();
         assertThat(meterRegistry.find("codex.retrieval.results").summary()).isNotNull();
         assertThat(meterRegistry.find("codex.retrieval.distance").summary()).isNotNull();
@@ -1109,12 +1146,21 @@ class RealmAuthorizationIntegrationTest {
     @TestConfiguration(proxyBeanMethods = false)
     static class TestChatConfiguration {
 
+        private static final AtomicBoolean FAIL_NEXT_GENERATION = new AtomicBoolean();
+
+        static void failNextGeneration() {
+            FAIL_NEXT_GENERATION.set(true);
+        }
+
         @Bean
         @Primary
         GroundedAnswerModel deterministicGroundedAnswerModel() {
             return new GroundedAnswerModel() {
                 @Override
                 public GroundedAnswerDraft generate(GroundedAnswerRequest request) {
+                    if (FAIL_NEXT_GENERATION.getAndSet(false)) {
+                        throw new AnswerModelUnavailableException("deterministic model unavailable");
+                    }
                     if (request.evidence().isEmpty()) return GroundedAnswerDraft.insufficient();
                     var evidence = request.evidence().getFirst();
                     String claim = evidence.content().strip().replaceAll("\\s+", " ");

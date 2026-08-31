@@ -1,23 +1,26 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import dev.codexofrealms.lore.LoreSearch;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.qa.AnswerOutcome;
 import dev.codexofrealms.qa.AnswerFailureReason;
-import dev.codexofrealms.qa.DraftClaim;
-import dev.codexofrealms.qa.GroundedAnswerDraft;
-import dev.codexofrealms.qa.GroundedAnswerModel;
-import dev.codexofrealms.qa.GroundedAnswerRequest;
-import dev.codexofrealms.qa.ModelDescriptor;
+import dev.codexofrealms.qa.application.port.AnswerModelUnavailableException;
+import dev.codexofrealms.qa.application.port.DraftClaim;
+import dev.codexofrealms.qa.application.port.GroundedAnswerDraft;
+import dev.codexofrealms.qa.application.port.GroundedAnswerModel;
+import dev.codexofrealms.qa.application.port.GroundedAnswerRequest;
+import dev.codexofrealms.qa.application.port.ModelDescriptor;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.Test;
 
-class LoreQuestionServiceTest {
+class QuestionAnsweringServiceTest {
 
     @Test
     void doesNotCallModelWhenEvidenceGateRejectsQuestion() {
@@ -58,7 +61,7 @@ class LoreQuestionServiceTest {
         LoreSearch search = search("¿En qué año apareció el Meridiano?",
             "El Meridiano apareció en el año 0 Después de la Partición.");
         GroundedAnswerModel model = model(request -> {
-            throw new IllegalStateException("runtime unavailable");
+            throw new AnswerModelUnavailableException("runtime unavailable");
         });
 
         var answer = service(search, model)
@@ -69,14 +72,76 @@ class LoreQuestionServiceTest {
         assertThat(answer.failureReason()).isEqualTo(AnswerFailureReason.MODEL_UNAVAILABLE);
     }
 
-    private static LoreQuestionService service(LoreSearch search, GroundedAnswerModel model) {
-        QaProperties properties = TestQaFixtures.properties();
-        return new LoreQuestionService(
+    @Test
+    void forwardsConfiguredRetrievalLimit() {
+        AtomicInteger receivedLimit = new AtomicInteger();
+        LoreSearch search = (realmId, userId, question, limit) -> {
+            receivedLimit.set(limit);
+            return new RetrievalResult(
+                "¿En qué año apareció el Meridiano?", "test", "embedding-v1",
+                List.of(TestQaFixtures.evidence(1, 0.90,
+                    "El Meridiano apareció en el año 0 Después de la Partición."))
+            );
+        };
+
+        service(search, model(request -> GroundedAnswerDraft.insufficient()))
+            .answer(UUID.randomUUID(), UUID.randomUUID(), "pregunta");
+
+        assertThat(receivedLimit).hasValue(TestQaFixtures.properties().retrievalLimit());
+    }
+
+    @Test
+    void doesNotHideUnexpectedModelFailures() {
+        LoreSearch search = search("¿En qué año apareció el Meridiano?",
+            "El Meridiano apareció en el año 0 Después de la Partición.");
+        GroundedAnswerModel model = model(request -> {
+            throw new IllegalStateException("programming error");
+        });
+
+        assertThatThrownBy(() -> service(search, model)
+            .answer(UUID.randomUUID(), UUID.randomUUID(), "pregunta"))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessage("programming error");
+    }
+
+    @Test
+    void recordsModelRefusalMetricsExactlyOnce() {
+        LoreSearch search = search("¿En qué año apareció el Meridiano?",
+            "El Meridiano apareció en el año 0 Después de la Partición.");
+        GroundedAnswerModel model = model(request -> {
+            throw new AnswerModelUnavailableException("runtime unavailable");
+        });
+        var registry = new SimpleMeterRegistry();
+
+        service(search, model, registry)
+            .answer(UUID.randomUUID(), UUID.randomUUID(), "pregunta");
+
+        assertThat(registry.get("codex.qa.outcomes")
+            .tag("outcome", "insufficient_evidence")
+            .tag("stage", "model")
+            .counter().count()).isEqualTo(1.0);
+        assertThat(registry.get("codex.qa.duration")
+            .tag("outcome", "insufficient_evidence")
+            .tag("reason", "model_unavailable")
+            .timer().count()).isEqualTo(1L);
+    }
+
+    private static QuestionAnsweringService service(LoreSearch search, GroundedAnswerModel model) {
+        return service(search, model, new SimpleMeterRegistry());
+    }
+
+    private static QuestionAnsweringService service(
+        LoreSearch search,
+        GroundedAnswerModel model,
+        SimpleMeterRegistry registry
+    ) {
+        AnsweringProperties properties = TestQaFixtures.properties();
+        return new QuestionAnsweringService(
             search,
             model,
             new EvidenceGate(properties),
             new AnswerValidator(properties),
-            new QaMetrics(new SimpleMeterRegistry()),
+            new QaMetrics(registry),
             properties
         );
     }

@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -7,10 +7,11 @@ import dev.codexofrealms.lore.LoreSearch;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.lore.RetrievedEvidence;
 import dev.codexofrealms.qa.AnswerOutcome;
-import dev.codexofrealms.qa.GroundedAnswerDraft;
 import dev.codexofrealms.qa.LoreAnswer;
-import dev.codexofrealms.qa.infrastructure.LocalOllamaGroundedAnswerModel;
-import dev.codexofrealms.qa.infrastructure.LocalOllamaGroundedAnswerModel.CallTelemetry;
+import dev.codexofrealms.qa.application.port.GroundedAnswerDraft;
+import dev.codexofrealms.qa.infrastructure.model.ChatModelProperties;
+import dev.codexofrealms.qa.infrastructure.model.LocalOllamaGroundedAnswerModel;
+import dev.codexofrealms.qa.infrastructure.model.LocalOllamaGroundedAnswerModel.CallTelemetry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
@@ -68,8 +69,10 @@ class LocalModelEvaluationIT {
         Map<String, SourceFixture> sources = loadSources(root.resolve("demo/lore"));
         validateDatasetReferences(baseline, sources);
 
-        QaProperties properties = new QaProperties(
-            10, 6, 0.45, 0.70, 0.35, 6, 2000,
+        AnsweringProperties answeringProperties = new AnsweringProperties(
+            10, 6, 0.45, 0.70, 0.35, 6, 2000
+        );
+        ChatModelProperties modelProperties = new ChatModelProperties(
             "ollama", settings.model(), settings.contextSize(),
             settings.maxPredictTokens(), settings.keepAlive()
         );
@@ -79,16 +82,17 @@ class LocalModelEvaluationIT {
                 settings.maxPredictTokens(), settings.keepAlive(),
                 Duration.ofSeconds(settings.httpReadTimeoutSeconds())
             ),
-            properties
+            answeringProperties,
+            modelProperties
         );
         MutableLoreSearch search = new MutableLoreSearch();
-        LoreQuestionService service = new LoreQuestionService(
+        QuestionAnsweringService service = new QuestionAnsweringService(
             search,
             modelSession.model(),
-            new EvidenceGate(properties),
-            new AnswerValidator(properties),
+            new EvidenceGate(answeringProperties),
+            new AnswerValidator(answeringProperties),
             new QaMetrics(new SimpleMeterRegistry()),
-            properties
+            answeringProperties
         );
 
         List<CaseResult> results = new ArrayList<>();
@@ -126,7 +130,7 @@ class LocalModelEvaluationIT {
         Baseline baseline,
         Map<String, SourceFixture> sources,
         MutableLoreSearch search,
-        LoreQuestionService service,
+        QuestionAnsweringService service,
         LocalOllamaGroundedAnswerModel.Session modelSession,
         EvaluationSettings settings
     ) {

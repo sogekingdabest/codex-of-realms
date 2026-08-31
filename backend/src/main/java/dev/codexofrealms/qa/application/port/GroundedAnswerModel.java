@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa;
+package dev.codexofrealms.qa.application.port;
 
 public interface GroundedAnswerModel {
 

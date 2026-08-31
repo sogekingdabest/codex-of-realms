@@ -1,23 +1,18 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties("codex.qa")
-public record QaProperties(
+public record AnsweringProperties(
     int retrievalLimit,
     int maxEvidenceChunks,
     double minimumSimilarity,
     double minimumQuestionCoverage,
     double minimumClaimCoverage,
     int maxClaims,
-    int maxAnswerCharacters,
-    String chatProvider,
-    String chatModel,
-    int chatContextSize,
-    int chatMaxPredictTokens,
-    String chatKeepAlive
+    int maxAnswerCharacters
 ) {
-    public QaProperties {
+    public AnsweringProperties {
         if (retrievalLimit < 1 || retrievalLimit > 20) {
             throw new IllegalArgumentException("QA retrieval limit must be between 1 and 20.");
         }
@@ -29,16 +24,6 @@ public record QaProperties(
         requireProbability(minimumClaimCoverage, "minimum claim coverage");
         if (maxClaims < 1 || maxClaims > 10 || maxAnswerCharacters < 100 || maxAnswerCharacters > 10000) {
             throw new IllegalArgumentException("QA output limits are invalid.");
-        }
-        if (chatProvider == null || chatProvider.isBlank() || chatModel == null || chatModel.isBlank()) {
-            throw new IllegalArgumentException("QA model provenance is required.");
-        }
-        if (chatContextSize < 512 || chatContextSize > 131072
-            || chatMaxPredictTokens < 1 || chatMaxPredictTokens > 4096) {
-            throw new IllegalArgumentException("QA model token limits are invalid.");
-        }
-        if (chatKeepAlive == null || chatKeepAlive.isBlank()) {
-            throw new IllegalArgumentException("QA model keep-alive is required.");
         }
     }
 

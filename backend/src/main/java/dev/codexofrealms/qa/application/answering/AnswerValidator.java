@@ -1,13 +1,13 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
-import dev.codexofrealms.qa.AnswerOutcome;
 import dev.codexofrealms.qa.AnswerFailureReason;
+import dev.codexofrealms.qa.AnswerOutcome;
 import dev.codexofrealms.qa.AnswerProvenance;
 import dev.codexofrealms.qa.Citation;
-import dev.codexofrealms.qa.DraftClaim;
-import dev.codexofrealms.qa.GroundedAnswerDraft;
 import dev.codexofrealms.qa.LoreAnswer;
+import dev.codexofrealms.qa.application.port.DraftClaim;
+import dev.codexofrealms.qa.application.port.GroundedAnswerDraft;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -22,9 +22,9 @@ class AnswerValidator {
 
     private static final Pattern WHITESPACE = Pattern.compile("\\s++");
 
-    private final QaProperties properties;
+    private final AnsweringProperties properties;
 
-    AnswerValidator(QaProperties properties) {
+    AnswerValidator(AnsweringProperties properties) {
         this.properties = properties;
     }
 
@@ -51,7 +51,8 @@ class AnswerValidator {
         int answerCharacters = 0;
 
         for (DraftClaim claim : draft.claims()) {
-            if (!validText(claim.text()) || claim.citations().isEmpty() || claim.citations().size() > 3) {
+            if (claim == null || !validText(claim.text())
+                || claim.citations().isEmpty() || claim.citations().size() > 3) {
                 return LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
             }
             List<Integer> uniqueRanks = claim.citations().stream().distinct().sorted().toList();

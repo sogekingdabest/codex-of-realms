@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
 import java.util.UUID;
@@ -8,11 +8,8 @@ public final class TestQaFixtures {
     private TestQaFixtures() {
     }
 
-    static QaProperties properties() {
-        return new QaProperties(
-            10, 6, 0.45, 0.70, 0.35, 6, 2000,
-            "test", "chat-v1", 8192, 768, "5m"
-        );
+    static AnsweringProperties properties() {
+        return new AnsweringProperties(10, 6, 0.45, 0.70, 0.35, 6, 2000);
     }
 
     public static RetrievedEvidence evidence(int rank, double similarity, String content) {

@@ -1,4 +1,4 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
 
 import java.text.Normalizer;
 import java.util.Arrays;

@@ -1,12 +1,12 @@
-package dev.codexofrealms.qa.infrastructure;
+package dev.codexofrealms.qa.infrastructure.model;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
-import dev.codexofrealms.qa.GroundedAnswerDraft;
-import dev.codexofrealms.qa.GroundedAnswerModel;
-import dev.codexofrealms.qa.GroundedAnswerRequest;
-import dev.codexofrealms.qa.ModelDescriptor;
-import dev.codexofrealms.qa.ModelUnavailableException;
-import dev.codexofrealms.qa.application.QaProperties;
+import dev.codexofrealms.qa.application.answering.AnsweringProperties;
+import dev.codexofrealms.qa.application.port.AnswerModelUnavailableException;
+import dev.codexofrealms.qa.application.port.GroundedAnswerDraft;
+import dev.codexofrealms.qa.application.port.GroundedAnswerModel;
+import dev.codexofrealms.qa.application.port.GroundedAnswerRequest;
+import dev.codexofrealms.qa.application.port.ModelDescriptor;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
 @Component
-class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
+class OllamaGroundedAnswerModel implements GroundedAnswerModel {
 
     private static final String SYSTEM_INSTRUCTIONS = """
         Eres el redactor de respuestas fundamentadas de Codex of Realms.
@@ -45,24 +45,25 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
     private final OllamaChatOptions requestOptions;
     private final String systemInstructions;
 
-    SpringAiGroundedAnswerModel(
+    OllamaGroundedAnswerModel(
         ObjectProvider<ChatModel> modelProvider,
         ObjectMapper objectMapper,
-        QaProperties properties
+        AnsweringProperties answeringProperties,
+        ChatModelProperties modelProperties
     ) {
         this.modelProvider = modelProvider;
         this.objectMapper = objectMapper;
         this.outputConverter = new BeanOutputConverter<>(GroundedAnswerDraft.class);
-        this.descriptor = new ModelDescriptor(properties.chatProvider(), properties.chatModel());
+        this.descriptor = new ModelDescriptor(modelProperties.chatProvider(), modelProperties.chatModel());
         this.systemInstructions = SYSTEM_INSTRUCTIONS.formatted(
-            properties.maxClaims(), outputConverter.getFormat()
+            answeringProperties.maxClaims(), outputConverter.getFormat()
         );
         this.requestOptions = OllamaChatOptions.builder()
             .model(descriptor.model())
             .temperature(0.0)
-            .numCtx(properties.chatContextSize())
-            .numPredict(properties.chatMaxPredictTokens())
-            .keepAlive(properties.chatKeepAlive())
+            .numCtx(modelProperties.chatContextSize())
+            .numPredict(modelProperties.chatMaxPredictTokens())
+            .keepAlive(modelProperties.chatKeepAlive())
             .disableThinking()
             .outputSchema(outputConverter.getJsonSchema())
             .build();
@@ -72,7 +73,7 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
     public GroundedAnswerDraft generate(GroundedAnswerRequest request) {
         ChatModel chatModel = modelProvider.getIfAvailable();
         if (chatModel == null) {
-            throw new ModelUnavailableException("No chat model is configured.");
+            throw new AnswerModelUnavailableException("No chat model is configured.");
         }
         String userPayload = objectMapper.writeValueAsString(Map.of(
             "question", request.question(),
@@ -89,7 +90,7 @@ class SpringAiGroundedAnswerModel implements GroundedAnswerModel {
         try {
             response = chatModel.call(prompt);
         } catch (RuntimeException exception) {
-            throw new ModelUnavailableException("The configured chat model is unavailable.", exception);
+            throw new AnswerModelUnavailableException("The configured chat model is unavailable.", exception);
         }
         try {
             String text = response.getResult().getOutput().getText();

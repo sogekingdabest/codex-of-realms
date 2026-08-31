@@ -1,7 +1,7 @@
 package dev.codexofrealms.qa.web;
 
 import dev.codexofrealms.qa.LoreAnswer;
-import dev.codexofrealms.qa.application.LoreQuestionService;
+import dev.codexofrealms.qa.application.answering.QuestionAnsweringService;
 import dev.codexofrealms.realm.RealmAccess;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.RestController;
 class LoreQuestionController {
 
     private final RealmAccess realmAccess;
-    private final LoreQuestionService service;
+    private final QuestionAnsweringService service;
 
-    LoreQuestionController(RealmAccess realmAccess, LoreQuestionService service) {
+    LoreQuestionController(RealmAccess realmAccess, QuestionAnsweringService service) {
         this.realmAccess = realmAccess;
         this.service = service;
     }

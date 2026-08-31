@@ -1,11 +1,12 @@
-package dev.codexofrealms.qa.infrastructure;
+package dev.codexofrealms.qa.infrastructure.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import dev.codexofrealms.qa.AnswerOutcome;
-import dev.codexofrealms.qa.GroundedAnswerRequest;
-import dev.codexofrealms.qa.application.QaProperties;
-import dev.codexofrealms.qa.application.TestQaFixtures;
+import dev.codexofrealms.qa.application.answering.AnsweringProperties;
+import dev.codexofrealms.qa.application.answering.TestQaFixtures;
+import dev.codexofrealms.qa.application.port.AnswerModelUnavailableException;
+import dev.codexofrealms.qa.application.port.GroundedAnswerRequest;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,7 @@ import org.springframework.ai.ollama.api.OllamaChatOptions;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import tools.jackson.databind.json.JsonMapper;
 
-class SpringAiGroundedAnswerModelTest {
+class OllamaGroundedAnswerModelTest {
 
     @Test
     void keepsInstructionsSeparateFromUntrustedEvidenceAndParsesStructuredOutput() {
@@ -29,7 +30,7 @@ class SpringAiGroundedAnswerModelTest {
                 "{\"outcome\":\"INSUFFICIENT_EVIDENCE\",\"claims\":[]}"
             ))));
         };
-        SpringAiGroundedAnswerModel adapter = adapter(chatModel);
+        OllamaGroundedAnswerModel adapter = adapter(chatModel);
 
         var result = adapter.generate(new GroundedAnswerRequest(
             "¿Qué dice la fuente?",
@@ -72,15 +73,46 @@ class SpringAiGroundedAnswerModelTest {
         assertThat(result.claims()).isEmpty();
     }
 
-    private static SpringAiGroundedAnswerModel adapter(ChatModel chatModel) {
+    @Test
+    void missingChatModelIsReportedAsUnavailable() {
+        DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
+
+        var adapter = adapter(beans);
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> adapter.generate(new GroundedAnswerRequest(
+                "¿Qué dice la fuente?",
+                List.of(TestQaFixtures.evidence(1, 0.90, "La fuente describe la Aguja."))
+            )))
+            .isInstanceOf(AnswerModelUnavailableException.class);
+    }
+
+    @Test
+    void chatModelFailureIsReportedAsUnavailable() {
+        ChatModel chatModel = prompt -> {
+            throw new IllegalStateException("offline");
+        };
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> adapter(chatModel).generate(
+                new GroundedAnswerRequest(
+                    "¿Qué dice la fuente?",
+                    List.of(TestQaFixtures.evidence(1, 0.90, "La fuente describe la Aguja."))
+                )
+            ))
+            .isInstanceOf(AnswerModelUnavailableException.class)
+            .hasCauseInstanceOf(IllegalStateException.class);
+    }
+
+    private static OllamaGroundedAnswerModel adapter(ChatModel chatModel) {
         DefaultListableBeanFactory beans = new DefaultListableBeanFactory();
         beans.registerSingleton("chatModel", chatModel);
-        QaProperties properties = new QaProperties(
-            10, 6, 0.45, 0.70, 0.35, 6, 2000,
-            "test", "chat-v1", 8192, 768, "5m"
-        );
-        return new SpringAiGroundedAnswerModel(
-            beans.getBeanProvider(ChatModel.class), JsonMapper.builder().build(), properties
+        return adapter(beans);
+    }
+
+    private static OllamaGroundedAnswerModel adapter(DefaultListableBeanFactory beans) {
+        AnsweringProperties answering = new AnsweringProperties(10, 6, 0.45, 0.70, 0.35, 6, 2000);
+        ChatModelProperties model = new ChatModelProperties("test", "chat-v1", 8192, 768, "5m");
+        return new OllamaGroundedAnswerModel(
+            beans.getBeanProvider(ChatModel.class), JsonMapper.builder().build(), answering, model
         );
     }
 }

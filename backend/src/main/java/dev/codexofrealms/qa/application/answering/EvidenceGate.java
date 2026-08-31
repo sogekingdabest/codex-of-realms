@@ -1,4 +1,10 @@
-package dev.codexofrealms.qa.application;
+package dev.codexofrealms.qa.application.answering;
+
+import static dev.codexofrealms.qa.application.answering.EvidenceGateDecision.Reason.DIRECT_INJECTION;
+import static dev.codexofrealms.qa.application.answering.EvidenceGateDecision.Reason.INDIRECT_INJECTION;
+import static dev.codexofrealms.qa.application.answering.EvidenceGateDecision.Reason.LOW_QUESTION_COVERAGE;
+import static dev.codexofrealms.qa.application.answering.EvidenceGateDecision.Reason.LOW_SIMILARITY;
+import static dev.codexofrealms.qa.application.answering.EvidenceGateDecision.Reason.NO_EVIDENCE;
 
 import dev.codexofrealms.lore.RetrievedEvidence;
 import java.text.Normalizer;
@@ -19,28 +25,28 @@ class EvidenceGate {
         Pattern.compile("\\b(begin|inicio)\\s+(system|instructions|instrucciones)\\b")
     );
 
-    private final QaProperties properties;
+    private final AnsweringProperties properties;
 
-    EvidenceGate(QaProperties properties) {
+    EvidenceGate(AnsweringProperties properties) {
         this.properties = properties;
     }
 
     EvidenceGateDecision evaluate(String question, List<RetrievedEvidence> retrieved) {
-        if (containsInjection(question)) return EvidenceGateDecision.reject("direct_injection");
-        if (retrieved.isEmpty()) return EvidenceGateDecision.reject("no_evidence");
+        if (containsInjection(question)) return EvidenceGateDecision.reject(DIRECT_INJECTION);
+        if (retrieved.isEmpty()) return EvidenceGateDecision.reject(NO_EVIDENCE);
 
         List<RetrievedEvidence> evidence = retrieved.stream()
             .limit(properties.maxEvidenceChunks())
             .toList();
         if (evidence.stream().map(RetrievedEvidence::content).anyMatch(EvidenceGate::containsInjection)) {
-            return EvidenceGateDecision.reject("indirect_injection");
+            return EvidenceGateDecision.reject(INDIRECT_INJECTION);
         }
         double bestSimilarity = evidence.stream()
             .mapToDouble(RetrievedEvidence::similarity)
             .max()
             .orElse(Double.NEGATIVE_INFINITY);
         if (bestSimilarity < properties.minimumSimilarity()) {
-            return EvidenceGateDecision.reject("low_similarity");
+            return EvidenceGateDecision.reject(LOW_SIMILARITY);
         }
 
         String combinedEvidence = evidence.stream()
@@ -48,9 +54,9 @@ class EvidenceGate {
             .reduce("", (left, right) -> left + "\n" + right);
         double coverage = TextTerms.coverage(question, combinedEvidence);
         if (coverage < properties.minimumQuestionCoverage()) {
-            return EvidenceGateDecision.reject("low_question_coverage");
+            return EvidenceGateDecision.reject(LOW_QUESTION_COVERAGE);
         }
-        return new EvidenceGateDecision(true, "sufficient", evidence);
+        return EvidenceGateDecision.accept(evidence);
     }
 
     private static boolean containsInjection(String text) {
