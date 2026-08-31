@@ -2,8 +2,8 @@ package dev.codexofrealms.content.infrastructure;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
-import dev.codexofrealms.content.application.EmbeddingUnavailableException;
-import dev.codexofrealms.content.application.IngestionProperties;
+import dev.codexofrealms.content.application.ingestion.IngestionException;
+import dev.codexofrealms.content.application.ingestion.IngestionProperties;
 import java.util.List;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.ObjectProvider;
@@ -28,7 +28,7 @@ class SpringAiEmbeddingGenerator implements TextEmbedding {
     @Override
     public List<float[]> embed(List<String> texts) {
         EmbeddingModel model = modelProvider.getIfAvailable(() -> {
-            throw new EmbeddingUnavailableException("No embedding model is configured.");
+            throw IngestionException.embeddingUnavailable("No embedding model is configured.");
         });
         return model.embed(texts);
     }

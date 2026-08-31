@@ -1,4 +1,4 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.source;
 
 import java.util.UUID;
 

@@ -1,9 +1,11 @@
 package dev.codexofrealms.content.infrastructure;
 
 import dev.codexofrealms.content.SourceEvidence;
-import dev.codexofrealms.content.application.SourceChunk;
-import dev.codexofrealms.content.application.SourceChunkView;
-import dev.codexofrealms.content.application.SourceDocumentView;
+import dev.codexofrealms.content.application.ingestion.SourceChunk;
+import dev.codexofrealms.content.application.port.SourceRepository;
+import dev.codexofrealms.content.application.port.SourceVersion;
+import dev.codexofrealms.content.application.source.SourceChunkView;
+import dev.codexofrealms.content.application.source.SourceDocumentView;
 import dev.codexofrealms.content.domain.ProcessingStatus;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +17,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
-public class SourceJdbcRepository {
+public class SourceJdbcRepository implements SourceRepository {
 
     private static final String VIEW_SQL = """
         SELECT d.id, d.realm_id, d.title, v.id version_id, v.version_number,
@@ -49,10 +51,10 @@ public class SourceJdbcRepository {
             .param("userId", userId).update();
     }
 
-    public SourceVersionRecord createVersion(
+    public SourceVersion createVersion(
         UUID realmId,
         UUID userId,
-        SourceVersionRecord version
+        SourceVersion version
     ) {
         jdbc.sql("""
                 INSERT INTO document_version (
@@ -83,7 +85,7 @@ public class SourceJdbcRepository {
             .query(Integer.class).single();
     }
 
-    public Optional<SourceVersionRecord> findActiveVersion(UUID realmId, UUID documentId) {
+    public Optional<SourceVersion> findActiveVersion(UUID realmId, UUID documentId) {
         return jdbc.sql("""
                 SELECT d.id document_id, v.id version_id, v.version_number, d.title,
                        v.original_filename, v.media_type, v.language, v.checksum_sha256,
@@ -175,7 +177,7 @@ public class SourceJdbcRepository {
     }
 
     public void activate(
-        SourceVersionRecord version, List<SourceChunk> chunks, List<float[]> embeddings,
+        SourceVersion version, List<SourceChunk> chunks, List<float[]> embeddings,
         String provider, String model
     ) {
         if (chunks.size() != embeddings.size() || chunks.isEmpty()) {
@@ -230,11 +232,6 @@ public class SourceJdbcRepository {
             .param("versionId", version.versionId()).param("provider", provider)
             .param("model", model).param("dimension", dimension).update();
         if (activated != 1) throw new IllegalStateException("The version was not ready for activation.");
-    }
-
-    public List<SourceDocumentView> listActive(UUID realmId) {
-        return jdbc.sql(VIEW_SQL + " WHERE d.realm_id=:realmId AND d.active AND v.active ORDER BY lower(d.title), d.id")
-            .param("realmId", realmId).query(SourceJdbcRepository::mapView).list();
     }
 
     public List<SourceDocumentView> listAccessible(UUID realmId, UUID userId) {
@@ -308,7 +305,7 @@ public class SourceJdbcRepository {
             .optional();
     }
 
-    public Optional<SourceVersionRecord> findAccessibleVersion(
+    public Optional<SourceVersion> findAccessibleVersion(
         UUID realmId,
         UUID documentId,
         UUID versionId,
@@ -367,8 +364,8 @@ public class SourceJdbcRepository {
         return keys;
     }
 
-    private static SourceVersionRecord mapVersion(ResultSet rs, int row) throws SQLException {
-        return new SourceVersionRecord(rs.getObject("document_id", UUID.class), rs.getObject("version_id", UUID.class),
+    private static SourceVersion mapVersion(ResultSet rs, int row) throws SQLException {
+        return new SourceVersion(rs.getObject("document_id", UUID.class), rs.getObject("version_id", UUID.class),
             rs.getInt("version_number"), rs.getString("title"), rs.getString("original_filename"),
             rs.getString("media_type"), rs.getString("language"), rs.getString("checksum_sha256"),
             rs.getString("storage_key"), rs.getObject("access_policy_id", UUID.class), rs.getString("pipeline_fingerprint"));

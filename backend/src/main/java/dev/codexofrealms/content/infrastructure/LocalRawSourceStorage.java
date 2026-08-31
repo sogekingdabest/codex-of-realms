@@ -1,7 +1,6 @@
 package dev.codexofrealms.content.infrastructure;
 
-import dev.codexofrealms.content.application.RawSourceStorage;
-import dev.codexofrealms.content.application.StorageProperties;
+import dev.codexofrealms.content.application.port.RawSourceStorage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

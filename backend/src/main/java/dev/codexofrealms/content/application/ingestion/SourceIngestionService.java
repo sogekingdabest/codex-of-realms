@@ -1,9 +1,11 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.ingestion;
 
 import dev.codexofrealms.content.EmbeddingDescriptor;
 import dev.codexofrealms.content.TextEmbedding;
+import dev.codexofrealms.content.application.port.RawSourceStorage;
+import dev.codexofrealms.content.application.port.SourceVersion;
+import dev.codexofrealms.content.application.source.SourceDocumentView;
 import dev.codexofrealms.content.domain.ProcessingStatus;
-import dev.codexofrealms.content.infrastructure.SourceVersionRecord;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -16,17 +18,16 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class SourceIngestionService {
-
     private final SourceFileValidator validator;
     private final StructuralChunker chunker;
     private final RawSourceStorage storage;
-    private final SourceMetadataCoordinator metadata;
+    private final IngestionMetadataCoordinator metadata;
     private final ObjectProvider<TextEmbedding> embeddingProvider;
     private final IngestionProperties properties;
 
     SourceIngestionService(
         SourceFileValidator validator, StructuralChunker chunker, RawSourceStorage storage,
-        SourceMetadataCoordinator metadata, ObjectProvider<TextEmbedding> embeddingProvider,
+        IngestionMetadataCoordinator metadata, ObjectProvider<TextEmbedding> embeddingProvider,
         IngestionProperties properties
     ) {
         this.validator = validator;
@@ -56,10 +57,10 @@ public class SourceIngestionService {
     }
 
     public SourceDocumentView reprocess(UUID realmId, UUID documentId, UUID userId) {
-        SourceVersionRecord active = metadata.activeVersion(realmId, documentId, userId);
+        SourceVersion active = metadata.activeVersion(realmId, documentId, userId);
         PreparedVersion prepared = metadata.reprocess(realmId, documentId, userId, fingerprint());
         if (prepared.isUnchanged()) return prepared.existing();
-        SourceVersionRecord version = prepared.version();
+        SourceVersion version = prepared.version();
         AcceptedSource source;
         try {
             byte[] bytes = storage.read(active.storageKey());
@@ -71,62 +72,23 @@ public class SourceIngestionService {
         return process(realmId, userId, version, source);
     }
 
-    public List<SourceDocumentView> list(UUID realmId, UUID userId) {
-        return metadata.list(realmId, userId);
-    }
-
-    public SourceDocumentView get(UUID realmId, UUID documentId, UUID userId) {
-        return metadata.get(realmId, documentId, userId);
-    }
-
-    public List<SourceChunkView> chunks(UUID realmId, UUID documentId, UUID userId) {
-        return metadata.chunks(realmId, documentId, userId);
-    }
-
-    public SourceContentView content(
-        UUID realmId,
-        UUID documentId,
-        UUID versionId,
-        UUID userId
-    ) {
-        SourceVersionRecord version = metadata.accessibleVersion(
-            realmId, documentId, versionId, userId
-        );
-        byte[] bytes = storage.read(version.storageKey());
-        return new SourceContentView(
-            documentId,
-            versionId,
-            version.title(),
-            version.originalFilename(),
-            new String(bytes, StandardCharsets.UTF_8)
-        );
-    }
-
-    public void delete(UUID realmId, UUID documentId, UUID userId) {
-        metadata.retire(realmId, documentId, userId).forEach(storage::delete);
-    }
-
-    private SourceDocumentView process(UUID realmId, UUID userId, SourceVersionRecord version, AcceptedSource source) {
+    private SourceDocumentView process(UUID realmId, UUID userId, SourceVersion version, AcceptedSource source) {
         try {
             storage.write(version.storageKey(), source.bytes());
-            return processAfterStorage(realmId, userId, version, source);
+            metadata.status(version.versionId(), ProcessingStatus.VALIDATED, null);
+            List<SourceChunk> chunks = chunker.split(source.text());
+            metadata.status(version.versionId(), ProcessingStatus.PROCESSING, null);
+            TextEmbedding generator = embeddingProvider.getIfAvailable(() -> {
+                throw IngestionException.embeddingUnavailable("No embedding model is configured.");
+            });
+            List<float[]> embeddings = embedInBatches(generator, chunks);
+            EmbeddingDescriptor descriptor = generator.descriptor();
+            return metadata.activate(realmId, userId, version, chunks, embeddings,
+                descriptor.provider(), descriptor.model());
         } catch (RuntimeException exception) {
             metadata.status(version.versionId(), ProcessingStatus.FAILED, failureCode(exception));
             throw exception;
         }
-    }
-
-    private SourceDocumentView processAfterStorage(UUID realmId, UUID userId, SourceVersionRecord version, AcceptedSource source) {
-        metadata.status(version.versionId(), ProcessingStatus.VALIDATED, null);
-        List<SourceChunk> chunks = chunker.split(source.text());
-        metadata.status(version.versionId(), ProcessingStatus.PROCESSING, null);
-        TextEmbedding generator = embeddingProvider.getIfAvailable(() -> {
-            throw new EmbeddingUnavailableException("No embedding model is configured.");
-        });
-        List<float[]> embeddings = embedInBatches(generator, chunks);
-        EmbeddingDescriptor descriptor = generator.descriptor();
-        return metadata.activate(realmId, userId, version, chunks, embeddings,
-            descriptor.provider(), descriptor.model());
     }
 
     private String fingerprint() {
@@ -152,8 +114,12 @@ public class SourceIngestionService {
     }
 
     private static String failureCode(RuntimeException exception) {
-        if (exception instanceof EmbeddingUnavailableException) return "EMBEDDING_UNAVAILABLE";
-        if (exception instanceof InvalidSourceException) return "INVALID_SOURCE";
+        if (exception instanceof IngestionException ingestionException) {
+            return switch (ingestionException.code()) {
+                case EMBEDDING_UNAVAILABLE -> "EMBEDDING_UNAVAILABLE";
+                case INVALID_SOURCE -> "INVALID_SOURCE";
+            };
+        }
         return "PROCESSING_ERROR";
     }
 }

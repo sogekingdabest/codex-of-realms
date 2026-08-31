@@ -1,4 +1,4 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.infrastructure;
 
 import java.nio.file.Path;
 import org.springframework.boot.context.properties.ConfigurationProperties;

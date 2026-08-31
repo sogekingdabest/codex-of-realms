@@ -136,9 +136,13 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(jsonPath("$[0].id").value(aliceRealm.toString()));
 
         mockMvc.perform(get("/api/v1/realms/{realmId}", aliceRealm)
-                .with(identity("bob")))
+            .with(identity("bob")))
             .andExpect(status().isNotFound())
-            .andExpect(jsonPath("$.detail").value("The requested resource is unavailable."));
+            .andExpect(jsonPath("$.detail").value("The requested realm is unavailable."))
+            .andExpect(jsonPath("$.code").value("realm.unavailable"))
+            .andExpect(jsonPath("$.type").value(
+                "urn:codex-of-realms:problem:realm.unavailable"
+            ));
 
         mockMvc.perform(get("/api/v1/realms/{realmId}", bobRealm)
                 .with(identity("alice")))
@@ -386,6 +390,22 @@ class RealmAuthorizationIntegrationTest {
         UUID documentId = UUID.fromString(objectMapper.readTree(created).get("id").asString());
         UUID firstVersion = UUID.fromString(objectMapper.readTree(created).get("versionId").asString());
 
+        mockMvc.perform(get("/api/v1/realms/{realmId}/sources/{documentId}", realmId, UUID.randomUUID())
+                .with(identity("owner")))
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("source.unavailable"))
+            .andExpect(jsonPath("$.type").value("urn:codex-of-realms:problem:source.unavailable"));
+
+        mockMvc.perform(multipart("/api/v1/realms/{realmId}/sources", realmId)
+                .file(new MockMultipartFile(
+                    "file", "invalid.html", "text/plain", "contenido".getBytes(StandardCharsets.UTF_8)
+                ))
+                .param("title", "Fuente inválida")
+                .param("accessPolicyId", policyId.toString()).with(identity("owner")))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.code").value("source.invalid"))
+            .andExpect(jsonPath("$.type").value("urn:codex-of-realms:problem:source.invalid"));
+
         assertThat(jdbcClient.sql("SELECT count(*) FROM lore_chunk WHERE document_version_id=:versionId")
             .param("versionId", firstVersion).query(Integer.class).single()).isPositive();
         assertThat(jdbcClient.sql("SELECT embedding_dimension FROM document_version WHERE id=:versionId")
@@ -456,7 +476,8 @@ class RealmAuthorizationIntegrationTest {
         mockMvc.perform(get(
                     "/api/v1/realms/{realmId}/sources/{documentId}/chunks", realmId, documentId
                 ).with(identity("catalogue-player")))
-            .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound())
+            .andExpect(jsonPath("$.code").value("realm.unavailable"));
 
         UUID naraId = createCatalogueEntity(
             "catalogue-owner", realmId, "CHARACTER", "Nara Vey", publicPolicy, List.of(chunkId)

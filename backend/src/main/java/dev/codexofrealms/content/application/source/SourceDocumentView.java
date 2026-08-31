@@ -1,4 +1,4 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.source;
 
 import dev.codexofrealms.content.domain.ProcessingStatus;
 import java.time.Instant;

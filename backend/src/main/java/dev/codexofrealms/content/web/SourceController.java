@@ -1,9 +1,10 @@
 package dev.codexofrealms.content.web;
 
-import dev.codexofrealms.content.application.SourceChunkView;
-import dev.codexofrealms.content.application.SourceContentView;
-import dev.codexofrealms.content.application.SourceDocumentView;
-import dev.codexofrealms.content.application.SourceIngestionService;
+import dev.codexofrealms.content.application.ingestion.SourceIngestionService;
+import dev.codexofrealms.content.application.source.SourceChunkView;
+import dev.codexofrealms.content.application.source.SourceContentView;
+import dev.codexofrealms.content.application.source.SourceDocumentView;
+import dev.codexofrealms.content.application.source.SourceManagementService;
 import dev.codexofrealms.realm.RealmAccess;
 import java.io.IOException;
 import java.net.URI;
@@ -28,11 +29,17 @@ import org.springframework.web.multipart.MultipartFile;
 class SourceController {
 
     private final RealmAccess realmAccess;
-    private final SourceIngestionService service;
+    private final SourceIngestionService ingestionService;
+    private final SourceManagementService managementService;
 
-    SourceController(RealmAccess realmAccess, SourceIngestionService service) {
+    SourceController(
+        RealmAccess realmAccess,
+        SourceIngestionService ingestionService,
+        SourceManagementService managementService
+    ) {
         this.realmAccess = realmAccess;
-        this.service = service;
+        this.ingestionService = ingestionService;
+        this.managementService = managementService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -42,7 +49,7 @@ class SourceController {
         @RequestParam("accessPolicyId") UUID accessPolicyId,
         @RequestParam("file") MultipartFile file
     ) throws IOException {
-        SourceDocumentView source = service.create(realmId, currentUser(jwt), title,
+        SourceDocumentView source = ingestionService.create(realmId, currentUser(jwt), title,
             accessPolicyId, file.getBytes(), file.getOriginalFilename(), file.getContentType());
         return ResponseEntity.created(URI.create("/api/v1/realms/" + realmId + "/sources/" + source.id())).body(source);
     }
@@ -54,7 +61,7 @@ class SourceController {
         @RequestParam("accessPolicyId") UUID accessPolicyId,
         @RequestParam("file") MultipartFile file
     ) throws IOException {
-        return service.replace(realmId, documentId, currentUser(jwt), accessPolicyId,
+        return ingestionService.replace(realmId, documentId, currentUser(jwt), accessPolicyId,
             file.getBytes(), file.getOriginalFilename(), file.getContentType());
     }
 
@@ -63,12 +70,12 @@ class SourceController {
         @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        return service.reprocess(realmId, documentId, currentUser(jwt));
+        return ingestionService.reprocess(realmId, documentId, currentUser(jwt));
     }
 
     @GetMapping
     List<SourceDocumentView> list(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId) {
-        return service.list(realmId, currentUser(jwt));
+        return managementService.list(realmId, currentUser(jwt));
     }
 
     @GetMapping("/{documentId}")
@@ -76,7 +83,7 @@ class SourceController {
         @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        return service.get(realmId, documentId, currentUser(jwt));
+        return managementService.get(realmId, documentId, currentUser(jwt));
     }
 
     @GetMapping("/{documentId}/chunks")
@@ -85,7 +92,7 @@ class SourceController {
         @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        return service.chunks(realmId, documentId, currentUser(jwt));
+        return managementService.chunks(realmId, documentId, currentUser(jwt));
     }
 
     @GetMapping("/{documentId}/versions/{versionId}/content")
@@ -95,7 +102,7 @@ class SourceController {
         @PathVariable UUID documentId,
         @PathVariable UUID versionId
     ) {
-        return service.content(realmId, documentId, versionId, currentUser(jwt));
+        return managementService.content(realmId, documentId, versionId, currentUser(jwt));
     }
 
     @DeleteMapping("/{documentId}")
@@ -103,7 +110,7 @@ class SourceController {
         @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        service.delete(realmId, documentId, currentUser(jwt));
+        managementService.delete(realmId, documentId, currentUser(jwt));
         return ResponseEntity.noContent().build();
     }
 

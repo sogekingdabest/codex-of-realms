@@ -1,8 +1,8 @@
-package dev.codexofrealms.content.infrastructure;
+package dev.codexofrealms.content.application.port;
 
 import java.util.UUID;
 
-public record SourceVersionRecord(
+public record SourceVersion(
     UUID documentId,
     UUID versionId,
     int versionNumber,

@@ -1,4 +1,4 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.ingestion;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -13,7 +13,6 @@ import org.springframework.stereotype.Component;
 
 @Component
 class SourceFileValidator {
-
     private static final Set<String> EXTENSIONS = Set.of("md", "markdown", "txt");
     private static final Set<String> MEDIA_TYPES = Set.of(
         "text/plain", "text/markdown", "application/octet-stream"
@@ -26,24 +25,26 @@ class SourceFileValidator {
 
     AcceptedSource validate(byte[] bytes, String filename, String contentType) {
         if (bytes == null || bytes.length == 0 || bytes.length > properties.maxFileBytes()) {
-            throw new InvalidSourceException("The source must be non-empty and within the upload limit.");
+            throw IngestionException.invalidSource("The source must be non-empty and within the upload limit.");
         }
         String safeName = safeFilename(filename);
         String extension = safeName.substring(safeName.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT);
         if (!EXTENSIONS.contains(extension)) {
-            throw new InvalidSourceException("Only Markdown and TXT sources are accepted.");
+            throw IngestionException.invalidSource("Only Markdown and TXT sources are accepted.");
         }
-        String normalizedType = contentType == null ? "application/octet-stream" : contentType.split(";", 2)[0].trim().toLowerCase(Locale.ROOT);
+        String normalizedType = contentType == null
+            ? "application/octet-stream"
+            : contentType.split(";", 2)[0].trim().toLowerCase(Locale.ROOT);
         if (!MEDIA_TYPES.contains(normalizedType)) {
-            throw new InvalidSourceException("The declared media type is not supported.");
+            throw IngestionException.invalidSource("The declared media type is not supported.");
         }
         String text = decodeUtf8(bytes);
         if (text.indexOf('\0') >= 0 || text.isBlank()) {
-            throw new InvalidSourceException("The source must contain valid text without null bytes.");
+            throw IngestionException.invalidSource("The source must contain valid text without null bytes.");
         }
         if (text.chars().anyMatch(character -> Character.isISOControl(character)
             && character != '\n' && character != '\r' && character != '\t')) {
-            throw new InvalidSourceException("The source contains unsupported control characters.");
+            throw IngestionException.invalidSource("The source contains unsupported control characters.");
         }
         return new AcceptedSource(bytes.clone(), text, safeName,
             extension.equals("txt") ? "text/plain" : "text/markdown", sha256(bytes));
@@ -53,10 +54,10 @@ class SourceFileValidator {
         String value = filename == null ? "" : filename.replace('\\', '/');
         value = value.substring(value.lastIndexOf('/') + 1).trim();
         if (value.isEmpty() || value.length() > 255 || value.lastIndexOf('.') <= 0) {
-            throw new InvalidSourceException("A valid source filename is required.");
+            throw IngestionException.invalidSource("A valid source filename is required.");
         }
         if (value.chars().anyMatch(Character::isISOControl)) {
-            throw new InvalidSourceException("The source filename contains control characters.");
+            throw IngestionException.invalidSource("The source filename contains control characters.");
         }
         return value;
     }
@@ -68,7 +69,7 @@ class SourceFileValidator {
                 .onUnmappableCharacter(CodingErrorAction.REPORT)
                 .decode(ByteBuffer.wrap(bytes)).toString();
         } catch (CharacterCodingException exception) {
-            throw new InvalidSourceException("The source must be valid UTF-8.");
+            throw IngestionException.invalidSource("The source must be valid UTF-8.");
         }
     }
 

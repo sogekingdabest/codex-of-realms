@@ -1,9 +1,10 @@
 package dev.codexofrealms.content.web;
 
-import dev.codexofrealms.content.application.EmbeddingUnavailableException;
-import dev.codexofrealms.content.application.InvalidSourceException;
-import dev.codexofrealms.content.application.SourceNotFoundException;
+import dev.codexofrealms.content.application.evidence.SourceEvidenceException;
+import dev.codexofrealms.content.application.ingestion.IngestionException;
+import dev.codexofrealms.content.application.source.SourceException;
 import java.io.IOException;
+import java.net.URI;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -13,35 +14,49 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @RestControllerAdvice
 class SourceExceptionHandler {
 
-    @ExceptionHandler(SourceNotFoundException.class)
-    ProblemDetail notFound() {
-        ProblemDetail detail = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
-        detail.setTitle("Resource not found");
-        detail.setDetail("The requested resource is unavailable.");
-        return detail;
+    @ExceptionHandler(SourceException.class)
+    ProblemDetail source(SourceException exception) {
+        return problem(HttpStatus.NOT_FOUND, "Source unavailable", exception.getMessage(),
+            exception.code().apiCode());
     }
 
-    @ExceptionHandler({InvalidSourceException.class, IOException.class})
-    ProblemDetail invalidSource(Exception exception) {
-        ProblemDetail detail = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
-        detail.setTitle("Invalid source");
-        detail.setDetail(exception instanceof InvalidSourceException ? exception.getMessage() : "The upload could not be read.");
-        return detail;
+    @ExceptionHandler(IngestionException.class)
+    ProblemDetail ingestion(IngestionException exception) {
+        return switch (exception.code()) {
+            case INVALID_SOURCE -> problem(HttpStatus.BAD_REQUEST, "Invalid source",
+                exception.getMessage(), exception.code().apiCode());
+            case EMBEDDING_UNAVAILABLE -> problem(HttpStatus.SERVICE_UNAVAILABLE,
+                "Embedding model unavailable", exception.getMessage(), exception.code().apiCode());
+        };
     }
 
-    @ExceptionHandler(EmbeddingUnavailableException.class)
-    ProblemDetail embeddingUnavailable() {
-        ProblemDetail detail = ProblemDetail.forStatus(HttpStatus.SERVICE_UNAVAILABLE);
-        detail.setTitle("Embedding model unavailable");
-        detail.setDetail("Configure and start the local embedding model before processing sources.");
-        return detail;
+    @ExceptionHandler(SourceEvidenceException.class)
+    ProblemDetail evidence(SourceEvidenceException exception) {
+        return switch (exception.code()) {
+            case UNAVAILABLE -> problem(HttpStatus.NOT_FOUND, "Source evidence unavailable",
+                exception.getMessage(), exception.code().apiCode());
+            case INVALID_SELECTION -> problem(HttpStatus.BAD_REQUEST, "Invalid source evidence",
+                exception.getMessage(), exception.code().apiCode());
+        };
+    }
+
+    @ExceptionHandler(IOException.class)
+    ProblemDetail invalidMultipart() {
+        return problem(HttpStatus.BAD_REQUEST, "Invalid source", "The upload could not be read.",
+            "source.invalid");
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     ProblemDetail uploadTooLarge() {
-        ProblemDetail detail = ProblemDetail.forStatus(HttpStatus.CONTENT_TOO_LARGE);
-        detail.setTitle("Source too large");
-        detail.setDetail("The upload exceeds the configured source limit.");
+        return problem(HttpStatus.CONTENT_TOO_LARGE, "Source too large",
+            "The upload exceeds the configured source limit.", "source.upload_too_large");
+    }
+
+    private static ProblemDetail problem(HttpStatus status, String title, String message, String code) {
+        ProblemDetail detail = ProblemDetail.forStatusAndDetail(status, message);
+        detail.setTitle(title);
+        detail.setType(URI.create("urn:codex-of-realms:problem:" + code));
+        detail.setProperty("code", code);
         return detail;
     }
 }

@@ -1,4 +1,4 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.ingestion;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -10,7 +10,6 @@ record AcceptedSource(
     String mediaType,
     String checksum
 ) {
-
     @Override
     public boolean equals(Object other) {
         return this == other

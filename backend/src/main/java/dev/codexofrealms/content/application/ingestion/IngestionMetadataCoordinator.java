@@ -1,8 +1,10 @@
-package dev.codexofrealms.content.application;
+package dev.codexofrealms.content.application.ingestion;
 
+import dev.codexofrealms.content.application.port.SourceRepository;
+import dev.codexofrealms.content.application.port.SourceVersion;
+import dev.codexofrealms.content.application.source.SourceDocumentView;
+import dev.codexofrealms.content.application.source.SourceException;
 import dev.codexofrealms.content.domain.ProcessingStatus;
-import dev.codexofrealms.content.infrastructure.SourceJdbcRepository;
-import dev.codexofrealms.content.infrastructure.SourceVersionRecord;
 import dev.codexofrealms.realm.RealmAccess;
 import java.util.List;
 import java.util.UUID;
@@ -10,12 +12,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-class SourceMetadataCoordinator {
-
+class IngestionMetadataCoordinator {
     private final RealmAccess realmAccess;
-    private final SourceJdbcRepository repository;
+    private final SourceRepository repository;
 
-    SourceMetadataCoordinator(RealmAccess realmAccess, SourceJdbcRepository repository) {
+    IngestionMetadataCoordinator(RealmAccess realmAccess, SourceRepository repository) {
         this.realmAccess = realmAccess;
         this.repository = repository;
     }
@@ -27,11 +28,10 @@ class SourceMetadataCoordinator {
     ) {
         authorize(realmId, policyId, userId);
         UUID documentId = UUID.randomUUID();
-        repository.createDocument(documentId, realmId, normalizeTitle(title), userId);
+        String normalizedTitle = normalizeTitle(title);
+        repository.createDocument(documentId, realmId, normalizedTitle, userId);
         return PreparedVersion.created(createVersion(
-            new VersionContext(
-                realmId, documentId, userId, normalizeTitle(title), policyId, fingerprint, 1
-            ),
+            new VersionContext(realmId, documentId, userId, normalizedTitle, policyId, fingerprint, 1),
             source
         ));
     }
@@ -42,17 +42,18 @@ class SourceMetadataCoordinator {
         AcceptedSource source, String fingerprint
     ) {
         authorize(realmId, policyId, userId);
-        SourceVersionRecord active = repository.findActiveVersion(realmId, documentId)
-            .orElseThrow(SourceNotFoundException::new);
+        SourceVersion active = repository.findActiveVersion(realmId, documentId)
+            .orElseThrow(SourceException::unavailable);
         if (active.checksum().equals(source.checksum())
             && active.accessPolicyId().equals(policyId)
             && active.pipelineFingerprint().equals(fingerprint)) {
-            return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId).orElseThrow());
+            return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId)
+                .orElseThrow(SourceException::unavailable));
         }
-        int number = repository.nextVersionNumber(realmId, documentId);
         return PreparedVersion.created(createVersion(
             new VersionContext(
-                realmId, documentId, userId, active.title(), policyId, fingerprint, number
+                realmId, documentId, userId, active.title(), policyId, fingerprint,
+                repository.nextVersionNumber(realmId, documentId)
             ),
             source
         ));
@@ -60,26 +61,27 @@ class SourceMetadataCoordinator {
 
     @Transactional
     PreparedVersion reprocess(UUID realmId, UUID documentId, UUID userId, String fingerprint) {
-        SourceVersionRecord active = repository.findActiveVersion(realmId, documentId)
-            .orElseThrow(SourceNotFoundException::new);
+        SourceVersion active = repository.findActiveVersion(realmId, documentId)
+            .orElseThrow(SourceException::unavailable);
         authorize(realmId, active.accessPolicyId(), userId);
         if (active.pipelineFingerprint().equals(fingerprint)) {
-            return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId).orElseThrow());
+            return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId)
+                .orElseThrow(SourceException::unavailable));
         }
         return PreparedVersion.created(cloneVersion(
             new VersionContext(
-                realmId, documentId, userId, active.title(), active.accessPolicyId(),
-                fingerprint, repository.nextVersionNumber(realmId, documentId)
+                realmId, documentId, userId, active.title(), active.accessPolicyId(), fingerprint,
+                repository.nextVersionNumber(realmId, documentId)
             ),
             active
         ));
     }
 
     @Transactional(readOnly = true)
-    SourceVersionRecord activeVersion(UUID realmId, UUID documentId, UUID userId) {
+    SourceVersion activeVersion(UUID realmId, UUID documentId, UUID userId) {
         realmAccess.requireEditor(realmId, userId);
         return repository.findActiveVersion(realmId, documentId)
-            .orElseThrow(SourceNotFoundException::new);
+            .orElseThrow(SourceException::unavailable);
     }
 
     @Transactional
@@ -89,62 +91,21 @@ class SourceMetadataCoordinator {
 
     @Transactional
     SourceDocumentView activate(
-        UUID realmId, UUID userId, SourceVersionRecord version,
+        UUID realmId, UUID userId, SourceVersion version,
         List<SourceChunk> chunks, List<float[]> embeddings,
         String provider, String model
     ) {
         authorize(realmId, version.accessPolicyId(), userId);
         repository.activate(version, chunks, embeddings, provider, model);
-        return repository.findActiveView(realmId, version.documentId()).orElseThrow();
+        return repository.findActiveView(realmId, version.documentId())
+            .orElseThrow(SourceException::unavailable);
     }
 
-    @Transactional(readOnly = true)
-    List<SourceDocumentView> list(UUID realmId, UUID userId) {
-        realmAccess.requireMember(realmId, userId);
-        return repository.listAccessible(realmId, userId);
-    }
-
-    @Transactional(readOnly = true)
-    SourceDocumentView get(UUID realmId, UUID documentId, UUID userId) {
-        realmAccess.requireMember(realmId, userId);
-        return repository.findAccessibleView(realmId, documentId, userId)
-            .orElseThrow(SourceNotFoundException::new);
-    }
-
-    @Transactional(readOnly = true)
-    List<SourceChunkView> chunks(UUID realmId, UUID documentId, UUID userId) {
-        realmAccess.requireEditor(realmId, userId);
-        repository.findActiveView(realmId, documentId)
-            .orElseThrow(SourceNotFoundException::new);
-        return repository.listActiveChunks(realmId, documentId);
-    }
-
-    @Transactional(readOnly = true)
-    SourceVersionRecord accessibleVersion(
-        UUID realmId,
-        UUID documentId,
-        UUID versionId,
-        UUID userId
-    ) {
-        realmAccess.requireMember(realmId, userId);
-        return repository.findAccessibleVersion(realmId, documentId, versionId, userId)
-            .orElseThrow(SourceNotFoundException::new);
-    }
-
-    @Transactional
-    List<String> retire(UUID realmId, UUID documentId, UUID userId) {
-        realmAccess.requireEditor(realmId, userId);
-        return repository.retireDocument(realmId, documentId);
-    }
-
-    private SourceVersionRecord createVersion(
-        VersionContext context,
-        AcceptedSource source
-    ) {
+    private SourceVersion createVersion(VersionContext context, AcceptedSource source) {
         UUID versionId = UUID.randomUUID();
         String extension = source.mediaType().equals("text/plain") ? "txt" : "md";
         String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
-        SourceVersionRecord version = new SourceVersionRecord(
+        SourceVersion version = new SourceVersion(
             context.documentId(), versionId, context.number(), context.title(),
             source.originalFilename(), source.mediaType(), "es", source.checksum(), key,
             context.policyId(), context.fingerprint()
@@ -152,17 +113,14 @@ class SourceMetadataCoordinator {
         return repository.createVersion(context.realmId(), context.userId(), version);
     }
 
-    private SourceVersionRecord cloneVersion(
-        VersionContext context,
-        SourceVersionRecord active
-    ) {
+    private SourceVersion cloneVersion(VersionContext context, SourceVersion active) {
         UUID versionId = UUID.randomUUID();
         String extension = active.mediaType().equals("text/plain") ? "txt" : "md";
         String key = context.realmId() + "/" + context.documentId() + "/" + versionId + "." + extension;
-        SourceVersionRecord version = new SourceVersionRecord(
+        SourceVersion version = new SourceVersion(
             context.documentId(), versionId, context.number(), context.title(),
-            active.originalFilename(), active.mediaType(), active.language(), active.checksum(),
-            key, context.policyId(), context.fingerprint()
+            active.originalFilename(), active.mediaType(), active.language(), active.checksum(), key,
+            context.policyId(), context.fingerprint()
         );
         return repository.createVersion(context.realmId(), context.userId(), version);
     }
@@ -174,7 +132,7 @@ class SourceMetadataCoordinator {
 
     private static String normalizeTitle(String title) {
         if (title == null || title.isBlank() || title.strip().length() > 200) {
-            throw new InvalidSourceException("The title must contain between 1 and 200 characters.");
+            throw IngestionException.invalidSource("The title must contain between 1 and 200 characters.");
         }
         return title.strip();
     }
