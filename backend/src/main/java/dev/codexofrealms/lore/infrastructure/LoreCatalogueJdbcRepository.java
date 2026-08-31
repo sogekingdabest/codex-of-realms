@@ -4,6 +4,7 @@ import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.lore.application.CataloguePromotionView;
 import dev.codexofrealms.lore.application.LoreEntityView;
 import dev.codexofrealms.lore.application.LoreRelationView;
+import dev.codexofrealms.lore.application.port.LoreCatalogueRepository;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.EntityType;
 import dev.codexofrealms.lore.domain.LoreEntity;
@@ -19,7 +20,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
-public class LoreCatalogueJdbcRepository {
+public class LoreCatalogueJdbcRepository implements LoreCatalogueRepository {
 
     private static final String ENTITY_COLUMNS = """
         SELECT e.id, e.realm_id, e.entity_type, e.display_name, e.description,

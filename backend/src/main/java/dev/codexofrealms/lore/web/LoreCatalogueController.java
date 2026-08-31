@@ -1,9 +1,10 @@
 package dev.codexofrealms.lore.web;
 
 import dev.codexofrealms.lore.application.CreateLoreRelationCommand;
-import dev.codexofrealms.lore.application.LoreCatalogueService;
+import dev.codexofrealms.lore.application.LoreEntityService;
 import dev.codexofrealms.lore.application.LoreEntityCommand;
 import dev.codexofrealms.lore.application.LoreEntityView;
+import dev.codexofrealms.lore.application.LoreRelationService;
 import dev.codexofrealms.lore.application.LoreRelationView;
 import dev.codexofrealms.lore.application.UpdateLoreRelationCommand;
 import dev.codexofrealms.lore.domain.CanonStatus;
@@ -33,11 +34,17 @@ import org.springframework.web.bind.annotation.RestController;
 class LoreCatalogueController {
 
     private final RealmAccess realmAccess;
-    private final LoreCatalogueService service;
+    private final LoreEntityService entities;
+    private final LoreRelationService relations;
 
-    LoreCatalogueController(RealmAccess realmAccess, LoreCatalogueService service) {
+    LoreCatalogueController(
+        RealmAccess realmAccess,
+        LoreEntityService entities,
+        LoreRelationService relations
+    ) {
         this.realmAccess = realmAccess;
-        this.service = service;
+        this.entities = entities;
+        this.relations = relations;
     }
 
     @PostMapping("/entities")
@@ -47,7 +54,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @RequestBody EntityRequest request
     ) {
-        LoreEntityView entity = service.createEntity(
+        LoreEntityView entity = entities.create(
             realmId, currentUser(jwt), request.toCommand()
         );
         return ResponseEntity.created(entityUri(realmId, entity.id())).body(entity);
@@ -61,7 +68,7 @@ class LoreCatalogueController {
         @RequestParam(required = false) EntityType type,
         @RequestParam(required = false) CanonStatus canonStatus
     ) {
-        return service.listEntities(realmId, currentUser(jwt), type, canonStatus);
+        return entities.list(realmId, currentUser(jwt), type, canonStatus);
     }
 
     @GetMapping("/entities/{entityId}")
@@ -71,7 +78,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID entityId
     ) {
-        return service.getEntity(realmId, entityId, currentUser(jwt));
+        return entities.get(realmId, entityId, currentUser(jwt));
     }
 
     @PutMapping("/entities/{entityId}")
@@ -82,7 +89,7 @@ class LoreCatalogueController {
         @PathVariable UUID entityId,
         @RequestBody EntityRequest request
     ) {
-        return service.updateEntity(realmId, entityId, currentUser(jwt), request.toCommand());
+        return entities.update(realmId, entityId, currentUser(jwt), request.toCommand());
     }
 
     @PostMapping("/entities/{entityId}/promotion")
@@ -92,7 +99,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID entityId
     ) {
-        return service.promoteEntity(realmId, entityId, currentUser(jwt));
+        return entities.promote(realmId, entityId, currentUser(jwt));
     }
 
     @DeleteMapping("/entities/{entityId}")
@@ -102,7 +109,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID entityId
     ) {
-        service.deleteEntity(realmId, entityId, currentUser(jwt));
+        entities.delete(realmId, entityId, currentUser(jwt));
         return ResponseEntity.noContent().build();
     }
 
@@ -113,7 +120,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @RequestBody RelationRequest request
     ) {
-        LoreRelationView relation = service.createRelation(
+        LoreRelationView relation = relations.create(
             realmId, currentUser(jwt), request.toCreateCommand()
         );
         return ResponseEntity.created(relationUri(realmId, relation.id())).body(relation);
@@ -127,7 +134,7 @@ class LoreCatalogueController {
         @RequestParam(required = false) UUID entityId,
         @RequestParam(required = false) CanonStatus canonStatus
     ) {
-        return service.listRelations(realmId, currentUser(jwt), entityId, canonStatus);
+        return relations.list(realmId, currentUser(jwt), entityId, canonStatus);
     }
 
     @GetMapping("/relations/{relationId}")
@@ -137,7 +144,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID relationId
     ) {
-        return service.getRelation(realmId, relationId, currentUser(jwt));
+        return relations.get(realmId, relationId, currentUser(jwt));
     }
 
     @PutMapping("/relations/{relationId}")
@@ -148,7 +155,7 @@ class LoreCatalogueController {
         @PathVariable UUID relationId,
         @RequestBody RelationUpdateRequest request
     ) {
-        return service.updateRelation(
+        return relations.update(
             realmId, relationId, currentUser(jwt), request.toCommand()
         );
     }
@@ -160,7 +167,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID relationId
     ) {
-        return service.promoteRelation(realmId, relationId, currentUser(jwt));
+        return relations.promote(realmId, relationId, currentUser(jwt));
     }
 
     @DeleteMapping("/relations/{relationId}")
@@ -170,7 +177,7 @@ class LoreCatalogueController {
         @PathVariable UUID realmId,
         @PathVariable UUID relationId
     ) {
-        service.deleteRelation(realmId, relationId, currentUser(jwt));
+        relations.delete(realmId, relationId, currentUser(jwt));
         return ResponseEntity.noContent().build();
     }
 
