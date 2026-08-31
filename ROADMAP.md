@@ -14,7 +14,7 @@ This roadmap is outcome-oriented. A milestone is complete only when its acceptan
 - Create an original Spanish demonstration realm.
 - Create the first answerable, restricted, and unanswerable RAG cases.
 
-**Evidence:** `docs/`, `demo/`, `README.md`, and this roadmap.
+**Evidence:** `demo/`, `README.md`, and this roadmap.
 
 ## M1 — Walking skeleton
 

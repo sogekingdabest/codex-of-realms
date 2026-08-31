@@ -45,30 +45,8 @@ M8 adds React 19.2, TypeScript 6, Vite 8, Node.js 24 LTS, the official Keycloak 
 
 M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` remains the incumbent chat model for the 6 GB GPU target until M5.1 produces reviewed evidence for a replacement. The application and evaluation script never download models implicitly.
 
-## M0 documentation
+## Project references
 
-- [Product charter](docs/product/PRODUCT_CHARTER.md)
-- [MVP scope](docs/product/MVP_SCOPE.md)
-- [Initial domain model](docs/product/DOMAIN_MODEL.md)
-- [Ubiquitous language](docs/product/GLOSSARY.md)
-- [Initial architecture](docs/architecture/ARCHITECTURE.md)
-- [Architecture decision records](docs/architecture/adr/)
-- [Threat model](docs/security/THREAT_MODEL.md)
-- [Realm authorization model](docs/security/AUTHORIZATION_MODEL.md)
-- [Source ingestion runbook](docs/operations/SOURCE_INGESTION.md)
-- [Retrieval baseline](docs/evaluation/RETRIEVAL_BASELINE.md)
-- [Local chat-model evaluation](docs/evaluation/LOCAL_MODEL_EVALUATION.md)
-- [Grounded-answer runbook](docs/operations/GROUNDED_ANSWERS.md)
-- [Lore catalogue runbook](docs/operations/LORE_CATALOGUE.md)
-- [Canon workspace](docs/operations/CANON_WORKSPACE.md)
-- [M7 deterministic quality report](docs/evaluation/PORTFOLIO_REPORT.md)
-- [Reviewer demo](docs/operations/DEMO.md)
-- [Local observability](docs/operations/OBSERVABILITY.md)
-- [Web UI](docs/operations/WEB_UI.md)
-- [Backup and restore](docs/operations/BACKUP_AND_RESTORE.md)
-- [M8.2 local product acceptance](docs/evaluation/M8_2_ACCEPTANCE.md)
-- [Code quality and SonarQube Cloud](docs/operations/CODE_QUALITY.md)
-- [Application modules](docs/architecture/MODULES.md)
 - [Roadmap](ROADMAP.md)
 - [Original Spanish demo realm](demo/README.md)
 - [Baseline RAG evaluation set](demo/evaluation/README.md)
@@ -80,10 +58,6 @@ backend/                 Java 21 Spring Boot application
 frontend/                React and TypeScript web application
 demo/lore/               Original Spanish canonical source documents
 demo/evaluation/         Versioned RAG evaluation cases
-docs/product/            Product definition and scope
-docs/architecture/adr/   Architecture decision records
-docs/security/           Threat model and security requirements
-docs/operations/         Local runbooks and troubleshooting
 infra/keycloak/          Importable local OIDC realm
 ops/                     Local observability assets (introduced when needed)
 ```
@@ -100,7 +74,7 @@ Copy **.env.example** to **.env**, set both local passwords, then start the stac
 docker compose up --build
 ~~~
 
-Then open <http://localhost:5173>. See the [web UI guide](docs/operations/WEB_UI.md) for Keycloak demo-user setup and the first-use flow.
+Then open <http://localhost:5173>.
 
 Run the complete test suite from **backend**:
 
@@ -117,7 +91,7 @@ npm run test:coverage
 npm run build
 ~~~
 
-Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers. See the [local development guide](docs/operations/LOCAL_DEVELOPMENT.md) for endpoints and troubleshooting, and the [code-quality guide](docs/operations/CODE_QUALITY.md) for coverage and SonarQube Cloud onboarding.
+Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers.
 
 Run the reviewer workflow from the repository root:
 
@@ -125,7 +99,7 @@ Run the reviewer workflow from the repository root:
 .\scripts\demo.ps1
 ~~~
 
-Use `-StartStack` after configuring `.env`, and add `-WithObservability` for the optional Prometheus/Grafana overlay. See the [reviewer demo](docs/operations/DEMO.md) for the complete walkthrough.
+Use `-StartStack` after configuring `.env`, and add `-WithObservability` for the optional Prometheus/Grafana overlay.
 
 With the normal stack running, execute the complete deterministic product and recovery gate:
 
@@ -142,7 +116,7 @@ Once Ollama and the candidate weights are prepared, run the opt-in Spanish model
 .\scripts\evaluate-local-models.ps1 -Repetitions 3
 ~~~
 
-See the [evaluation guide](docs/evaluation/LOCAL_MODEL_EVALUATION.md) before interpreting or promoting a result.
+Review the generated comparison results before promoting a model change.
 
 ## Intellectual property
 
