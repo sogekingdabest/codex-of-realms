@@ -1,0 +1,106 @@
+.access-panel {
+  grid-column: 1 / -1;
+}
+
+.access-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  border-top: 1px solid var(--line);
+}
+
+.access-section {
+  min-width: 0;
+  padding: 1.5rem;
+}
+
+.access-section + .access-section {
+  border-left: 1px solid var(--line);
+}
+
+.access-section > h3,
+.pending-list h4 {
+  margin: 0 0 1rem;
+  font-family: Georgia, serif;
+  font-weight: 400;
+}
+
+.invite-form,
+.policy-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(120px, 0.42fr) auto;
+  align-items: end;
+  gap: 0.7rem;
+  margin-bottom: 1.2rem;
+}
+
+.policy-form {
+  grid-template-columns: minmax(140px, 0.7fr) minmax(0, 1fr) auto;
+}
+
+.member-list,
+.pending-list,
+.spoiler-list {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.member-list article,
+.pending-list article,
+.spoiler-list > article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.8rem;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.035);
+}
+
+.member-list article > div,
+.spoiler-list article > div:first-child {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.member-list span,
+.spoiler-list span,
+.pending-list span,
+.spoiler-list small {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.pending-list {
+  margin-top: 1.4rem;
+}
+
+.pending-list h4 {
+  margin-bottom: 0.2rem;
+  font-size: 1rem;
+}
+
+.spoiler-list > article {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.grant-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 1rem;
+}
+
+.grant-list label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.grant-list input {
+  width: auto;
+}
+

@@ -1,0 +1,121 @@
+.upload-card {
+  padding: 1.5rem;
+  background: rgba(183, 207, 128, 0.035);
+  border-bottom: 1px solid var(--line);
+}
+
+.upload-card h3,
+.citations h3 {
+  margin: 0 0 1rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.upload-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.9rem;
+}
+
+.upload-form .file-field,
+.upload-form button {
+  grid-column: 1 / -1;
+}
+
+input[type="file"] {
+  color: var(--muted);
+  padding: 0.55rem;
+}
+
+input[type="file"]::file-selector-button {
+  margin-right: 0.8rem;
+  padding: 0.45rem 0.7rem;
+  color: var(--ink);
+  background: #2a3029;
+  border: 0;
+  cursor: pointer;
+}
+
+.policy-empty p {
+  color: var(--muted);
+  font-size: 0.87rem;
+}
+
+.policy-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.chip-button {
+  padding: 0.55rem 0.7rem;
+  font-size: 0.76rem;
+}
+
+.source-list {
+  min-height: 180px;
+}
+
+.source-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.source-item:last-child {
+  border-bottom: 0;
+}
+
+.source-item h3 {
+  margin: 0 0 0.35rem;
+  font-family: Georgia, serif;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+.source-item p,
+.source-meta small,
+.muted,
+.empty-state p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.source-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.45rem;
+}
+
+.status {
+  padding: 0.25rem 0.45rem;
+  border: 1px solid var(--line);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.status-ready { color: var(--moss); }
+.status-failed { color: var(--danger); }
+.status-processing { color: var(--gold); }
+
+.empty-state {
+  min-height: 180px;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.8rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.empty-state span {
+  color: var(--gold);
+  font-size: 1.8rem;
+}
+

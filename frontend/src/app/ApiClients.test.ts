@@ -1,8 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { ApiError, HttpCodexApi } from './api'
+import { ApiError, AuthenticatedHttpClient } from '../shared/api'
+import { createApiClients } from './ApiClients'
 
-describe('HttpCodexApi', () => {
+describe('feature API clients', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
   })
@@ -27,9 +28,9 @@ describe('HttpCodexApi', () => {
       ),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1/', getToken)
+    const api = createApiClients('/api/v1/', getToken)
 
-    await api.ask('realm 1', '¿Qué protege la Aguja?')
+    await api.qa.ask('realm 1', '¿Qué protege la Aguja?')
 
     expect(getToken).toHaveBeenCalledOnce()
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
@@ -48,12 +49,12 @@ describe('HttpCodexApi', () => {
       }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
     const file = new File(['# Lumbrevela'], 'lumbrevela.md', {
       type: 'text/markdown',
     })
 
-    await api.uploadSource('realm-1', 'Lumbrevela', 'policy-1', file)
+    await api.content.uploadSource('realm-1', 'Lumbrevela', 'policy-1', file)
 
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const headers = new Headers(init.headers)
@@ -65,12 +66,29 @@ describe('HttpCodexApi', () => {
     expect(body.get('file')).toBe(file)
   })
 
+  it('propaga AbortSignal en las lecturas cancelables', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ user: {}, realms: [] }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = createApiClients('/api/v1', async () => 'token')
+    const controller = new AbortController()
+
+    await api.realm.getCurrentUser(controller.signal)
+
+    const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(init.signal).toBe(controller.signal)
+  })
+
   it('acepta respuestas vacías en revocaciones y borrados', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
 
-    await expect(api.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
+    await expect(api.realm.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
   })
 
   it('expone el código estable de los errores ProblemDetail', async () => {
@@ -87,9 +105,9 @@ describe('HttpCodexApi', () => {
       ),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
 
-    const error = await api.inviteMember('realm-1', 'player@example.test', 'PLAYER')
+    const error = await api.realm.inviteMember('realm-1', 'player@example.test', 'PLAYER')
       .catch((reason: unknown) => reason)
 
     expect(error).toBeInstanceOf(ApiError)
@@ -105,9 +123,9 @@ describe('HttpCodexApi', () => {
       new Response('upstream failure', { status: 502 }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
 
-    const error = await api.getCurrentUser().catch((reason: unknown) => reason)
+    const error = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({ message: 'Error HTTP 502', status: 502, code: null })
@@ -127,9 +145,9 @@ describe('HttpCodexApi', () => {
       ),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
 
-    const error = await api.deleteLoreEntity('realm-1', 'entity-1')
+    const error = await api.lore.deleteLoreEntity('realm-1', 'entity-1')
       .catch((reason: unknown) => reason)
 
     expect(error).toBeInstanceOf(ApiError)
@@ -147,7 +165,7 @@ describe('HttpCodexApi', () => {
       }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
     const input = {
       type: 'CHARACTER' as const,
       displayName: 'Nara Vey',
@@ -157,7 +175,7 @@ describe('HttpCodexApi', () => {
       evidenceChunkIds: ['chunk-1'],
     }
 
-    await api.createLoreEntity('realm 1', input)
+    await api.lore.createLoreEntity('realm 1', input)
 
     const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(url).toBe('/api/v1/realms/realm%201/catalogue/entities')
@@ -173,9 +191,9 @@ describe('HttpCodexApi', () => {
       }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('/api/v1', async () => 'token')
+    const api = createApiClients('/api/v1', async () => 'token')
 
-    await api.ask('../../outside?redirect=https://example.test', 'pregunta')
+    await api.qa.ask('../../outside?redirect=https://example.test', 'pregunta')
 
     const [url] = fetchMock.mock.calls[0] as [string, RequestInit]
     expect(url).toBe(
@@ -191,9 +209,9 @@ describe('HttpCodexApi', () => {
       }),
     )
     vi.stubGlobal('fetch', fetchMock)
-    const api = new HttpCodexApi('https://api.example.test/api/v1', async () => 'token')
+    const api = createApiClients('https://api.example.test/api/v1', async () => 'token')
 
-    await api.ask('realm-1', 'pregunta')
+    await api.qa.ask('realm-1', 'pregunta')
 
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/v1/realms/realm-1/questions',
@@ -202,9 +220,7 @@ describe('HttpCodexApi', () => {
   })
 
   it('rechaza rutas absolutas o que escapen de la base configurada', async () => {
-    const api = new HttpCodexApi('/api/v1', async () => 'token') as unknown as {
-      request<T>(path: string): Promise<T>
-    }
+    const api = new AuthenticatedHttpClient('/api/v1', async () => 'token')
 
     await expect(api.request('//evil.example/path')).rejects.toThrow('La ruta solicitada no es válida.')
     await expect(api.request('/../outside')).rejects.toThrow(

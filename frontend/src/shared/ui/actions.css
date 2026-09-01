@@ -1,0 +1,19 @@
+.text-danger,
+.citation-link {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  font-size: 0.72rem;
+}
+
+.text-danger {
+  color: #cf8f82;
+}
+
+.citation-link {
+  margin-top: 0.45rem;
+  color: var(--gold);
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
+

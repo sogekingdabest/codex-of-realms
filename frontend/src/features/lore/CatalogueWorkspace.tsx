@@ -1,20 +1,22 @@
 import { useEffect, useMemo, useState, type SubmitEvent } from 'react'
 
-import type { CodexApi } from './api'
+import type { ContentApi, SourceDocumentView, SourceEvidence } from '../content'
+import type { LoreApi } from './api'
 import type {
   AccessPolicyView,
+} from '../realm'
+import type {
   CanonStatus,
   EntityType,
   LoreEntityInput,
   LoreEntityView,
   LoreRelationInput,
   LoreRelationView,
-  SourceDocumentView,
-  SourceEvidence,
-} from './types'
+} from './model'
 
 interface CatalogueWorkspaceProps {
-  readonly api: CodexApi
+  readonly contentApi: ContentApi
+  readonly loreApi: LoreApi
   readonly realmId: string
   readonly canEdit: boolean
   readonly policies: AccessPolicyView[]
@@ -53,7 +55,8 @@ const emptyRelation = (
 })
 
 export function CatalogueWorkspace({
-  api,
+  contentApi,
+  loreApi,
   realmId,
   canEdit,
   policies,
@@ -76,7 +79,11 @@ export function CatalogueWorkspace({
 
   useEffect(() => {
     let active = true
-    Promise.all([api.listLoreEntities(realmId), api.listLoreRelations(realmId)])
+    const controller = new AbortController()
+    Promise.all([
+      loreApi.listLoreEntities(realmId, controller.signal),
+      loreApi.listLoreRelations(realmId, controller.signal),
+    ])
       .then(([nextEntities, nextRelations]) => {
         if (!active) return
         setEntities(nextEntities)
@@ -90,8 +97,9 @@ export function CatalogueWorkspace({
       })
     return () => {
       active = false
+      controller.abort()
     }
-  }, [api, realmId])
+  }, [loreApi, realmId])
 
   const effectiveEntityDraft = {
     ...entityDraft,
@@ -134,8 +142,8 @@ export function CatalogueWorkspace({
     setError(null)
     try {
       const saved = editingEntityId
-        ? await api.updateLoreEntity(realmId, editingEntityId, effectiveEntityDraft)
-        : await api.createLoreEntity(realmId, effectiveEntityDraft)
+        ? await loreApi.updateLoreEntity(realmId, editingEntityId, effectiveEntityDraft)
+        : await loreApi.createLoreEntity(realmId, effectiveEntityDraft)
       setEntities((current) => upsert(current, saved))
       setEditingEntityId(null)
       setEntityDraft(emptyEntity(policies[0]?.id))
@@ -153,13 +161,13 @@ export function CatalogueWorkspace({
     setError(null)
     try {
       const saved = editingRelationId
-        ? await api.updateLoreRelation(realmId, editingRelationId, {
+        ? await loreApi.updateLoreRelation(realmId, editingRelationId, {
             relationType: relationDraft.relationType,
             description: relationDraft.description,
             accessPolicyId: effectiveRelationDraft.accessPolicyId,
             evidenceChunkIds: relationDraft.evidenceChunkIds,
           })
-        : await api.createLoreRelation(realmId, effectiveRelationDraft)
+        : await loreApi.createLoreRelation(realmId, effectiveRelationDraft)
       setRelations((current) => upsert(current, saved))
       setEditingRelationId(null)
       setRelationDraft(emptyRelation(
@@ -178,7 +186,7 @@ export function CatalogueWorkspace({
     setSaving(true)
     setError(null)
     try {
-      const promoted = await api.promoteLoreEntity(realmId, entity.id)
+      const promoted = await loreApi.promoteLoreEntity(realmId, entity.id)
       setEntities((current) => upsert(current, promoted))
     } catch (reason) {
       setError(errorMessage(reason))
@@ -191,7 +199,7 @@ export function CatalogueWorkspace({
     setSaving(true)
     setError(null)
     try {
-      const promoted = await api.promoteLoreRelation(realmId, relation.id)
+      const promoted = await loreApi.promoteLoreRelation(realmId, relation.id)
       setRelations((current) => upsert(current, promoted))
     } catch (reason) {
       setError(errorMessage(reason))
@@ -205,7 +213,7 @@ export function CatalogueWorkspace({
     setSaving(true)
     setError(null)
     try {
-      await api.deleteLoreEntity(realmId, entity.id)
+      await loreApi.deleteLoreEntity(realmId, entity.id)
       setEntities((current) => current.filter((item) => item.id !== entity.id))
     } catch (reason) {
       setError(errorMessage(reason))
@@ -219,7 +227,7 @@ export function CatalogueWorkspace({
     setSaving(true)
     setError(null)
     try {
-      await api.deleteLoreRelation(realmId, relation.id)
+      await loreApi.deleteLoreRelation(realmId, relation.id)
       setRelations((current) => current.filter((item) => item.id !== relation.id))
     } catch (reason) {
       setError(errorMessage(reason))
@@ -322,7 +330,7 @@ export function CatalogueWorkspace({
         <div className="catalogue-layout">
           {canEdit && (
             <EntityForm
-              api={api}
+              contentApi={contentApi}
               draft={effectiveEntityDraft}
               editing={Boolean(editingEntityId)}
               policies={policies}
@@ -353,7 +361,7 @@ export function CatalogueWorkspace({
         <div className="catalogue-layout">
           {canEdit && entities.length >= 2 && (
             <RelationForm
-              api={api}
+              contentApi={contentApi}
               draft={effectiveRelationDraft}
               editing={Boolean(editingRelationId)}
               entities={entities}
@@ -388,7 +396,7 @@ export function CatalogueWorkspace({
 }
 
 interface EntityFormProps {
-  readonly api: CodexApi
+  readonly contentApi: ContentApi
   readonly draft: LoreEntityInput
   readonly editing: boolean
   readonly policies: AccessPolicyView[]
@@ -400,7 +408,7 @@ interface EntityFormProps {
   readonly onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }
 
-function EntityForm({ api, draft, editing, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: EntityFormProps) {
+function EntityForm({ contentApi, draft, editing, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: EntityFormProps) {
   return (
     <form className="catalogue-editor" onSubmit={onSubmit}>
       <div className="catalogue-editor-heading">
@@ -437,7 +445,7 @@ function EntityForm({ api, draft, editing, policies, realmId, saving, sources, o
       </label>
       <PolicySelect policies={policies} value={draft.accessPolicyId} onChange={(accessPolicyId) => onChange({ ...draft, accessPolicyId, evidenceChunkIds: [] })} />
       <EvidencePicker
-        api={api}
+        contentApi={contentApi}
         evidenceChunkIds={draft.evidenceChunkIds}
         policyId={draft.accessPolicyId}
         realmId={realmId}
@@ -452,7 +460,7 @@ function EntityForm({ api, draft, editing, policies, realmId, saving, sources, o
 }
 
 interface RelationFormProps {
-  readonly api: CodexApi
+  readonly contentApi: ContentApi
   readonly draft: LoreRelationInput
   readonly editing: boolean
   readonly entities: LoreEntityView[]
@@ -465,7 +473,7 @@ interface RelationFormProps {
   readonly onSubmit: (event: SubmitEvent<HTMLFormElement>) => void
 }
 
-function RelationForm({ api, draft, editing, entities, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: RelationFormProps) {
+function RelationForm({ contentApi, draft, editing, entities, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: RelationFormProps) {
   return (
     <form className="catalogue-editor" onSubmit={onSubmit}>
       <div className="catalogue-editor-heading">
@@ -499,7 +507,7 @@ function RelationForm({ api, draft, editing, entities, policies, realmId, saving
       </label>
       <PolicySelect policies={policies} value={draft.accessPolicyId} onChange={(accessPolicyId) => onChange({ ...draft, accessPolicyId, evidenceChunkIds: [] })} />
       <EvidencePicker
-        api={api}
+        contentApi={contentApi}
         evidenceChunkIds={draft.evidenceChunkIds}
         policyId={draft.accessPolicyId}
         realmId={realmId}
@@ -525,7 +533,7 @@ function PolicySelect({ policies, value, onChange }: Readonly<{ policies: Access
 }
 
 interface EvidencePickerProps {
-  readonly api: CodexApi
+  readonly contentApi: ContentApi
   readonly evidenceChunkIds: string[]
   readonly policyId: string
   readonly realmId: string
@@ -533,13 +541,13 @@ interface EvidencePickerProps {
   readonly onChange: (ids: string[]) => void
 }
 
-function EvidencePicker({ api, evidenceChunkIds, policyId, realmId, sources, onChange }: EvidencePickerProps) {
+function EvidencePicker({ contentApi, evidenceChunkIds, policyId, realmId, sources, onChange }: EvidencePickerProps) {
   const eligibleSources = useMemo(
     () => sources.filter((source) => source.status === 'READY' && source.accessPolicyId === policyId),
     [policyId, sources],
   )
   const [documentId, setDocumentId] = useState(() => eligibleSources[0]?.id ?? '')
-  const [chunks, setChunks] = useState<Awaited<ReturnType<CodexApi['listSourceChunks']>>>([])
+  const [chunks, setChunks] = useState<Awaited<ReturnType<ContentApi['listSourceChunks']>>>([])
   const [loadedDocumentId, setLoadedDocumentId] = useState('')
   const [error, setError] = useState<string | null>(null)
   const selectedDocumentId = eligibleSources.some((source) => source.id === documentId)
@@ -550,7 +558,8 @@ function EvidencePicker({ api, evidenceChunkIds, policyId, realmId, sources, onC
   useEffect(() => {
     if (!selectedDocumentId) return
     let active = true
-    api.listSourceChunks(realmId, selectedDocumentId)
+    const controller = new AbortController()
+    contentApi.listSourceChunks(realmId, selectedDocumentId, controller.signal)
       .then((nextChunks) => {
         if (active) {
           setChunks(nextChunks)
@@ -563,8 +572,9 @@ function EvidencePicker({ api, evidenceChunkIds, policyId, realmId, sources, onC
       })
     return () => {
       active = false
+      controller.abort()
     }
-  }, [api, realmId, selectedDocumentId])
+  }, [contentApi, realmId, selectedDocumentId])
 
   function toggle(chunkId: string) {
     if (evidenceChunkIds.includes(chunkId)) {
@@ -672,7 +682,7 @@ function RelationList({ canEdit, entityCount, loading, policies, relations, savi
 }
 
 function ChunkOptions({ chunks, evidenceChunkIds, loading, onToggle }: Readonly<{
-  chunks: Awaited<ReturnType<CodexApi['listSourceChunks']>>
+  chunks: Awaited<ReturnType<ContentApi['listSourceChunks']>>
   evidenceChunkIds: string[]
   loading: boolean
   onToggle: (chunkId: string) => void

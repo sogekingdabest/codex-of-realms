@@ -1,9 +1,8 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { CodexApi } from './api'
 import { CatalogueWorkspace } from './CatalogueWorkspace'
-import type { LoreEntityView, LoreRelationView } from './types'
+import type { LoreEntityView, LoreRelationView } from './model'
 
 const publicPolicy = {
   id: 'policy-public',
@@ -78,6 +77,10 @@ function relation(): LoreRelationView {
 
 function catalogueApi(entities: LoreEntityView[] = [], relations: LoreRelationView[] = []) {
   return {
+    listSources: vi.fn(),
+    uploadSource: vi.fn(),
+    deleteSource: vi.fn(),
+    getSourceContent: vi.fn(),
     listLoreEntities: vi.fn().mockResolvedValue(entities),
     listLoreRelations: vi.fn().mockResolvedValue(relations),
     listSourceChunks: vi.fn().mockResolvedValue([
@@ -101,7 +104,7 @@ function catalogueApi(entities: LoreEntityView[] = [], relations: LoreRelationVi
     updateLoreRelation: vi.fn(),
     promoteLoreRelation: vi.fn(),
     deleteLoreRelation: vi.fn(),
-  } as unknown as CodexApi
+  }
 }
 
 describe('CatalogueWorkspace', () => {
@@ -110,7 +113,8 @@ describe('CatalogueWorkspace', () => {
 
     render(
       <CatalogueWorkspace
-        api={api}
+        contentApi={api}
+        loreApi={api}
         canEdit={false}
         policies={[]}
         realmId="realm-1"
@@ -122,7 +126,7 @@ describe('CatalogueWorkspace', () => {
     expect(await screen.findByText('Nara Vey')).toBeInTheDocument()
     expect(screen.queryByText('Registrar concepto')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
-    expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1')
+    expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
 
     fireEvent.click(screen.getByRole('button', { name: 'Relaciones' }))
     expect(await screen.findByText('Nara vive en Lumbrevela.')).toBeInTheDocument()
@@ -147,7 +151,8 @@ describe('CatalogueWorkspace', () => {
 
     render(
       <CatalogueWorkspace
-        api={api}
+        contentApi={api}
+        loreApi={api}
         canEdit
         policies={[publicPolicy]}
         realmId="realm-1"
@@ -183,7 +188,8 @@ describe('CatalogueWorkspace', () => {
 
     render(
       <CatalogueWorkspace
-        api={api}
+        contentApi={api}
+        loreApi={api}
         canEdit
         policies={[publicPolicy]}
         realmId="realm-1"
@@ -209,7 +215,8 @@ describe('CatalogueWorkspace', () => {
 
     render(
       <CatalogueWorkspace
-        api={api}
+        contentApi={api}
+        loreApi={api}
         canEdit
         policies={[publicPolicy]}
         realmId="realm-1"

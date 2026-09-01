@@ -1,0 +1,22 @@
+.empty-realm {
+  min-height: 330px;
+  display: grid;
+  grid-template-columns: auto minmax(280px, 520px);
+  justify-content: center;
+  align-items: start;
+  gap: 2rem;
+  padding: 3rem;
+}
+
+.empty-realm p:not(.eyebrow) {
+  color: var(--muted);
+}
+
+.empty-realm form {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: 0.8rem;
+  margin-top: 1.5rem;
+}
+

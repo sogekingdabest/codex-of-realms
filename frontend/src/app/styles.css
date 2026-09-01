@@ -1,0 +1,177 @@
+.app-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 4vw;
+  border-bottom: 1px solid var(--line);
+  background: rgba(16, 19, 16, 0.82);
+  backdrop-filter: blur(18px);
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.brand-mark,
+.sigil {
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  display: grid;
+  place-items: center;
+  transform: rotate(45deg);
+  font-family: Georgia, serif;
+  font-size: 1.25rem;
+}
+
+.brand-mark > span,
+.sigil > span {
+  transform: rotate(-45deg);
+}
+
+.brand > span:last-child {
+  display: grid;
+  line-height: 1;
+}
+
+.brand strong {
+  font-family: Georgia, serif;
+  font-size: 1.22rem;
+  font-weight: 500;
+}
+
+.brand small {
+  margin-top: 0.25rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.56rem;
+}
+
+.identity {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: right;
+}
+
+.identity > span {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.identity small {
+  color: var(--muted);
+  font-size: 0.66rem;
+}
+
+.identity strong {
+  font-size: 0.82rem;
+}
+
+.quiet-button,
+.chip-button {
+  color: #d6dacd;
+  background: transparent;
+  border-color: var(--line);
+}
+
+.quiet-button:hover:not(:disabled),
+.chip-button:hover:not(:disabled) {
+  color: var(--moss);
+  background: rgba(183, 207, 128, 0.07);
+  border-color: var(--moss-deep);
+}
+
+.workspace {
+  width: min(1480px, 92vw);
+  margin: 0 auto;
+  padding: 4.5rem 0 6rem;
+}
+
+.hero {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 3rem;
+  margin-bottom: 3.5rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.8rem;
+  color: var(--moss);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hero h1,
+.startup-error h1 {
+  margin: 0;
+  color: #f0f0e9;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.6rem, 6vw, 5.6rem);
+  font-weight: 400;
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+}
+
+.hero h1 em {
+  color: var(--gold);
+  font-weight: 400;
+}
+
+.realm-picker {
+  width: min(320px, 100%);
+  padding-left: 1rem;
+  border-left: 2px solid var(--moss-deep);
+}
+
+.realm-picker small {
+  color: var(--muted);
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.82fr) minmax(420px, 1.18fr);
+  align-items: start;
+  gap: 1.25rem;
+}
+
+.workspace-navigation {
+  display: flex;
+  gap: 0.35rem;
+  margin: -1.3rem 0 1.25rem;
+  padding: 0.35rem;
+  width: fit-content;
+  background: rgba(8, 11, 8, 0.58);
+  border: 1px solid var(--line);
+}
+
+.workspace-navigation button,
+.segmented-control button {
+  color: var(--muted);
+  background: transparent;
+  border-color: transparent;
+}
+
+.workspace-navigation button.active,
+.segmented-control button.active {
+  color: #101310;
+  background: var(--moss);
+}
+

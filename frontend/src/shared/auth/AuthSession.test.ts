@@ -42,7 +42,13 @@ vi.mock('keycloak-js', () => ({
   },
 }))
 
-import { createAuthSession } from './auth'
+import { createAuthSession } from './AuthSession'
+
+const configuration = {
+  keycloakUrl: 'http://localhost:8180',
+  keycloakRealm: 'codex-of-realms',
+  keycloakClientId: 'codex-web',
+}
 
 describe('createAuthSession', () => {
   beforeEach(() => {
@@ -56,7 +62,7 @@ describe('createAuthSession', () => {
   })
 
   it('usa Authorization Code con PKCE S256 y mantiene el token en la sesión', async () => {
-    const session = await createAuthSession()
+    const session = await createAuthSession(configuration)
 
     expect(keycloak.constructor).toHaveBeenCalledWith({
       url: 'http://localhost:8180',
@@ -77,7 +83,7 @@ describe('createAuthSession', () => {
   it('vuelve al proveedor de identidad si falla la renovación', async () => {
     const renewalError = new Error('expired')
     keycloak.updateToken.mockRejectedValue(renewalError)
-    const session = await createAuthSession()
+    const session = await createAuthSession(configuration)
 
     await expect(session.getAccessToken()).rejects.toBe(renewalError)
     expect(keycloak.clearToken).toHaveBeenCalledOnce()
@@ -87,7 +93,7 @@ describe('createAuthSession', () => {
   it('usa el nombre de usuario preferido cuando no existe un nombre completo', async () => {
     keycloak.tokenParsed = { preferred_username: 'cartografa' }
 
-    const session = await createAuthSession()
+    const session = await createAuthSession(configuration)
 
     expect(session.displayName).toBe('cartografa')
   })
@@ -95,7 +101,7 @@ describe('createAuthSession', () => {
   it('usa un nombre neutral cuando el token no contiene identidad visible', async () => {
     keycloak.tokenParsed = undefined
 
-    const session = await createAuthSession()
+    const session = await createAuthSession(configuration)
 
     expect(session.displayName).toBe('Explorador')
   })

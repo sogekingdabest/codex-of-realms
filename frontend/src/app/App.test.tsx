@@ -1,13 +1,13 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import type { CodexApi } from './api'
 import { App } from './App'
-import type { AuthSession } from './auth'
-import type { LoreAnswer } from './types'
+import type { LoreAnswer } from '../features/qa'
+import type { AuthSession } from '../shared/auth'
+import { composeTestApiClients } from '../test/apiClients'
 
-function testApi(): CodexApi {
-  return {
+function testApi() {
+  const api = {
     getCurrentUser: vi.fn().mockResolvedValue({
       user: {
         id: 'user-1',
@@ -103,6 +103,7 @@ function testApi(): CodexApi {
       embedding: { provider: 'ollama', model: 'bge-m3', available: true, status: 'READY', installedModels: [] },
     }),
   }
+  return composeTestApiClients(api)
 }
 
 const session: AuthSession = {
@@ -112,6 +113,16 @@ const session: AuthSession = {
 }
 
 describe('App', () => {
+  it('mantiene la biblioteca disponible mientras se preparan las políticas base', async () => {
+    const api = testApi()
+    vi.mocked(api.listPolicies).mockResolvedValue([])
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
+    expect(screen.getByText('Preparando las políticas base del universo…')).toBeInTheDocument()
+  })
+
   it('carga el realm y presenta sus fuentes visibles', async () => {
     render(<App api={testApi()} session={session} />)
 
@@ -119,6 +130,16 @@ describe('App', () => {
     expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
     expect(screen.getByText('lumbrevela.md · versión 2')).toBeInTheDocument()
     expect(screen.getByText('4 fragmentos')).toBeInTheDocument()
+  })
+
+  it('mantiene las fuentes visibles si falla la carga independiente de acceso', async () => {
+    const api = testApi()
+    vi.mocked(api.listPolicies).mockRejectedValue(new Error('Acceso temporalmente no disponible'))
+
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
+    expect(await screen.findByText('Acceso temporalmente no disponible')).toBeInTheDocument()
   })
 
   it('muestra una respuesta con la localización exacta de la cita', async () => {
@@ -158,7 +179,7 @@ describe('App', () => {
     render(<App api={api} session={session} />)
 
     expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
-    expect(api.listSources).toHaveBeenCalledWith('realm-1')
+    expect(api.listSources).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
     expect(api.listPolicies).not.toHaveBeenCalled()
     expect(api.listMemberships).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
@@ -172,8 +193,8 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Atlas del canon' }))
 
     expect(await screen.findByRole('heading', { name: 'Atlas del canon' })).toBeInTheDocument()
-    expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1')
-    expect(api.listLoreRelations).toHaveBeenCalledWith('realm-1')
+    expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
+    expect(api.listLoreRelations).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
   })
 
   it('crea el primer universo desde el estado vacío', async () => {

@@ -1,0 +1,50 @@
+@media (max-width: 900px) {
+  .workspace { padding-top: 3rem; }
+  .hero { align-items: stretch; flex-direction: column; }
+  .content-grid { grid-template-columns: 1fr; }
+  .realm-picker { width: 100%; }
+  .access-columns { grid-template-columns: 1fr; }
+  .access-section + .access-section { border-left: 0; border-top: 1px solid var(--line); }
+  .invite-form, .policy-form { grid-template-columns: 1fr; }
+  .catalogue-header { align-items: stretch; flex-direction: column; }
+  .catalogue-summary { flex-wrap: wrap; }
+  .catalogue-toolbar { grid-template-columns: 1fr 1fr; }
+  .segmented-control { grid-column: 1 / -1; width: fit-content; }
+  .catalogue-layout { grid-template-columns: 1fr; }
+  .catalogue-editor { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
+}
+
+@media (max-width: 600px) {
+  .topbar { height: auto; min-height: 72px; padding: 0.8rem 1rem; }
+  .identity > span { display: none; }
+  .workspace { width: min(94vw, 680px); }
+  .hero { margin-bottom: 2rem; }
+  .upload-form { grid-template-columns: 1fr; }
+  .question-footer { align-items: stretch; flex-direction: column; }
+  .question-footer button { width: 100%; }
+  .empty-realm { grid-template-columns: 1fr; padding: 2rem; }
+  .empty-realm form { grid-template-columns: 1fr; }
+  .runtime-notice { align-items: stretch; flex-direction: column; }
+  .runtime-notice code { white-space: normal; }
+  .runtime-notice .runtime-commands { justify-items: start; }
+  .workspace-navigation { width: 100%; }
+  .workspace-navigation button { flex: 1; }
+  .catalogue-header { padding: 1.4rem; }
+  .catalogue-summary { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .catalogue-summary span { min-width: 0; }
+  .catalogue-toolbar { grid-template-columns: 1fr; }
+  .segmented-control { grid-column: auto; width: 100%; }
+  .segmented-control button { flex: 1; }
+  .catalogue-card > footer { align-items: flex-start; flex-direction: column; }
+  .catalogue-card > footer > div { justify-content: flex-start; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+

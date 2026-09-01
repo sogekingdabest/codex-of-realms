@@ -1,11 +1,11 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
-import { HttpCodexApi } from './api'
-import { App } from './App'
-import { createAuthSession } from './auth'
-import { runtimeConfig } from './config'
-import './styles.css'
+import { createApiClients } from './app/ApiClients'
+import { runtimeConfig } from './app/config'
+import { App } from './app/App'
+import { createAuthSession } from './shared/auth'
+import './shared/styles/index.css'
 
 const rootElement = document.getElementById('root')
 if (!rootElement) {
@@ -15,8 +15,8 @@ if (!rootElement) {
 const root = createRoot(rootElement)
 
 try {
-  const session = await createAuthSession()
-  const api = new HttpCodexApi(runtimeConfig.apiBaseUrl, session.getAccessToken)
+  const session = await createAuthSession(runtimeConfig)
+  const api = createApiClients(runtimeConfig.apiBaseUrl, session.getAccessToken)
   root.render(
     <StrictMode>
       <App api={api} session={session} />

@@ -1,0 +1,32 @@
+.runtime-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: -1.5rem 0 2rem;
+  padding: 1rem 1.2rem;
+  border: 1px solid rgba(214, 181, 109, 0.38);
+  background: rgba(79, 61, 27, 0.28);
+}
+
+.runtime-notice div {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.runtime-notice span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.runtime-notice code {
+  padding: 0.45rem 0.65rem;
+  color: var(--gold);
+  background: rgba(0, 0, 0, 0.22);
+  white-space: nowrap;
+}
+
+.runtime-notice .runtime-commands {
+  justify-items: end;
+}
+
