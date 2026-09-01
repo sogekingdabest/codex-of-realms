@@ -17,4 +17,26 @@ export default tseslint.config(
       globals: globals.browser,
     },
   },
+  {
+    files: ['src/shared/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/app/**', '**/features/**'],
+          message: 'shared no puede depender de app ni de features.',
+        }],
+      }],
+    },
+  },
+  {
+    files: ['src/features/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': ['error', {
+        patterns: [{
+          group: ['**/app/**'],
+          message: 'Los features no pueden depender de la capa de composición app.',
+        }],
+      }],
+    },
+  },
 )
