@@ -132,6 +132,40 @@ describe('App', () => {
     expect(screen.getByText('4 fragmentos')).toBeInTheDocument()
   })
 
+  it('remonta el workspace al cambiar de realm y aborta la carga anterior', async () => {
+    const api = testApi()
+    const [source] = await api.listSources('realm-1')
+    if (!source) throw new Error('La fuente de prueba es obligatoria')
+    const signals: AbortSignal[] = []
+    vi.mocked(api.listSources).mockClear()
+    vi.mocked(api.listSources).mockImplementation(async (realmId, signal) => {
+      if (signal) signals.push(signal)
+      return [{
+        ...source,
+        id: `source-${realmId}`,
+        realmId,
+        title: realmId === 'realm-1' ? 'Crónica del Meridiano' : 'Crónica de la Frontera',
+      }]
+    })
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: {
+        id: 'user-1', issuer: 'issuer', subject: 'subject-1', displayName: 'Maestra', email: null,
+      },
+      realms: [
+        { id: 'realm-1', name: 'El Meridiano', role: 'OWNER' },
+        { id: 'realm-2', name: 'La Frontera', role: 'OWNER' },
+      ],
+    })
+
+    render(<App api={api} session={session} />)
+    expect(await screen.findByText('Crónica del Meridiano')).toBeInTheDocument()
+    fireEvent.change(screen.getByDisplayValue('El Meridiano'), { target: { value: 'realm-2' } })
+
+    expect(await screen.findByText('Crónica de la Frontera')).toBeInTheDocument()
+    expect(api.listSources).toHaveBeenCalledWith('realm-2', expect.any(AbortSignal))
+    expect(signals[0]?.aborted).toBe(true)
+  })
+
   it('mantiene las fuentes visibles si falla la carga independiente de acceso', async () => {
     const api = testApi()
     vi.mocked(api.listPolicies).mockRejectedValue(new Error('Acceso temporalmente no disponible'))
@@ -335,56 +369,6 @@ describe('App', () => {
       expect(await screen.findByText(expectedMessage)).toBeInTheDocument()
     },
   )
-
-  it('gestiona invitaciones, políticas, miembros y permisos de spoiler', async () => {
-    const api = testApi()
-    const player = {
-      userId: 'player-1',
-      displayName: 'Nara Valcor',
-      email: null,
-      role: 'PLAYER' as const,
-    }
-    vi.mocked(api.listPolicies).mockResolvedValue([
-      { id: 'policy-1', realmId: 'realm-1', classification: 'PUBLIC', name: 'Público', description: null },
-      { id: 'policy-secret', realmId: 'realm-1', classification: 'SPOILER', name: 'La Aguja', description: 'Capítulo 4' },
-    ])
-    vi.mocked(api.listMemberships).mockResolvedValue([
-      { userId: 'user-1', displayName: 'Maestra del Meridiano', email: 'gm-demo@local.invalid', role: 'OWNER' },
-      player,
-    ])
-    vi.mocked(api.listInvitations).mockResolvedValue([
-      { id: 'invite-1', realmId: 'realm-1', email: 'pendiente@local.invalid', role: 'PLAYER', status: 'PENDING', acceptedUserId: null, createdAt: '2026-08-29T10:00:00Z' },
-    ])
-    vi.mocked(api.listPolicyGrants).mockResolvedValue([player])
-    vi.mocked(api.inviteMember).mockResolvedValue({
-      id: 'invite-2', realmId: 'realm-1', email: 'editor@local.invalid', role: 'EDITOR', status: 'PENDING', acceptedUserId: null, createdAt: '2026-08-30T10:00:00Z',
-    })
-    vi.mocked(api.createPolicy).mockResolvedValue({
-      id: 'policy-new', realmId: 'realm-1', classification: 'SPOILER', name: 'Nuevo secreto', description: 'Tras el prólogo',
-    })
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
-
-    render(<App api={api} session={session} />)
-    expect(await screen.findByText('La Aguja')).toBeInTheDocument()
-
-    fireEvent.change(screen.getByLabelText('Correo de Keycloak'), { target: { value: 'editor@local.invalid' } })
-    fireEvent.change(screen.getByLabelText('Rol'), { target: { value: 'EDITOR' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Invitar' }))
-    await waitFor(() => expect(api.inviteMember).toHaveBeenCalledWith('realm-1', 'editor@local.invalid', 'EDITOR'))
-
-    fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Nuevo secreto' } })
-    fireEvent.change(screen.getByLabelText('Descripción opcional'), { target: { value: 'Tras el prólogo' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Crear grupo' }))
-    await waitFor(() => expect(api.createPolicy).toHaveBeenCalledWith('realm-1', 'SPOILER', 'Nuevo secreto', 'Tras el prólogo'))
-
-    fireEvent.click(screen.getAllByLabelText('Nara Valcor')[0])
-    await waitFor(() => expect(api.revokePolicy).toHaveBeenCalledWith('realm-1', 'policy-secret', 'player-1'))
-    fireEvent.click(screen.getAllByRole('button', { name: 'Revocar' })[0])
-    await waitFor(() => expect(api.revokeInvitation).toHaveBeenCalledWith('realm-1', 'invite-2'))
-    fireEvent.click(screen.getByRole('button', { name: 'Quitar' }))
-    await waitFor(() => expect(api.removeMembership).toHaveBeenCalledWith('realm-1', 'player-1'))
-    confirm.mockRestore()
-  })
 
   it('sube y elimina fuentes, incluyendo estados fallido y en proceso', async () => {
     const api = testApi()

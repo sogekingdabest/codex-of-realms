@@ -3,9 +3,10 @@ import { useEffect, useState, type SubmitEvent } from 'react'
 import type { AuthSession } from '../shared/auth'
 import { errorMessage, isAbortError } from '../shared/lib/errors'
 import { formText } from '../shared/lib/forms'
-import { EmptyRealmPanel, RealmWorkspace, type CurrentUserView, type RealmSummary } from '../features/realm'
+import { EmptyRealmPanel, type CurrentUserView, type RealmSummary } from '../features/realm'
 import { RuntimeNotice, type RuntimeCapabilities } from '../features/runtime'
 import type { ApiClients } from './ApiClients'
+import { RealmWorkspace } from './workspace/RealmWorkspace'
 
 interface AppProps {
   readonly api: ApiClients
