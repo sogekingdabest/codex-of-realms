@@ -37,3 +37,8 @@ export const emptyRelation = (
 export function upsert<T extends { id: string }>(items: T[], value: T) {
   return [value, ...items.filter((item) => item.id !== value.id)]
 }
+
+export function editorSubmitLabel(saving: boolean, editing: boolean) {
+  if (saving) return 'Guardando…'
+  return editing ? 'Guardar y devolver a propuesto' : 'Crear como propuesta'
+}

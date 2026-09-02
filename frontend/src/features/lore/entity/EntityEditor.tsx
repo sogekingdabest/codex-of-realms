@@ -2,8 +2,8 @@ import type { SubmitEvent } from 'react'
 
 import type { ContentApi, SourceDocumentView } from '../../content'
 import type { AccessPolicyView } from '../../realm'
-import { editorSubmitLabel, PolicySelect } from '../CataloguePrimitives'
-import { entityTypeLabels } from '../catalogueModel'
+import { PolicySelect } from '../CataloguePrimitives'
+import { editorSubmitLabel, entityTypeLabels } from '../catalogueModel'
 import { EvidencePicker } from '../evidence/EvidencePicker'
 import type { EntityType, LoreEntityInput } from '../model'
 

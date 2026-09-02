@@ -41,8 +41,3 @@ export function CanonBadge({ status }: Readonly<{ status: CanonStatus }>) {
 export function CatalogueEmpty({ text }: Readonly<{ text: string }>) {
   return <div className="catalogue-empty"><span aria-hidden="true">◇</span><p>{text}</p></div>
 }
-
-export function editorSubmitLabel(saving: boolean, editing: boolean) {
-  if (saving) return 'Guardando…'
-  return editing ? 'Guardar y devolver a propuesto' : 'Crear como propuesta'
-}
