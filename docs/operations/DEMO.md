@@ -25,6 +25,8 @@ The downloads go into the stack's model volume, separate from a native Ollama in
 
 The campaign material is original to this project. Create the accounts through registration; the demo has no shared passwords.
 
+Shortly before the session, ask “¿Dónde se alza Lumbrevela?” and wait for a cited answer. The first request may spend over a minute loading models; a healthy container does not mean the models are already loaded. If preparation fails, resolve it before inviting participants. Keep the session close to this check: the default model keep-alive is five minutes.
+
 ## Eight-minute presentation
 
 | Time | Action | What the reviewer can assess |

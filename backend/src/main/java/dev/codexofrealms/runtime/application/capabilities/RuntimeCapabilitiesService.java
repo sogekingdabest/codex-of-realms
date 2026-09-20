@@ -49,10 +49,15 @@ public class RuntimeCapabilitiesService {
         }
 
         List<String> installed = installedModels.orElseThrow();
-        ModelCapabilityStatus status = installed.contains(configuredModel.model())
+        ModelCapabilityStatus status = installed.stream()
+            .anyMatch(model -> withoutDefaultTag(model).equals(withoutDefaultTag(configuredModel.model())))
             ? ModelCapabilityStatus.READY
             : ModelCapabilityStatus.MODEL_MISSING;
         return capability(configuredModel, status, installed);
+    }
+
+    private static String withoutDefaultTag(String model) {
+        return model.endsWith(":latest") ? model.substring(0, model.length() - ":latest".length()) : model;
     }
 
     private static ModelCapability capability(

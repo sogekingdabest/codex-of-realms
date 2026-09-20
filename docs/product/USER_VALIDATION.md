@@ -2,6 +2,8 @@
 
 **Status:** session prepared; no external sessions recorded yet.
 
+For a session in Spanish, use the [participant tasks and observation sheet](USER_SESSION_ES.md).
+
 The question is simple: can a Game Master and two players find and check campaign information more easily than in their usual notes?
 
 Start with one group. Record each participant's role and familiarity with the setting. If the first session exposes substantial usability problems, fix those before trying a second group.

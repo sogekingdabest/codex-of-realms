@@ -23,6 +23,8 @@ docker compose exec ollama ollama pull qwen3.5:4b
 
 The downloads go into the Compose Ollama volume. A native Ollama installation uses a separate store. If you changed the model defaults, pull those tags instead, then reload the application.
 
+Use `docker compose exec ollama ollama list` to check the models available to the application. If native Ollama is also running, a request to `localhost:11434` may reach that instance instead. The backend uses the Compose service at `http://ollama:11434` by default.
+
 For an NVIDIA-enabled Docker installation, use the GPU override when starting the stack:
 
 ```sh

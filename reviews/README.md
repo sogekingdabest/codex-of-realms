@@ -4,13 +4,14 @@ Start with the most recent record for the area you want to inspect. Each report 
 
 | Date | Record | Checks covered |
 |---|---|---|
+| 20 September | [Clean-install rehearsal](2026-09-20-ensayo-instalacion.md) | Published CI, fresh local data, three accounts, permissions, real ingestion, Atlas and two live queries |
 | 20 September | [Local verification](../CHANGELOG.md#verification-recorded-on-20-september-2026) | 185 backend tests; 119 frontend tests, lint, coverage and builds |
 | 19 September | [Archive interface](2026-09-19-archivo-campana.md) | Frontend checks and desktop/mobile review with example API data |
 | 15 September | [Reading and navigation](2026-09-15-mejoras-portfolio.md) | Source workflows, deterministic checks and browser scenarios |
 | 13 September | [AI context and omissions](2026-09-13-contexto-y-omisiones.md) | Candidate evaluation and the reasons promotion was blocked |
 | 6 September | [Delivery acceptance](2026-09-06-entrega-y-validacion.md) | Deterministic, browser, recovery and selector results |
 
-The 20 September review did not repeat browser, restore or live-model checks. Use [OPERATIONS.md](../OPERATIONS.md) to run those.
+The initial local verification on 20 September did not repeat browser or live-model checks; the later rehearsal records those separately. Restore checks were not repeated. Use [OPERATIONS.md](../OPERATIONS.md) to run them.
 
 ## Older reports
 
