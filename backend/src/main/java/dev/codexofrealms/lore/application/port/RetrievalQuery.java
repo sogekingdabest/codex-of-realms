@@ -10,9 +10,14 @@ public record RetrievalQuery(
     UUID userId,
     float[] embedding,
     EmbeddingDescriptor embeddingDescriptor,
-    int limit
+    int limit,
+    String question
 ) {
+    public RetrievalQuery(UUID realmId, UUID userId, float[] embedding, EmbeddingDescriptor descriptor, int limit) {
+        this(realmId, userId, embedding, descriptor, limit, "");
+    }
     public RetrievalQuery {
+        question = Objects.requireNonNull(question);
         if (realmId == null || userId == null || embeddingDescriptor == null) {
             throw new IllegalArgumentException("Realm, user, and embedding descriptor are required.");
         }
@@ -48,8 +53,9 @@ public record RetrievalQuery(
                 UUID thatUserId,
                 float[] thatEmbedding,
                 EmbeddingDescriptor thatDescriptor,
-                int thatLimit
+                int thatLimit, String thatQuestion
             )
+            && question.equals(thatQuestion)
             && limit == thatLimit
             && realmId.equals(thatRealmId)
             && userId.equals(thatUserId)
@@ -60,7 +66,7 @@ public record RetrievalQuery(
     @Override
     public int hashCode() {
         return Objects.hash(
-            realmId, userId, Arrays.hashCode(embedding), embeddingDescriptor, limit
+            realmId, userId, Arrays.hashCode(embedding), embeddingDescriptor, limit, question
         );
     }
 

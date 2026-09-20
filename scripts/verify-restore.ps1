@@ -2,7 +2,8 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$BackupDirectory,
-    [switch]$KeepEnvironment
+    [switch]$KeepEnvironment,
+    [switch]$ResumePendingJobs
 )
 
 $ErrorActionPreference = "Stop"
@@ -119,6 +120,29 @@ try {
         }
     }
 
+    $restoredJobs = @()
+    if ($manifest.PSObject.Properties.Name -contains "pendingSourceJobs") {
+        $jobsTable = Invoke-DockerComposeCapture @(
+            "exec", "-T", "postgres", "psql", "--username=codex", "--dbname=codex_of_realms",
+            "--tuples-only", "--no-align", "--command=SELECT to_regclass('public.source_job')"
+        )
+        $pendingJobsJson = '[]'
+        if ($jobsTable -eq 'source_job') { $pendingJobsJson = Invoke-DockerComposeCapture @(
+            "exec", "-T", "postgres", "psql", "--username=codex", "--dbname=codex_of_realms",
+            "--tuples-only", "--no-align", "--command=SELECT coalesce(json_agg(json_build_object('id',j.id,'versionId',j.version_id,'state',j.state,'storageKey',v.storage_key,'checksum',v.checksum_sha256)), '[]'::json) FROM source_job j JOIN document_version v ON v.id=j.version_id WHERE j.state IN ('UPLOADING','QUEUED','RUNNING')"
+        ) }
+        $restoredJobs = @($pendingJobsJson | ConvertFrom-Json)
+        if ($restoredJobs.Count -ne @($manifest.pendingSourceJobs).Count) { throw "Pending jobs changed during restore." }
+        foreach ($job in $restoredJobs) {
+            $expected = @($manifest.pendingSourceJobs | Where-Object { $_.id -eq $job.id -and $_.versionId -eq $job.versionId -and $_.state -eq $job.state })
+            if ($expected.Count -ne 1) { throw "A pending operation was not restored exactly." }
+            if ($job.state -ne "UPLOADING" -and $restoredHashes[$job.storageKey] -ne $job.checksum) {
+                throw "A queued or running operation is missing its intact original file."
+            }
+        }
+        Write-Host "Restored $($restoredJobs.Count) pending source operations with their execution state and original files."
+    }
+
     Write-Host "[5/5] Booting Keycloak against the restored schema..."
     Invoke-DockerCompose @("up", "-d", "--wait", "keycloak")
     $realmCount = Invoke-DockerComposeCapture @(
@@ -127,6 +151,28 @@ try {
     )
     if ([int]$realmCount -ne 1) {
         throw "The restored Keycloak schema does not contain exactly one codex-of-realms realm."
+    }
+
+    if ($ResumePendingJobs -and $restoredJobs.Count -gt 0) {
+        Write-Host "Resuming restored operations with the configured embedding service..."
+        Invoke-DockerCompose @("up", "-d", "--build", "--no-deps", "--wait", "app")
+        $pendingIds = @($restoredJobs | ForEach-Object { "'" + ([Guid]$_.id).ToString() + "'" }) -join ','
+        $deadline = (Get-Date).AddMinutes(10)
+        do {
+            $statesJson = Invoke-DockerComposeCapture @(
+                "exec", "-T", "postgres", "psql", "--username=codex", "--dbname=codex_of_realms",
+                "--tuples-only", "--no-align", "--command=SELECT json_agg(json_build_object('state',j.state,'ready',v.active AND v.processing_status='READY')) FROM source_job j JOIN document_version v ON v.id=j.version_id WHERE j.id IN ($pendingIds)"
+            )
+            $states = @($statesJson | ConvertFrom-Json)
+            if (@($states | Where-Object { $_.state -in @('FAILED','CANCELLED') }).Count -gt 0) {
+                throw "A restored operation could not publish. Check compatible processing configuration, original files and requester permissions."
+            }
+            $unfinished = @($states | Where-Object { $_.state -ne 'SUCCEEDED' -or -not $_.ready }).Count
+            if ($unfinished -eq 0) { break }
+            Start-Sleep -Seconds 5
+        } while ((Get-Date) -lt $deadline)
+        if ($unfinished -ne 0) { throw "Restored operations did not complete within ten minutes." }
+        Write-Host "All $($states.Count) restored operations completed and published their versions."
     }
 
     Write-Host "Restore verification passed in isolated project $projectName" -ForegroundColor Green

@@ -42,9 +42,10 @@ class IngestionMetadataCoordinator {
         AcceptedSource source, String fingerprint
     ) {
         authorize(realmId, policyId, userId);
-        SourceVersion active = repository.findActiveVersion(realmId, documentId)
+        repository.nextVersionNumber(realmId, documentId);
+        SourceVersion active = repository.findLatestVersion(realmId, documentId)
             .orElseThrow(SourceException::unavailable);
-        if (active.checksum().equals(source.checksum())
+        if (isPublished(realmId, active) && active.checksum().equals(source.checksum())
             && active.accessPolicyId().equals(policyId)
             && active.pipelineFingerprint().equals(fingerprint)) {
             return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId)
@@ -61,10 +62,12 @@ class IngestionMetadataCoordinator {
 
     @Transactional
     PreparedVersion reprocess(UUID realmId, UUID documentId, UUID userId, String fingerprint) {
-        SourceVersion active = repository.findActiveVersion(realmId, documentId)
+        realmAccess.requireEditor(realmId, userId);
+        repository.nextVersionNumber(realmId, documentId);
+        SourceVersion active = repository.findLatestVersion(realmId, documentId)
             .orElseThrow(SourceException::unavailable);
         authorize(realmId, active.accessPolicyId(), userId);
-        if (active.pipelineFingerprint().equals(fingerprint)) {
+        if (isPublished(realmId, active) && active.pipelineFingerprint().equals(fingerprint)) {
             return PreparedVersion.unchanged(repository.findActiveView(realmId, documentId)
                 .orElseThrow(SourceException::unavailable));
         }
@@ -77,10 +80,17 @@ class IngestionMetadataCoordinator {
         ));
     }
 
+    @Transactional
+    SourceVersion lockLatestVersion(UUID realmId, UUID documentId, UUID userId) {
+        realmAccess.requireEditor(realmId, userId);
+        repository.nextVersionNumber(realmId, documentId);
+        return activeVersion(realmId, documentId, userId);
+    }
+
     @Transactional(readOnly = true)
     SourceVersion activeVersion(UUID realmId, UUID documentId, UUID userId) {
         realmAccess.requireEditor(realmId, userId);
-        return repository.findActiveVersion(realmId, documentId)
+        return repository.findLatestVersion(realmId, documentId)
             .orElseThrow(SourceException::unavailable);
     }
 
@@ -99,6 +109,11 @@ class IngestionMetadataCoordinator {
         repository.activate(version, chunks, embeddings, provider, model);
         return repository.findActiveView(realmId, version.documentId())
             .orElseThrow(SourceException::unavailable);
+    }
+
+    private boolean isPublished(UUID realmId, SourceVersion version) {
+        return repository.findActiveVersion(realmId, version.documentId())
+            .map(active -> active.versionId().equals(version.versionId())).orElse(false);
     }
 
     private SourceVersion createVersion(VersionContext context, AcceptedSource source) {

@@ -1,7 +1,8 @@
 package dev.codexofrealms.realm.application.access;
 
 import dev.codexofrealms.realm.application.membership.MembershipView;
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.AccessPolicyRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
 import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.AccessPolicy;
 import dev.codexofrealms.realm.domain.RealmRole;
@@ -13,14 +14,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AccessPolicyService {
 
-    private final RealmRepository realmRepository;
+    private final AccessPolicyRepository accessPolicyRepository;
+    private final MembershipRepository membershipRepository;
     private final RealmAuthorizationService authorizationService;
 
     public AccessPolicyService(
-        RealmRepository realmRepository,
+        AccessPolicyRepository accessPolicyRepository,
+        MembershipRepository membershipRepository,
         RealmAuthorizationService authorizationService
     ) {
-        this.realmRepository = realmRepository;
+        this.accessPolicyRepository = accessPolicyRepository;
+        this.membershipRepository = membershipRepository;
         this.authorizationService = authorizationService;
     }
 
@@ -40,7 +44,7 @@ public class AccessPolicyService {
         String name = uniquePolicyName(realmId, baseName);
         String description = normalizeDescription(requestedDescription);
 
-        return realmRepository.createAccessPolicy(
+        return accessPolicyRepository.createAccessPolicy(
             UUID.randomUUID(),
             realmId,
             policy.classification(),
@@ -63,7 +67,7 @@ public class AccessPolicyService {
         if (policy.classification() != AccessClassification.SPOILER) {
             return List.of();
         }
-        return realmRepository.listPolicyGrants(realmId, policyId);
+        return accessPolicyRepository.listPolicyGrants(realmId, policyId);
     }
 
     @Transactional(readOnly = true)
@@ -72,7 +76,7 @@ public class AccessPolicyService {
         UUID policyId,
         UUID currentUserId
     ) {
-        return realmRepository.findAccessiblePolicy(realmId, policyId, currentUserId)
+        return accessPolicyRepository.findAccessiblePolicy(realmId, policyId, currentUserId)
             .orElseThrow(AccessPolicyException::unavailable);
     }
 
@@ -82,7 +86,7 @@ public class AccessPolicyService {
         UUID currentUserId
     ) {
         authorizationService.requireMember(realmId, currentUserId);
-        return realmRepository.findAccessiblePolicies(realmId, currentUserId);
+        return accessPolicyRepository.findAccessiblePolicies(realmId, currentUserId);
     }
 
     @Transactional
@@ -100,7 +104,7 @@ public class AccessPolicyService {
             );
         }
 
-        MembershipView membership = realmRepository.findActiveMembership(realmId, targetUserId)
+        MembershipView membership = membershipRepository.findActiveMembership(realmId, targetUserId)
             .orElseThrow(() -> new AccessPolicyException(
                 AccessPolicyException.Code.GRANTEE_UNAVAILABLE,
                 "The requested grant target is unavailable."
@@ -112,12 +116,12 @@ public class AccessPolicyService {
             );
         }
 
-        UUID membershipId = realmRepository.findActiveMembershipId(realmId, targetUserId)
+        UUID membershipId = membershipRepository.findActiveMembershipId(realmId, targetUserId)
             .orElseThrow(() -> new AccessPolicyException(
                 AccessPolicyException.Code.GRANTEE_UNAVAILABLE,
                 "The requested grant target is unavailable."
             ));
-        realmRepository.grantPolicy(realmId, policyId, membershipId);
+        accessPolicyRepository.grantPolicy(realmId, policyId, membershipId);
     }
 
     @Transactional
@@ -135,12 +139,12 @@ public class AccessPolicyService {
             );
         }
 
-        UUID membershipId = realmRepository.findActiveMembershipId(realmId, targetUserId)
+        UUID membershipId = membershipRepository.findActiveMembershipId(realmId, targetUserId)
             .orElseThrow(() -> new AccessPolicyException(
                 AccessPolicyException.Code.GRANTEE_UNAVAILABLE,
                 "The requested grant target is unavailable."
             ));
-        realmRepository.revokePolicy(realmId, policyId, membershipId);
+        accessPolicyRepository.revokePolicy(realmId, policyId, membershipId);
     }
 
     private AccessPolicy requireGrantablePolicy(
@@ -157,12 +161,12 @@ public class AccessPolicyService {
     }
 
     private String uniquePolicyName(UUID realmId, String baseName) {
-        if (!realmRepository.hasActivePolicyName(realmId, baseName)) {
+        if (!accessPolicyRepository.hasActivePolicyName(realmId, baseName)) {
             return baseName;
         }
         for (int suffix = 2; suffix <= 999; suffix++) {
             String candidate = baseName + " " + suffix;
-            if (candidate.length() <= 120 && !realmRepository.hasActivePolicyName(realmId, candidate)) {
+            if (candidate.length() <= 120 && !accessPolicyRepository.hasActivePolicyName(realmId, candidate)) {
                 return candidate;
             }
         }

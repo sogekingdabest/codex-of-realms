@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { isAbortError } from '../../../shared/lib/errors'
-import type { RealmApi } from '../api'
+import type { RealmAccessPolicyApi } from '../api'
 import type { AccessPolicyView, MembershipView } from '../model'
 
 export interface AccessPolicyInput {
@@ -10,7 +10,7 @@ export interface AccessPolicyInput {
 }
 
 interface UseAccessPoliciesOptions {
-  readonly api: RealmApi
+  readonly api: RealmAccessPolicyApi
   readonly enabled: boolean
   readonly realmId: string
   readonly onError: (error: unknown) => void

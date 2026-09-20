@@ -5,15 +5,16 @@ import dev.codexofrealms.content.application.source.SourceChunkView;
 import dev.codexofrealms.content.application.source.SourceContentView;
 import dev.codexofrealms.content.application.source.SourceDocumentView;
 import dev.codexofrealms.content.application.source.SourceManagementService;
-import dev.codexofrealms.realm.RealmAccess;
+import dev.codexofrealms.realm.AuthenticatedUser;
+import dev.codexofrealms.realm.CurrentUser;
 import java.io.IOException;
 import java.net.URI;
+import dev.codexofrealms.content.application.ingestion.SourceSubmission;
+import org.springframework.web.bind.annotation.RequestHeader;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,101 +29,86 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/v1/realms/{realmId}/sources")
 class SourceController {
 
-    private final RealmAccess realmAccess;
     private final SourceIngestionService ingestionService;
     private final SourceManagementService managementService;
 
     SourceController(
-        RealmAccess realmAccess,
         SourceIngestionService ingestionService,
         SourceManagementService managementService
     ) {
-        this.realmAccess = realmAccess;
         this.ingestionService = ingestionService;
         this.managementService = managementService;
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<SourceDocumentView> create(
-        @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
-        @RequestParam("title") String title,
-        @RequestParam("accessPolicyId") UUID accessPolicyId,
+    ResponseEntity<SourceSubmission> create(
+        @CurrentUser AuthenticatedUser user, @PathVariable UUID realmId,
+        @RequestHeader("Idempotency-Key") String key,
+        @RequestParam("title") String title, @RequestParam("accessPolicyId") UUID policy,
         @RequestParam("file") MultipartFile file
     ) throws IOException {
-        SourceDocumentView source = ingestionService.create(realmId, currentUser(jwt), title,
-            accessPolicyId, file.getBytes(), file.getOriginalFilename(), file.getContentType());
-        return ResponseEntity.created(URI.create("/api/v1/realms/" + realmId + "/sources/" + source.id())).body(source);
+        return response(realmId, ingestionService.create(realmId,user.id(),title,policy,
+            file.getBytes(),file.getOriginalFilename(),file.getContentType(),key));
     }
-
-    @PutMapping(path = "/{documentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    SourceDocumentView replace(
-        @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
-        @PathVariable UUID documentId,
-        @RequestParam("accessPolicyId") UUID accessPolicyId,
+    @PutMapping(path="/{documentId}",consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<SourceSubmission> replace(
+        @CurrentUser AuthenticatedUser user,@PathVariable UUID realmId,@PathVariable UUID documentId,
+        @RequestHeader("Idempotency-Key") String key,@RequestParam("accessPolicyId") UUID policy,
         @RequestParam("file") MultipartFile file
     ) throws IOException {
-        return ingestionService.replace(realmId, documentId, currentUser(jwt), accessPolicyId,
-            file.getBytes(), file.getOriginalFilename(), file.getContentType());
+        return response(realmId,ingestionService.replace(realmId,documentId,user.id(),policy,
+            file.getBytes(),file.getOriginalFilename(),file.getContentType(),key));
     }
-
     @PostMapping("/{documentId}/reprocess")
-    SourceDocumentView reprocess(
-        @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
-        @PathVariable UUID documentId
+    ResponseEntity<SourceSubmission> reprocess(
+        @CurrentUser AuthenticatedUser user,@PathVariable UUID realmId,@PathVariable UUID documentId,
+        @RequestHeader("Idempotency-Key") String key
     ) {
-        return ingestionService.reprocess(realmId, documentId, currentUser(jwt));
+        return response(realmId,ingestionService.reprocess(realmId,documentId,user.id(),key));
+    }
+    private ResponseEntity<SourceSubmission> response(UUID realmId,SourceSubmission submission) {
+        return ResponseEntity.status(submission.job().noOp() ? 200 : 202)
+            .location(URI.create("/api/v1/realms/"+realmId+"/source-jobs/"+submission.job().id())).body(submission);
     }
 
     @GetMapping
-    List<SourceDocumentView> list(@AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId) {
-        return managementService.list(realmId, currentUser(jwt));
+    List<SourceDocumentView> list(@CurrentUser AuthenticatedUser user, @PathVariable UUID realmId) {
+        return managementService.list(realmId, user.id());
     }
 
     @GetMapping("/{documentId}")
     SourceDocumentView get(
-        @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
+        @CurrentUser AuthenticatedUser user, @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        return managementService.get(realmId, documentId, currentUser(jwt));
+        return managementService.get(realmId, documentId, user.id());
     }
 
     @GetMapping("/{documentId}/chunks")
     List<SourceChunkView> chunks(
-        @AuthenticationPrincipal Jwt jwt,
+        @CurrentUser AuthenticatedUser user,
         @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        return managementService.chunks(realmId, documentId, currentUser(jwt));
+        return managementService.chunks(realmId, documentId, user.id());
     }
 
     @GetMapping("/{documentId}/versions/{versionId}/content")
     SourceContentView content(
-        @AuthenticationPrincipal Jwt jwt,
+        @CurrentUser AuthenticatedUser user,
         @PathVariable UUID realmId,
         @PathVariable UUID documentId,
         @PathVariable UUID versionId
     ) {
-        return managementService.content(realmId, documentId, versionId, currentUser(jwt));
+        return managementService.content(realmId, documentId, versionId, user.id());
     }
 
     @DeleteMapping("/{documentId}")
     ResponseEntity<Void> delete(
-        @AuthenticationPrincipal Jwt jwt, @PathVariable UUID realmId,
+        @CurrentUser AuthenticatedUser user, @PathVariable UUID realmId,
         @PathVariable UUID documentId
     ) {
-        managementService.delete(realmId, documentId, currentUser(jwt));
+        managementService.delete(realmId, documentId, user.id());
         return ResponseEntity.noContent().build();
-    }
-
-    private UUID currentUser(Jwt jwt) {
-        String displayName = firstPresent(jwt.getClaimAsString("name"),
-            jwt.getClaimAsString("preferred_username"), jwt.getSubject());
-        return realmAccess.synchronizeIdentity(jwt.getClaimAsString("iss"), jwt.getSubject(),
-            displayName, jwt.getClaimAsString("email"));
-    }
-
-    private static String firstPresent(String... values) {
-        for (String value : values) if (value != null && !value.isBlank()) return value;
-        return null;
     }
 }

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
@@ -12,7 +12,7 @@ function testApi() {
       user: {
         id: 'user-1',
         issuer: 'http://localhost:8180/realms/codex-of-realms',
-        subject: 'subject-1',
+        subject: 'subject-1', emailVerified: true,
         displayName: 'Maestra del Meridiano',
         email: 'gm-demo@local.invalid',
       },
@@ -54,6 +54,11 @@ function testApi() {
       },
     ]),
     uploadSource: vi.fn(),
+    replaceSource: vi.fn(),
+    reprocessSource: vi.fn(),
+    listSourceJobs: vi.fn().mockResolvedValue([]),
+    getSourceJob: vi.fn(),
+    retrySourceJob: vi.fn(),
     deleteSource: vi.fn(),
     getSourceContent: vi.fn().mockResolvedValue({
       documentId: 'source-1',
@@ -74,7 +79,8 @@ function testApi() {
     promoteLoreRelation: vi.fn(),
     deleteLoreRelation: vi.fn(),
     ask: vi.fn().mockResolvedValue({
-      outcome: 'ANSWERED',
+      outcome: 'ANSWERED', answerMode: 'EXTRACTIVE',
+      excerpts: [{ text: 'La Aguja conserva una deuda antigua con el Meridiano.', citationRank: 1 }],
       answer: 'La Aguja conserva una deuda antigua con el Meridiano.',
       citations: [
         {
@@ -126,9 +132,9 @@ describe('App', () => {
   it('carga el realm y presenta sus fuentes visibles', async () => {
     render(<App api={testApi()} session={session} />)
 
-    expect(await screen.findByText('El Meridiano')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'El Meridiano' })).toBeInTheDocument()
     expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
-    expect(screen.getByText('lumbrevela.md · versión 2')).toBeInTheDocument()
+    expect(screen.getByText('lumbrevela.md · v2')).toBeInTheDocument()
     expect(screen.getByText('4 fragmentos')).toBeInTheDocument()
   })
 
@@ -149,7 +155,7 @@ describe('App', () => {
     })
     vi.mocked(api.getCurrentUser).mockResolvedValue({
       user: {
-        id: 'user-1', issuer: 'issuer', subject: 'subject-1', displayName: 'Maestra', email: null,
+        id: 'user-1', issuer: 'issuer', subject: 'subject-1', emailVerified: true, displayName: 'Maestra', email: null,
       },
       realms: [
         { id: 'realm-1', name: 'El Meridiano', role: 'OWNER' },
@@ -180,6 +186,7 @@ describe('App', () => {
     const api = testApi()
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
 
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
       target: { value: '¿Qué deuda conserva la Aguja?' },
@@ -194,7 +201,7 @@ describe('App', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir evidencia exacta' }))
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
-    expect(api.getSourceContent).toHaveBeenCalledWith('realm-1', 'source-1', 'version-1')
+    expect(api.getSourceContent).toHaveBeenCalledWith('realm-1', 'source-1', 'version-1', expect.any(AbortSignal))
   })
 
   it('permite que un jugador cargue sus fuentes visibles y pregunte sin pedir políticas', async () => {
@@ -203,7 +210,7 @@ describe('App', () => {
       user: {
         id: 'player-1',
         issuer: 'http://localhost:8180/realms/codex-of-realms',
-        subject: 'player-subject',
+        subject: 'player-subject', emailVerified: true,
         displayName: 'Nara Valcor',
         email: 'nara-demo@local.invalid',
       },
@@ -216,6 +223,8 @@ describe('App', () => {
     expect(api.listSources).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
     expect(api.listPolicies).not.toHaveBeenCalled()
     expect(api.listMemberships).not.toHaveBeenCalled()
+    expect(screen.queryByRole('button', { name: 'Personas y permisos' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
     expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
   })
 
@@ -237,7 +246,7 @@ describe('App', () => {
       user: {
         id: 'user-1',
         issuer: 'http://localhost:8180/realms/codex-of-realms',
-        subject: 'subject-1',
+        subject: 'subject-1', emailVerified: true,
         displayName: 'Maestra del Meridiano',
         email: 'gm-demo@local.invalid',
       },
@@ -256,7 +265,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Crear universo' }))
 
     await waitFor(() => expect(api.createRealm).toHaveBeenCalledWith('Nueva Frontera'))
-    expect(await screen.findByText('Nueva Frontera')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Nueva Frontera' })).toBeInTheDocument()
   })
 
   it('muestra el runtime incompleto y una respuesta segura sin modelo', async () => {
@@ -279,10 +288,11 @@ describe('App', () => {
     })
 
     render(<App api={api} session={session} />)
+    await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
     expect(await screen.findByText('El runtime local necesita preparación')).toBeInTheDocument()
     expect(screen.getByText('ollama pull bge-m3')).toBeInTheDocument()
     expect(screen.getByText('ollama pull qwen3.5:4b')).toBeInTheDocument()
-    await screen.findByText('Crónica de Lumbrevela')
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
       target: { value: '¿Qué ocurrió?' },
     })
@@ -301,6 +311,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
     expect(await screen.findByText('Ollama no responde. Inicia o revisa el runtime local.')).toBeInTheDocument()
     expect(screen.queryByText(/ollama pull/)).not.toBeInTheDocument()
   })
@@ -314,6 +325,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
     expect(await screen.findByText(
       'Configura el proveedor y el modelo correspondientes antes de continuar.',
     )).toBeInTheDocument()
@@ -329,6 +341,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
+    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
     expect(await screen.findByText('Respuestas: shared-model (sin configurar).')).toBeInTheDocument()
     expect(screen.getAllByText('ollama pull shared-model')).toHaveLength(1)
     expect(screen.getByText(
@@ -361,6 +374,7 @@ describe('App', () => {
 
       render(<App api={api} session={session} />)
       await screen.findByText('Crónica de Lumbrevela')
+      fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
       fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
         target: { value: '¿Qué ocurrió?' },
       })
@@ -370,29 +384,27 @@ describe('App', () => {
     },
   )
 
-  it('sube y elimina fuentes, incluyendo estados fallido y en proceso', async () => {
+  it('encola una subida y refresca las fuentes publicadas antes de eliminarlas', async () => {
     const api = testApi()
     const [baseSource] = await api.listSources('realm-1')
-    if (!baseSource) throw new Error('La fuente de prueba es obligatoria')
-    vi.mocked(api.listSources).mockResolvedValue([
-      { ...baseSource, id: 'failed', title: 'Fuente fallida', status: 'FAILED' },
-      { ...baseSource, id: 'processing', title: 'Fuente en proceso', status: 'PROCESSING' },
-    ])
-    vi.mocked(api.uploadSource).mockResolvedValue({ ...baseSource, id: 'uploaded', title: 'Nueva fuente' })
+    if (!baseSource) throw new Error('Falta la fuente de prueba')
+    const uploaded = { ...baseSource, id: 'uploaded', title: 'Nueva fuente' }
+    vi.mocked(api.uploadSource).mockImplementation(async () => {
+      vi.mocked(api.listSources).mockResolvedValue([uploaded])
+      return { documentId: 'uploaded', versionId: 'v1', job: {} }
+    })
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
-
     render(<App api={api} session={session} />)
-    expect(await screen.findByText('Fuente fallida')).toBeInTheDocument()
-    expect(screen.getByText('Fallida')).toBeInTheDocument()
-    expect(screen.getByText('Procesando')).toBeInTheDocument()
-
+    await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.click(screen.getByText('Añadir conocimiento'))
     fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Nueva fuente' } })
     fireEvent.change(screen.getByLabelText('Archivo Markdown o TXT'), {
       target: { files: [new File(['contenido'], 'nueva.md', { type: 'text/markdown' })] },
     })
     fireEvent.submit(screen.getByRole('button', { name: 'Subir y procesar' }).closest('form')!)
-    await waitFor(() => expect(api.uploadSource).toHaveBeenCalled())
-    fireEvent.click(screen.getAllByRole('button', { name: 'Eliminar' })[0])
+    await screen.findByText('Nueva fuente')
+    fireEvent.click(screen.getByText('Gestionar'))
+    fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
     await waitFor(() => expect(api.deleteSource).toHaveBeenCalledWith('realm-1', 'uploaded'))
     confirm.mockRestore()
   })
@@ -402,11 +414,66 @@ describe('App', () => {
     vi.mocked(api.ask).mockRejectedValue(new Error('Servicio temporalmente no disponible'))
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
 
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: 'pregunta' } })
     fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
     expect(await screen.findByText('Servicio temporalmente no disponible')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }))
     expect(screen.queryByText('Servicio temporalmente no disponible')).not.toBeInTheDocument()
+  })
+
+  it('busca por título sin tildes y por archivo y abre la fuente sin preguntar a la IA', async () => {
+    const api = testApi()
+    render(<App api={api} session={session} />)
+    const search = await screen.findByLabelText('Buscar fuentes')
+    fireEvent.change(search, { target: { value: 'cronica' } })
+    expect(screen.getByRole('button', { name: 'Leer Crónica de Lumbrevela' })).toBeVisible()
+    fireEvent.change(search, { target: { value: 'inexistente' } })
+    expect(screen.queryByRole('button', { name: 'Leer Crónica de Lumbrevela' })).not.toBeInTheDocument()
+    fireEvent.change(search, { target: { value: 'lumbrevela.md' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Leer Crónica de Lumbrevela' }))
+    expect(await screen.findByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).toHaveTextContent('La Aguja conserva una deuda antigua con el Meridiano.')
+    expect(screen.getByRole('heading', { name: 'Crónica de Lumbrevela' })).toHaveFocus()
+    expect(screen.getByRole('button', { name: 'Abrir índice' })).toHaveAttribute('aria-expanded', 'false')
+    expect(api.ask).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('button', { name: 'Cerrar fuente' }))
+    expect(screen.getByRole('button', { name: 'Cerrar índice' })).toHaveAttribute('aria-expanded', 'true')
+    expect(screen.queryByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).not.toBeInTheDocument()
+  })
+
+  it('mantiene el universo actual si falla crear otro y permite reintentar', async () => {
+    const api = testApi()
+    vi.mocked(api.createRealm).mockRejectedValueOnce(new Error('No se pudo crear')).mockResolvedValueOnce({ id: 'realm-2', name: 'Frontera', role: 'OWNER' })
+    render(<App api={api} session={session} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Nuevo universo' }))
+    fireEvent.change(screen.getByLabelText('Nombre del universo'), { target: { value: 'Frontera' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Crear universo' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo crear')
+    expect(screen.getByLabelText('Universo activo')).toHaveValue('realm-1')
+    expect(screen.getByLabelText('Nombre del universo')).toHaveValue('Frontera')
+    expect(screen.getByText('Crónica de Lumbrevela')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Crear universo' }))
+    await waitFor(() => expect(screen.getByLabelText('Universo activo')).toHaveValue('realm-2'))
+    expect(screen.queryByLabelText('Nombre del universo')).not.toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Universo activo'), { target: { value: 'realm-1' } })
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeVisible()
+  })
+
+  it('cancela la lectura anterior al cambiar de universo e ignora su respuesta tardía', async () => {
+    const api = testApi()
+    const user = await api.getCurrentUser()
+    vi.mocked(api.getCurrentUser).mockResolvedValue({ ...user, realms: [...user.realms, { id: 'realm-2', name: 'Frontera', role: 'OWNER' }] })
+    const content = await api.getSourceContent('realm-1', 'source-1', 'version-1')
+    let finish!: (value: typeof content) => void
+    vi.mocked(api.getSourceContent).mockClear().mockImplementation(() => new Promise((resolve) => { finish = resolve }))
+    render(<App api={api} session={session} />)
+    fireEvent.click(await screen.findByRole('button', { name: 'Leer Crónica de Lumbrevela' }))
+    const signal = vi.mocked(api.getSourceContent).mock.calls[0][3]!
+    fireEvent.change(screen.getByLabelText('Universo activo'), { target: { value: 'realm-2' } })
+    expect(signal.aborted).toBe(true)
+    await act(async () => { finish(content) })
+    expect(screen.queryByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).not.toBeInTheDocument()
+    expect(screen.getByLabelText('Universo activo')).toHaveValue('realm-2')
   })
 })

@@ -4,7 +4,10 @@ import dev.codexofrealms.realm.application.access.AccessPolicyView;
 import dev.codexofrealms.realm.application.invitation.InvitationView;
 import dev.codexofrealms.realm.application.lifecycle.RealmSummary;
 import dev.codexofrealms.realm.application.membership.MembershipView;
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.AccessPolicyRepository;
+import dev.codexofrealms.realm.application.port.InvitationRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
+import dev.codexofrealms.realm.application.port.RealmLifecycleRepository;
 import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.InvitationStatus;
 import dev.codexofrealms.realm.domain.RealmRole;
@@ -16,7 +19,11 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 @SuppressWarnings("java:S1192") // JDBC placeholder and result-column names intentionally mirror the SQL.
-public class RealmJdbcRepository implements RealmRepository {
+public class RealmJdbcRepository implements
+    RealmLifecycleRepository,
+    MembershipRepository,
+    InvitationRepository,
+    AccessPolicyRepository {
 
     private static final String ACTIVE_OWNER_SQL = """
         SELECT EXISTS (
@@ -502,36 +509,32 @@ public class RealmJdbcRepository implements RealmRepository {
 
     public void acceptPendingInvitations(UUID userId, String email) {
         if (email == null || email.isBlank()) return;
-        jdbcClient.sql("""
-                INSERT INTO realm_membership (id, realm_id, user_id, role)
-                SELECT gen_random_uuid(), i.realm_id, :userId, i.role
-                FROM realm_invitation i
+        // Lock before deciding which invitations to consume. Revocation uses the same rows.
+        List<UUID> invitations = jdbcClient.sql("""
+                SELECT i.id FROM realm_invitation i
                 JOIN realm r ON r.id=i.realm_id AND r.active
                 WHERE lower(i.email)=lower(:email)
-                  AND i.accepted_at IS NULL
-                  AND i.revoked_at IS NULL
-                ON CONFLICT (realm_id, user_id) DO UPDATE
-                SET active=true,
-                    role=CASE
-                        WHEN realm_membership.role='OWNER' THEN 'OWNER'
-                        WHEN realm_membership.role='EDITOR' OR EXCLUDED.role='EDITOR' THEN 'EDITOR'
-                        ELSE 'PLAYER'
-                    END,
-                    updated_at=CURRENT_TIMESTAMP
+                  AND i.accepted_at IS NULL AND i.revoked_at IS NULL
+                ORDER BY i.id FOR UPDATE OF i
                 """)
-            .param("userId", userId)
-            .param("email", email)
-            .update();
-        jdbcClient.sql("""
-                UPDATE realm_invitation
-                SET accepted_by=:userId, accepted_at=CURRENT_TIMESTAMP
-                WHERE lower(email)=lower(:email)
-                  AND accepted_at IS NULL
-                  AND revoked_at IS NULL
-                """)
-            .param("userId", userId)
-            .param("email", email)
-            .update();
+            .param("email", email).query(UUID.class).list();
+        for (UUID invitationId : invitations) {
+            jdbcClient.sql("""
+                    INSERT INTO realm_membership (id, realm_id, user_id, role)
+                    SELECT gen_random_uuid(), realm_id, :userId, role
+                    FROM realm_invitation WHERE id=:invitationId
+                    ON CONFLICT (realm_id, user_id) DO UPDATE
+                    SET active=true,
+                        role=CASE
+                            WHEN realm_membership.role='OWNER' THEN 'OWNER'
+                            WHEN realm_membership.role='EDITOR' OR EXCLUDED.role='EDITOR' THEN 'EDITOR'
+                            ELSE 'PLAYER'
+                        END,
+                        updated_at=CURRENT_TIMESTAMP
+                    """)
+                .param("userId", userId).param("invitationId", invitationId).update();
+            acceptInvitation(invitationId, userId);
+        }
     }
 
     private static RealmSummary mapRealm(java.sql.ResultSet resultSet, int rowNumber)

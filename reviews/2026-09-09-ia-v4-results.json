@@ -1,0 +1,991 @@
+{
+  "run": "ia-v4-20260908-213725",
+  "decision": {
+    "hybridEnabled": false,
+    "model": "qwen3.5:4b",
+    "threshold": 1,
+    "regressionFailures": [
+      {
+        "id": "gm-002",
+        "repetition": 1,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 0,
+        "facts": 2
+      },
+      {
+        "id": "ia-val-multi",
+        "repetition": 1,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "ia-long-amber",
+          "ia-short-names"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      },
+      {
+        "id": "gm-002",
+        "repetition": 2,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 0,
+        "facts": 2
+      },
+      {
+        "id": "ia-val-multi",
+        "repetition": 2,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "ia-long-amber",
+          "ia-short-names"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      },
+      {
+        "id": "gm-002",
+        "repetition": 3,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 0,
+        "facts": 2
+      },
+      {
+        "id": "ia-val-multi",
+        "repetition": 3,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "ia-long-amber",
+          "ia-short-names"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      }
+    ],
+    "applied": false,
+    "status": "ACCEPTANCE_BLOCKED",
+    "prompt": "v2"
+  },
+  "configuration": {
+    "prompt": "v2",
+    "frozenAt": "2026-09-08T20:00:24.5304670Z",
+    "threshold": 1,
+    "dataset": {
+      "frozenAt": "2026-09-08T19:30:21.673Z",
+      "calibrationFamily": [
+        "canal",
+        "reloj"
+      ],
+      "validationFamily": [
+        "jardin",
+        "mina"
+      ],
+      "files": [
+        {
+          "path": "demo/evaluation/ia-v4.json",
+          "sha256": "8f9635b8f0a36cd5f9a07c3fd9b5c25b731bd7d073eb88b98ef60ad59343cbe3"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-canal.md",
+          "sha256": "ba5ecd3e03ada8b9f3c29a29150015b6cfda24f91b56eea24c0515607b7f1d5e"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-reloj.md",
+          "sha256": "8aa2d564ae9a4e0fdb6dee8184cacb2f40c2ad2930d06a85189c1fd33ef27c6d"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-canal-secret.md",
+          "sha256": "128132258a776866c9409b9888d2d7901ff8bba0c638d0ac28ea19470fa013ac"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-reveal.md",
+          "sha256": "c27a4c226a9bd87ac0fab7327f15e5d93a410614e9444762489ae6a91b16e617"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-garden.md",
+          "sha256": "e1dca01a3f8e4b9f2da98488c87061e3dfe4afb3d2e34fe6440370546ac53ebc"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-mine.md",
+          "sha256": "2de8591db48bae105d728940ce19a550eaf0b49c6c2469ceb05edd1aa2172585"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-garden-secret.md",
+          "sha256": "6398245da105aae67c2c49d5bbe7f219a9643cb05fa7cd47883bdceb7bf86ff1"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-mine-reveal.md",
+          "sha256": "4d6d551ba26e365267a7602f766209b085b7f03981b8153ca94122ee23d7b541"
+        },
+        {
+          "path": "demo/evaluation/ia-v4-sources/v4-distractor.md",
+          "sha256": "99dfce0b49aa8634d24eb5df7abb466d1c4d052473b02a08039d4f3644d1daf1"
+        }
+      ]
+    }
+  },
+  "models": [
+    {
+      "name": "qwen3.5:4b",
+      "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd"
+    },
+    {
+      "name": "bge-m3:latest",
+      "digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab"
+    }
+  ],
+  "hardware": {
+    "cpu": [
+      {
+        "Name": "AMD Ryzen 7 5800H with Radeon Graphics         "
+      }
+    ],
+    "gpu": [
+      {
+        "Name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "DriverVersion": "32.0.15.9597"
+      },
+      {
+        "Name": "AMD Radeon(TM) Graphics",
+        "DriverVersion": "31.0.12044.3"
+      }
+    ]
+  },
+  "audit": [
+    {
+      "cosine": 1,
+      "chunkId": "046b8e70-4c0f-4265-86f6-b49cafa021ff"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "3c5fdc3d-e401-42d4-aae5-b7c629957a0d"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "e3ad6098-3d69-427c-a6fa-ce117c7a14ae"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "6ac5b2a6-9e3b-419c-90f0-bf0d614932fc"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "950122d4-fdb8-4333-981a-818ea1b3e833"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "2d394016-ed35-4e33-b2ef-f1275da3d91a"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "18139b88-c5f8-4f72-ba57-8bca83c38af2"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "e03a3a8d-e497-4ec3-a11a-ffd8c8871bc6"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "af136afc-f523-4bf7-b73b-404523733a08"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "19c4faa0-fe8c-4855-a86a-a83e20a1df2c"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "e4e92c0f-75b9-44f6-8812-85577bcdd3ec"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "05709d27-6cb6-4b98-84a6-15aafdddf65b"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "23188ca8-ee0a-47e5-bbaa-d52b16cc034c"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "4899f859-b80b-4228-b225-1348c22cb8b2"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "da525d1d-8bba-48d9-b970-ae6c660d97cb"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "943ed1c3-db53-4797-9e61-f69d7dd83813"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "ed282653-4244-42e1-b855-82f0626bb9d2"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "36e26f55-43a5-4ba5-8989-7063c6756df4"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "f4c92a18-cd46-40b2-b56e-8e40daa03060"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "0ee4d2f8-9e9d-4bec-ad8b-f4f6a3806ed7"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "18ea93a5-1ce6-4967-aa34-24f25878c746"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "ae6cff66-4f11-43c9-bd12-a244b3b2d85d"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "6f7e9eb4-ffbd-4bce-8751-201c3df951a7"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "d4495202-047a-400c-82fa-b28af6aa8d19"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "28fd7344-ee37-4d5a-9527-d612052429d5"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "4193a554-01ea-4228-9c12-7c219ff6344b"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "c69c17ed-160f-442e-bba5-b6b896b325ee"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "3b4e21d3-44c8-41cc-80bc-8f0236a0998c"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "cec53cc0-1549-40f5-bca7-789075199bb0"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "74e19529-ec6d-44f6-ab6e-5680ea4631f8"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "ba967fc8-5b36-409e-b787-d64a43f44aca"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "d7f4fd1b-d1ad-4b79-a185-2f806a98aacb"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "be2c6f08-8f3a-4399-a64c-c71bc767b053"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "0a7121b9-e1eb-49f0-bf6b-d4ed78941a44"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "8ed10236-6d5b-44bd-b68b-f12ca181119a"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "0da320cc-a539-485c-bc88-8c17a287b943"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "51213c6c-5168-4df7-84f4-a4a0e1fd6bd9"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "8f8d09a6-6e80-458e-b7a2-6fd9161a5ad8"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "6a7d0210-0a91-43e7-ad1a-88cf76d67e7d"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "e8c5c19e-b09b-42a8-82a6-0a6435d0e974"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "55bdc56c-a81e-46e7-b80b-d4e3ebb00b5c"
+    },
+    {
+      "cosine": 1,
+      "chunkId": "a02b04db-46a5-456d-a9e9-1273b8e75277"
+    }
+  ],
+  "reports": [
+    {
+      "file": "calibration-reference.json",
+      "datasetVersion": 4,
+      "prompt": "v1",
+      "retrieval": "vector-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 159569,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.9375,
+          "factCoverage": 0.9230769230769231,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": true,
+          "warmP95Millis": 7466,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "v4-calibration-08",
+          "repetition": 1,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [],
+          "matchedFacts": 0,
+          "facts": 1,
+          "context": true,
+          "literal": true
+        }
+      ],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v1-0.80.json",
+      "datasetVersion": 4,
+      "prompt": "v1",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "0.8",
+      "coldStartMillis": 15922,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3201,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v1-0.90.json",
+      "datasetVersion": 4,
+      "prompt": "v1",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "0.9",
+      "coldStartMillis": 17346,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3253,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v1-1.00.json",
+      "datasetVersion": 4,
+      "prompt": "v1",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 24085,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3370,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v2-0.80.json",
+      "datasetVersion": 4,
+      "prompt": "v2",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "0.8",
+      "coldStartMillis": 15933,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 4502,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v2-0.90.json",
+      "datasetVersion": 4,
+      "prompt": "v2",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "0.9",
+      "coldStartMillis": 21697,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3003,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "calibration-v2-1.00.json",
+      "datasetVersion": 4,
+      "prompt": "v2",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 14943,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 1,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3211,
+          "eligible": true
+        }
+      ],
+      "failures": [],
+      "nonliteral": []
+    },
+    {
+      "file": "regression-v3.json",
+      "datasetVersion": 3,
+      "prompt": "v2",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 19063,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": false,
+          "warmP95Millis": 4136,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": false,
+          "warmP95Millis": 3537,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": false,
+          "warmP95Millis": 2980,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "matchedFacts": 0,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "gm-004",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-nara",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-glass-bell",
+            "meridian-spoiler-nara"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "ia-long-amber",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": false,
+          "literal": true
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "matchedFacts": 0,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "gm-004",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-nara",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-glass-bell",
+            "meridian-spoiler-nara"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "ia-long-amber",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": false,
+          "literal": true
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "matchedFacts": 0,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "gm-004",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-nara",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "meridian-spoiler-glass-bell",
+            "meridian-spoiler-nara"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "ia-long-amber",
+            "ia-short-names"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": false,
+          "literal": true
+        }
+      ],
+      "nonliteral": []
+    },
+    {
+      "file": "validation-candidate.json",
+      "datasetVersion": 4,
+      "prompt": "v2",
+      "retrieval": "hybrid-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 20814,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3308,
+          "eligible": true
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3346,
+          "eligible": true
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3171,
+          "eligible": true
+        }
+      ],
+      "failures": [
+        {
+          "id": "v4-validation-14",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "v4-validation-14",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "v4-validation-14",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        }
+      ],
+      "nonliteral": []
+    },
+    {
+      "file": "validation-reference.json",
+      "datasetVersion": 4,
+      "prompt": "v1",
+      "retrieval": "vector-v1",
+      "lexicalMinimumCoverage": "1",
+      "coldStartMillis": 14325,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3231,
+          "eligible": true
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 2820,
+          "eligible": true
+        },
+        {
+          "outcomeAccuracy": 1,
+          "factCoverage": 0.95,
+          "structuredOutput": 1,
+          "citationSuccess": 1,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 0,
+          "mandatoryPassed": true,
+          "warmP95Millis": 2607,
+          "eligible": true
+        }
+      ],
+      "failures": [
+        {
+          "id": "v4-validation-14",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret",
+            "v4-garden"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "v4-validation-14",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret",
+            "v4-garden"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        },
+        {
+          "id": "v4-validation-14",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "initialGate": "SUFFICIENT",
+          "passageGate": "SUFFICIENT",
+          "citedSources": [
+            "v4-garden-secret",
+            "v4-garden"
+          ],
+          "matchedFacts": 1,
+          "facts": 2,
+          "context": true,
+          "literal": true
+        }
+      ],
+      "nonliteral": []
+    }
+  ],
+  "supplementaryOriginalHashes": [
+    {
+      "path": "demo/evaluation/ia-sources/ia-long-amber.md",
+      "sha256": "bcbad355da7f5a7c0e038f73feecd94bcfc5da6819d9f8db10d44d58f65d335f"
+    },
+    {
+      "path": "demo/evaluation/ia-sources/ia-long-valley.md",
+      "sha256": "3d5da39111d855cea77b73976aa0ea06f917c55a8c0a357220c46587ea111be2"
+    },
+    {
+      "path": "demo/evaluation/ia-sources/ia-oversized.md",
+      "sha256": "276c60e4a3c57e137a1384f7961abdd0d144c51cd39a7d8d39998dfe8609015b"
+    },
+    {
+      "path": "demo/evaluation/ia-sources/ia-short-names.md",
+      "sha256": "8b67bb4274a5ee47698b089ef3c145b22e55038e2eb82bc15c5844987727f209"
+    }
+  ]
+}

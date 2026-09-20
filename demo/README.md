@@ -1,8 +1,8 @@
 # Demo realm: El Meridiano de Ceniza
 
-`El Meridiano de Ceniza` is the original Spanish-language realm used to demonstrate and evaluate Codex of Realms. Its content was created specifically for this project and must remain independent from existing fantasy franchises.
+`El Meridiano de Ceniza` is the original Spanish campaign used in demos and evaluations. Its seven sources give players a public account of the setting while keeping a different perspective for the Game Master and selected players.
 
-The realm contains seven focused sources—three public, two GM-only, and two spoiler documents—with enough structure to exercise:
+The sources include three public documents, two GM-only documents and two spoilers. They cover:
 
 - Public canon shared by all realm members
 - Game Master-only explanations that contradict an incomplete public account
@@ -19,7 +19,7 @@ The realm contains seven focused sources—three public, two GM-only, and two sp
 | `player_oren` | `PLAYER` | None |
 | `outsider_nuno` | Member of another realm | None |
 
-These are stable deterministic-test identifiers, not passwords or production identities. The imported Keycloak realm contains the separate interactive placeholders `gm-demo`, `nara-demo`, and `ivo-demo`, also without committed credentials.
+These identifiers are used by the deterministic tests; they have no associated passwords. The imported Keycloak realm contains the separate interactive placeholders `gm-demo`, `nara-demo`, and `ivo-demo`, also without committed credentials.
 
 ## Source layout
 
@@ -32,7 +32,7 @@ evaluation/       Machine-readable expected retrieval and authorization outcomes
 
 ## Metadata
 
-The Markdown front matter is a provisional ingestion contract. M3 may refine the schema through an ADR or documented migration, but these meanings must remain stable:
+The Markdown front matter describes the evaluation fixtures. When uploading through the application, choose visibility explicitly in the form: front matter does not create memberships, policies or spoiler grants.
 
 - `source_id`: stable logical identifier used by evaluation cases
 - `realm_id`: authorization boundary

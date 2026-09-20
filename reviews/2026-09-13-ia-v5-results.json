@@ -1,0 +1,543 @@
+{
+  "run": "ia-v5-20260913-135804",
+  "decision": {
+    "applied": false,
+    "model": "qwen3.5:4b",
+    "regressionFailures": [
+      {
+        "id": "gm-002",
+        "repetition": 1,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      },
+      {
+        "id": "gm-003",
+        "repetition": 1,
+        "observedOutcome": "INSUFFICIENT_EVIDENCE",
+        "citedSources": [],
+        "matchedFacts": 0,
+        "facts": 2
+      },
+      {
+        "id": "gm-002",
+        "repetition": 2,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      },
+      {
+        "id": "gm-003",
+        "repetition": 2,
+        "observedOutcome": "INSUFFICIENT_EVIDENCE",
+        "citedSources": [],
+        "matchedFacts": 0,
+        "facts": 2
+      },
+      {
+        "id": "gm-002",
+        "repetition": 3,
+        "observedOutcome": "ANSWERED",
+        "citedSources": [
+          "meridian-gm-needle-truth",
+          "meridian-public-overview"
+        ],
+        "matchedFacts": 1,
+        "facts": 2
+      },
+      {
+        "id": "gm-003",
+        "repetition": 3,
+        "observedOutcome": "INSUFFICIENT_EVIDENCE",
+        "citedSources": [],
+        "matchedFacts": 0,
+        "facts": 2
+      }
+    ],
+    "lexicalCoverage": 1,
+    "prompt": "v3",
+    "status": "ACCEPTANCE_BLOCKED"
+  },
+  "freeze": {
+    "frozenAt": "2026-09-13T11:52:55.466Z",
+    "configuration": {
+      "contextualPassages": true,
+      "completeSelection": true,
+      "prompt": "v3",
+      "hybrid": true,
+      "lexicalCoverage": 1,
+      "questionCoverage": 0.7
+    },
+    "files": [
+      {
+        "path": "demo/evaluation/ia-v5.json",
+        "sha256": "a10c0f6c5ada60af4de605151cf05f1b77f690b53560bf5c5b4c8f45d7437866"
+      },
+      {
+        "path": "demo/evaluation/ia-v5-sources/v5-library.md",
+        "sha256": "53b1d59782f50ba385f38ea58b18f9f957cc6ccaa9125dd7d0606ced0a25a1d8"
+      },
+      {
+        "path": "demo/evaluation/ia-v5-sources/v5-tower.md",
+        "sha256": "549536d8003bd53b985f9d0f74376c049f1d3f2598a4dd4ada4a3feda1a15b5d"
+      },
+      {
+        "path": "demo/evaluation/ia-v5-sources/v5-library-secret.md",
+        "sha256": "44bc30ea8ca2feab7d50d4cac32570f08e6676e29b40db482a72559fec2447f1"
+      },
+      {
+        "path": "demo/evaluation/ia-v5-sources/v5-tower-reveal.md",
+        "sha256": "7094401ae2ac0dbe30b208e72fc58eb7e1ba18bc6d2a552aec90c20cec2fd091"
+      },
+      {
+        "path": "demo/evaluation/ia-v5-sources/v5-distractor.md",
+        "sha256": "3dcfa2fe1a71d41bf352518cc0c60350fd3899825ae74e09e291f0571519ced2"
+      }
+    ]
+  },
+  "models": [
+    {
+      "name": "bge-m3:latest",
+      "digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab"
+    },
+    {
+      "name": "qwen3.5:4b",
+      "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd"
+    }
+  ],
+  "hardware": {
+    "cpu": [
+      {
+        "Name": "AMD Ryzen 7 5800H with Radeon Graphics         "
+      }
+    ],
+    "gpu": [
+      {
+        "Name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "DriverVersion": "32.0.15.9597"
+      },
+      {
+        "Name": "AMD Radeon(TM) Graphics",
+        "DriverVersion": "31.0.12044.3"
+      }
+    ]
+  },
+  "reports": [
+    {
+      "file": "validation-reference.json",
+      "datasetVersion": 5,
+      "prompt": "v1",
+      "contextualPassages": "false",
+      "completeSelection": "false",
+      "coldStartMillis": 167645,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9047619047619048,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 7154,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9047619047619048,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 4140,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9047619047619048,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 3051,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "v5-validation-01",
+          "repetition": 1,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "NO_EVIDENCE",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Por qué se cerró el archivo del Sauce?"
+          ]
+        },
+        {
+          "id": "v5-validation-01",
+          "repetition": 2,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "NO_EVIDENCE",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Por qué se cerró el archivo del Sauce?"
+          ]
+        },
+        {
+          "id": "v5-validation-01",
+          "repetition": 3,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "NO_EVIDENCE",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Por qué se cerró el archivo del Sauce?"
+          ]
+        }
+      ],
+      "nonliteral": []
+    },
+    {
+      "file": "validation-candidate.json",
+      "datasetVersion": 5,
+      "prompt": "v3",
+      "contextualPassages": "true",
+      "completeSelection": "true",
+      "coldStartMillis": 29276,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9523809523809523,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 4746,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9523809523809523,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 3985,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.9583333333333334,
+          "factCoverage": 0.9523809523809523,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9375,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 2856,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "v5-validation-13",
+          "repetition": 1,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 1,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Puede sonar la campana del Basalto durante una tormenta?"
+          ]
+        },
+        {
+          "id": "v5-validation-13",
+          "repetition": 2,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 1,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Puede sonar la campana del Basalto durante una tormenta?"
+          ]
+        },
+        {
+          "id": "v5-validation-13",
+          "repetition": 3,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 1,
+          "citedSources": [],
+          "literal": true,
+          "context": false,
+          "missingQuestionParts": [
+            "¿Puede sonar la campana del Basalto durante una tormenta?"
+          ]
+        }
+      ],
+      "nonliteral": []
+    },
+    {
+      "file": "regression-v3.json",
+      "datasetVersion": 3,
+      "prompt": "v3",
+      "contextualPassages": "true",
+      "completeSelection": "true",
+      "coldStartMillis": 40896,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9285714285714286,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 5015,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9285714285714286,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 3896,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.9285714285714286,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 3765,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-001",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-003",
+          "repetition": 1,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": [
+            "¿Qué riesgo oculto amenaza la segunda expedición de Maela",
+            "cuándo está prevista?"
+          ]
+        },
+        {
+          "id": "gm-004",
+          "repetition": 1,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-001",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-003",
+          "repetition": 2,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": [
+            "¿Qué riesgo oculto amenaza la segunda expedición de Maela",
+            "cuándo está prevista?"
+          ]
+        },
+        {
+          "id": "gm-004",
+          "repetition": 2,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-001",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-needle-truth",
+            "meridian-public-overview"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        },
+        {
+          "id": "gm-003",
+          "repetition": 3,
+          "outcome": "INSUFFICIENT_EVIDENCE",
+          "reason": "VALIDATION_FAILED",
+          "matchedFacts": 0,
+          "facts": 2,
+          "citedSources": [],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": [
+            "¿Qué riesgo oculto amenaza la segunda expedición de Maela",
+            "cuándo está prevista?"
+          ]
+        },
+        {
+          "id": "gm-004",
+          "repetition": 3,
+          "outcome": "ANSWERED",
+          "reason": null,
+          "matchedFacts": 1,
+          "facts": 2,
+          "citedSources": [
+            "meridian-gm-veil-pact"
+          ],
+          "literal": true,
+          "context": true,
+          "missingQuestionParts": []
+        }
+      ],
+      "nonliteral": []
+    }
+  ]
+}

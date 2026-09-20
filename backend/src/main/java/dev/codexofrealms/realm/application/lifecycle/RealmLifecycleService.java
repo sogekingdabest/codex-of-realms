@@ -1,6 +1,8 @@
 package dev.codexofrealms.realm.application.lifecycle;
 
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.AccessPolicyRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
+import dev.codexofrealms.realm.application.port.RealmLifecycleRepository;
 import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.util.List;
@@ -11,10 +13,18 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class RealmLifecycleService {
 
-    private final RealmRepository realmRepository;
+    private final RealmLifecycleRepository lifecycleRepository;
+    private final MembershipRepository membershipRepository;
+    private final AccessPolicyRepository accessPolicyRepository;
 
-    public RealmLifecycleService(RealmRepository realmRepository) {
-        this.realmRepository = realmRepository;
+    public RealmLifecycleService(
+        RealmLifecycleRepository lifecycleRepository,
+        MembershipRepository membershipRepository,
+        AccessPolicyRepository accessPolicyRepository
+    ) {
+        this.lifecycleRepository = lifecycleRepository;
+        this.membershipRepository = membershipRepository;
+        this.accessPolicyRepository = accessPolicyRepository;
     }
 
     @Transactional
@@ -22,13 +32,13 @@ public class RealmLifecycleService {
         String name = normalizeRealmName(requestedName);
         UUID realmId = UUID.randomUUID();
 
-        realmRepository.createRealm(realmId, name, currentUserId);
-        realmRepository.createOwnerMembership(UUID.randomUUID(), realmId, currentUserId);
-        realmRepository.createAccessPolicy(
+        lifecycleRepository.createRealm(realmId, name, currentUserId);
+        membershipRepository.createOwnerMembership(UUID.randomUUID(), realmId, currentUserId);
+        accessPolicyRepository.createAccessPolicy(
             UUID.randomUUID(), realmId, AccessClassification.PUBLIC,
             "Público", "Conocimiento visible para todos los miembros."
         );
-        realmRepository.createAccessPolicy(
+        accessPolicyRepository.createAccessPolicy(
             UUID.randomUUID(), realmId, AccessClassification.GM_ONLY,
             "Solo dirección", "Conocimiento reservado para propietarios y editores."
         );
@@ -38,12 +48,12 @@ public class RealmLifecycleService {
 
     @Transactional(readOnly = true)
     public List<RealmSummary> listRealms(UUID currentUserId) {
-        return realmRepository.findActiveRealmsForUser(currentUserId);
+        return lifecycleRepository.findActiveRealmsForUser(currentUserId);
     }
 
     @Transactional(readOnly = true)
     public RealmSummary getRealm(UUID realmId, UUID currentUserId) {
-        return realmRepository.findActiveRealmForMember(realmId, currentUserId)
+        return lifecycleRepository.findActiveRealmForMember(realmId, currentUserId)
             .orElseThrow(RealmException::unavailable);
     }
 

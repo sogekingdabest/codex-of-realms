@@ -6,14 +6,20 @@ public record ExternalIdentity(
     String issuer,
     String subject,
     String displayName,
-    String email
+    String email,
+    boolean emailVerified
 ) {
+
+    public ExternalIdentity(String issuer, String subject, String displayName, String email) {
+        this(issuer, subject, displayName, email, false);
+    }
 
     public ExternalIdentity {
         issuer = requireBounded("issuer", issuer, 512);
         subject = requireBounded("subject", subject, 255);
         displayName = normalizeOptional(displayName, subject, 160);
         email = normalizeOptional(email, null, 320);
+        emailVerified = email != null && emailVerified;
     }
 
     private static String requireBounded(String field, String value, int maximumLength) {

@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import type { RealmAdministrationState } from './useRealmAdministration'
@@ -45,12 +45,31 @@ function administration(overrides: Partial<RealmAdministrationState> = {}): Real
 }
 
 describe('RealmAccessPanel', () => {
+  it('conserva el siguiente borrador si termina una invitación pendiente y evita el doble envío', async () => {
+    let finish!: (saved: boolean) => void
+    const invite = vi.fn().mockImplementationOnce(() => new Promise<boolean>((resolve) => { finish = resolve })).mockResolvedValue(true)
+    render(<RealmAccessPanel administration={administration({ invite })} />)
+    const email = screen.getByLabelText('Correo del jugador')
+    fireEvent.change(email, { target: { value: 'first@example.test' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Invitar' }))
+    fireEvent.change(email, { target: { value: 'second@example.test' } })
+    fireEvent.change(screen.getByLabelText('Rol'), { target: { value: 'EDITOR' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Invitar' }))
+    expect(invite).toHaveBeenCalledTimes(1)
+    await act(async () => { finish(true) })
+    expect(email).toHaveValue('second@example.test')
+    expect(screen.getByLabelText('Rol')).toHaveValue('EDITOR')
+    fireEvent.click(screen.getByRole('button', { name: 'Invitar' }))
+    await waitFor(() => expect(invite).toHaveBeenLastCalledWith({ email: 'second@example.test', role: 'EDITOR' }))
+    await waitFor(() => expect(email).toHaveValue(''))
+  })
+
   it('adapta formularios y acciones del owner a comandos tipados', async () => {
     const state = administration()
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true)
     render(<RealmAccessPanel administration={state} />)
 
-    fireEvent.change(screen.getByLabelText('Correo de Keycloak'), {
+    fireEvent.change(screen.getByLabelText('Correo del jugador'), {
       target: { value: 'editor@example.test' },
     })
     fireEvent.change(screen.getByLabelText('Rol'), { target: { value: 'EDITOR' } })
@@ -58,7 +77,7 @@ describe('RealmAccessPanel', () => {
     await waitFor(() => expect(state.invite).toHaveBeenCalledWith({
       email: 'editor@example.test', role: 'EDITOR',
     }))
-    expect(screen.getByLabelText('Correo de Keycloak')).toHaveValue('')
+    expect(screen.getByLabelText('Correo del jugador')).toHaveValue('')
 
     fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Nuevo secreto' } })
     fireEvent.change(screen.getByLabelText('Descripción opcional'), { target: { value: 'Tras el prólogo' } })
@@ -80,7 +99,7 @@ describe('RealmAccessPanel', () => {
   it('oculta invitaciones y retirada de miembros a editores pero conserva políticas', () => {
     render(<RealmAccessPanel administration={administration({ isOwner: false })} />)
 
-    expect(screen.queryByLabelText('Correo de Keycloak')).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Correo del jugador')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Quitar' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Revocar' })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Crear grupo' })).toBeInTheDocument()

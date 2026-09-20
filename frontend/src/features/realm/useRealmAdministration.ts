@@ -1,13 +1,21 @@
 import { useCallback, useMemo } from 'react'
 
-import type { RealmApi } from './api'
+import type {
+  RealmAccessPolicyApi,
+  RealmInvitationApi,
+  RealmMembershipApi,
+} from './api'
 import { useAccessPolicies } from './access/useAccessPolicies'
 import { useInvitations } from './invitation/useInvitations'
 import { useMemberships } from './membership/useMemberships'
 import type { MembershipView } from './model'
 
+export type RealmAdministrationApi = RealmAccessPolicyApi
+  & RealmInvitationApi
+  & RealmMembershipApi
+
 interface UseRealmAdministrationOptions {
-  readonly api: RealmApi
+  readonly api: RealmAdministrationApi
   readonly canEdit: boolean
   readonly isOwner: boolean
   readonly realmId: string

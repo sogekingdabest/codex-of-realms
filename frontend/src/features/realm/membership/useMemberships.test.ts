@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createRealmApi } from '../../../test/realmApi'
+import { createRealmMembershipApi } from '../../../test/realmApi'
 import type { MembershipView } from '../model'
 import { useMemberships } from './useMemberships'
 
@@ -14,7 +14,7 @@ const player: MembershipView = {
 
 describe('useMemberships', () => {
   it('carga, recarga y elimina miembros sin permitir retirar al owner', async () => {
-    const api = createRealmApi({
+    const api = createRealmMembershipApi({
       listMemberships: vi.fn().mockResolvedValueOnce([owner, player]).mockResolvedValueOnce([owner]),
     })
     const onError = vi.fn()
@@ -37,7 +37,7 @@ describe('useMemberships', () => {
   it('no carga para jugadores y aborta la petición al desmontar', () => {
     let signal: AbortSignal | undefined
     const onError = vi.fn()
-    const api = createRealmApi({
+    const api = createRealmMembershipApi({
       listMemberships: vi.fn((_realmId, nextSignal) => {
         signal = nextSignal
         return new Promise<MembershipView[]>(() => undefined)
@@ -58,7 +58,7 @@ describe('useMemberships', () => {
   })
 
   it('informa fallos al recargar y retirar miembros sin alterar el estado', async () => {
-    const api = createRealmApi({
+    const api = createRealmMembershipApi({
       listMemberships: vi.fn().mockResolvedValueOnce([player]).mockRejectedValueOnce(new Error('reload failed')),
       removeMembership: vi.fn().mockRejectedValue(new Error('remove failed')),
     })

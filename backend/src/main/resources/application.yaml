@@ -34,13 +34,15 @@ spring:
           audiences:
             - ${OIDC_AUDIENCE:codex-api}
   ai:
+    retry:
+      max-attempts: 1
     model:
       chat: ${AI_CHAT_PROVIDER:none}
       embedding: ${AI_EMBEDDING_PROVIDER:none}
     ollama:
       base-url: ${OLLAMA_BASE_URL:http://localhost:11434}
       chat:
-        model: ${AI_CHAT_MODEL:qwen3:4b}
+        model: ${AI_CHAT_MODEL:qwen3.5:4b}
         temperature: 0.0
         think: false
         num-ctx: ${AI_CHAT_CONTEXT_SIZE:8192}
@@ -76,22 +78,30 @@ codex:
   storage:
     root: ${CODEX_SOURCE_STORAGE:./data/sources}
   ingestion:
+    worker-enabled: ${SOURCE_WORKER_ENABLED:true}
+    worker-concurrency: ${SOURCE_WORKER_CONCURRENCY:1}
+    poll-milliseconds: ${SOURCE_WORKER_POLL_MS:2000}
     max-file-bytes: ${SOURCE_MAX_FILE_BYTES:1048576}
     chunk-max-characters: ${SOURCE_CHUNK_MAX_CHARACTERS:1400}
     chunk-overlap-characters: ${SOURCE_CHUNK_OVERLAP_CHARACTERS:160}
     embedding-batch-size: ${SOURCE_EMBEDDING_BATCH_SIZE:32}
     embedding-provider: ${AI_EMBEDDING_PROVIDER:none}
     embedding-model: ${AI_EMBEDDING_MODEL:bge-m3}
+  retrieval:
+    contextual-passages-enabled: ${LORE_CONTEXTUAL_PASSAGES_ENABLED:false}
+    hybrid-enabled: ${LORE_HYBRID_ENABLED:false}
+    lexical-minimum-coverage: ${LORE_LEXICAL_MINIMUM_COVERAGE:1.0}
   qa:
+    complete-selection-enabled: ${QA_COMPLETE_SELECTION_ENABLED:false}
+    selection-prompt-version: ${QA_SELECTION_PROMPT_VERSION:v1}
     retrieval-limit: ${QA_RETRIEVAL_LIMIT:10}
     max-evidence-chunks: ${QA_MAX_EVIDENCE_CHUNKS:6}
     minimum-similarity: ${QA_MINIMUM_SIMILARITY:0.45}
     minimum-question-coverage: ${QA_MINIMUM_QUESTION_COVERAGE:0.70}
-    minimum-claim-coverage: ${QA_MINIMUM_CLAIM_COVERAGE:0.35}
-    max-claims: ${QA_MAX_CLAIMS:6}
-    max-answer-characters: ${QA_MAX_ANSWER_CHARACTERS:2000}
+    max-excerpts: ${QA_MAX_EXCERPTS:3}
+    max-answer-characters: ${QA_MAX_ANSWER_CHARACTERS:6000}
     chat-provider: ${AI_CHAT_PROVIDER:none}
-    chat-model: ${AI_CHAT_MODEL:qwen3:4b}
+    chat-model: ${AI_CHAT_MODEL:qwen3.5:4b}
     chat-context-size: ${AI_CHAT_CONTEXT_SIZE:8192}
     chat-max-predict-tokens: ${AI_CHAT_MAX_PREDICT_TOKENS:768}
     chat-keep-alive: ${AI_CHAT_KEEP_ALIVE:5m}

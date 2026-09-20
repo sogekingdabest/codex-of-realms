@@ -1,6 +1,5 @@
-import type { SubmitEvent } from 'react'
+import { useRef, useState, type SubmitEvent } from 'react'
 
-import { formText } from '../../../shared/lib/forms'
 import type { InvitationView } from '../model'
 import { roleLabels } from '../realmLabels'
 import type { RealmAdministrationState } from '../useRealmAdministration'
@@ -8,28 +7,41 @@ import type { RealmAdministrationState } from '../useRealmAdministration'
 export function InvitationForm({ administration }: Readonly<{
   administration: RealmAdministrationState
 }>) {
+  const [email, setEmail] = useState('')
+  const [role, setRole] = useState<'PLAYER' | 'EDITOR'>('PLAYER')
+  const revision = useRef(0)
+  const submitting = useRef(false)
+
   async function submit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
-    const formElement = event.currentTarget
-    const form = new FormData(formElement)
-    const email = formText(form, 'memberEmail')
-    if (!email) return
-    const saved = await administration.invite({
-      email,
-      role: form.get('memberRole') === 'EDITOR' ? 'EDITOR' : 'PLAYER',
-    })
-    if (saved) formElement.reset()
+    if (!email.trim() || submitting.current) return
+    const submittedRevision = revision.current
+    submitting.current = true
+    try {
+      const saved = await administration.invite({ email: email.trim(), role })
+      // An earlier request must never erase the next invitation being drafted.
+      if (saved && revision.current === submittedRevision) {
+        setEmail('')
+        setRole('PLAYER')
+      }
+    } finally {
+      submitting.current = false
+    }
   }
 
   return (
     <form className="invite-form" onSubmit={(event) => void submit(event)}>
       <label>
-        <span>Correo de Keycloak</span>
-        <input name="memberEmail" type="email" maxLength={320} required placeholder="jugador@ejemplo.local" />
+        <span>Correo del jugador</span>
+        <input name="memberEmail" type="email" maxLength={320} required placeholder="jugador@ejemplo.local"
+          value={email} onChange={(event) => { revision.current += 1; setEmail(event.target.value) }} />
       </label>
       <label>
         <span>Rol</span>
-        <select name="memberRole" defaultValue="PLAYER">
+        <select name="memberRole" value={role} onChange={(event) => {
+          revision.current += 1
+          setRole(event.target.value === 'EDITOR' ? 'EDITOR' : 'PLAYER')
+        }}>
           <option value="PLAYER">Jugador</option>
           <option value="EDITOR">Editor</option>
         </select>
@@ -37,6 +49,7 @@ export function InvitationForm({ administration }: Readonly<{
       <button disabled={administration.inviting} type="submit">
         {administration.inviting ? 'Invitando…' : 'Invitar'}
       </button>
+      <p className="muted">Comparte la dirección de la aplicación. La invitación se acepta cuando el jugador accede con este correo verificado.</p>
     </form>
   )
 }

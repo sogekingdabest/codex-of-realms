@@ -8,20 +8,38 @@ import type {
   RealmSummary,
 } from './model'
 
-export interface RealmApi {
+export interface RealmIdentityApi {
   getCurrentUser(signal?: AbortSignal): Promise<CurrentUserView>
+}
+
+export interface RealmLifecycleApi {
   createRealm(name: string): Promise<RealmSummary>
+}
+
+export interface RealmAccessPolicyApi {
   listPolicies(realmId: string, signal?: AbortSignal): Promise<AccessPolicyView[]>
   createPolicy(realmId: string, classification: AccessClassification, name?: string, description?: string): Promise<AccessPolicyView>
-  listMemberships(realmId: string, signal?: AbortSignal): Promise<MembershipView[]>
-  listInvitations(realmId: string, signal?: AbortSignal): Promise<InvitationView[]>
-  inviteMember(realmId: string, email: string, role: 'EDITOR' | 'PLAYER'): Promise<InvitationView>
-  revokeInvitation(realmId: string, invitationId: string): Promise<void>
-  removeMembership(realmId: string, userId: string): Promise<void>
   listPolicyGrants(realmId: string, policyId: string, signal?: AbortSignal): Promise<MembershipView[]>
   grantPolicy(realmId: string, policyId: string, userId: string): Promise<void>
   revokePolicy(realmId: string, policyId: string, userId: string): Promise<void>
 }
+
+export interface RealmMembershipApi {
+  listMemberships(realmId: string, signal?: AbortSignal): Promise<MembershipView[]>
+  removeMembership(realmId: string, userId: string): Promise<void>
+}
+
+export interface RealmInvitationApi {
+  listInvitations(realmId: string, signal?: AbortSignal): Promise<InvitationView[]>
+  inviteMember(realmId: string, email: string, role: 'EDITOR' | 'PLAYER'): Promise<InvitationView>
+  revokeInvitation(realmId: string, invitationId: string): Promise<void>
+}
+
+export type RealmApi = RealmIdentityApi
+  & RealmLifecycleApi
+  & RealmAccessPolicyApi
+  & RealmMembershipApi
+  & RealmInvitationApi
 
 export class HttpRealmApi implements RealmApi {
   constructor(private readonly http: AuthenticatedHttpClient) {}

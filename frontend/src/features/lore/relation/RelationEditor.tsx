@@ -1,4 +1,4 @@
-import type { SubmitEvent } from 'react'
+import { useEffect, useRef, type SubmitEvent } from 'react'
 
 import type { ContentApi, SourceDocumentView } from '../../content'
 import type { AccessPolicyView } from '../../realm'
@@ -22,14 +22,16 @@ interface RelationEditorProps {
 }
 
 export function RelationEditor({ contentApi, draft, editing, entities, policies, realmId, saving, sources, onCancel, onChange, onSubmit }: RelationEditorProps) {
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => { heading.current?.focus() }, [])
   return (
     <form className="catalogue-editor" onSubmit={onSubmit}>
       <div className="catalogue-editor-heading">
         <div>
           <p className="eyebrow">{editing ? 'Revisión manual' : 'Nuevo vínculo'}</p>
-          <h3>{editing ? 'Editar relación' : 'Relacionar conceptos'}</h3>
+          <h3 ref={heading} tabIndex={-1}>{editing ? 'Editar relación' : 'Relacionar conceptos'}</h3>
         </div>
-        {editing && <button className="quiet-button" type="button" onClick={onCancel}>Cancelar</button>}
+        <button className="quiet-button" disabled={saving} type="button" onClick={onCancel}>Cancelar</button>
       </div>
       <label>
         <span>Origen</span>

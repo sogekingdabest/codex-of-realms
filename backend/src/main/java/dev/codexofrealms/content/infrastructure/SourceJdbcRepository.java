@@ -79,7 +79,7 @@ public class SourceJdbcRepository implements SourceRepository {
     public int nextVersionNumber(UUID realmId, UUID documentId) {
         jdbc.sql("SELECT id FROM source_document WHERE realm_id=:realmId AND id=:documentId AND active FOR UPDATE")
             .param("realmId", realmId).param("documentId", documentId)
-            .query(UUID.class).optional().orElseThrow();
+            .query(UUID.class).optional().orElseThrow(dev.codexofrealms.content.application.source.SourceException::unavailable);
         return jdbc.sql("SELECT COALESCE(max(version_number), 0) + 1 FROM document_version WHERE realm_id=:realmId AND document_id=:documentId")
             .param("realmId", realmId).param("documentId", documentId)
             .query(Integer.class).single();
@@ -92,6 +92,18 @@ public class SourceJdbcRepository implements SourceRepository {
                        v.storage_key, v.access_policy_id, v.pipeline_fingerprint
                 FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
                 WHERE d.realm_id=:realmId AND d.id=:documentId AND d.active AND v.active
+                """)
+            .param("realmId", realmId).param("documentId", documentId)
+            .query(SourceJdbcRepository::mapVersion).optional();
+    }
+
+    public Optional<SourceVersion> findLatestVersion(UUID realmId, UUID documentId) {
+        return jdbc.sql("""
+                SELECT d.id document_id, v.id version_id, v.version_number, d.title,
+                       v.original_filename, v.media_type, v.language, v.checksum_sha256,
+                       v.storage_key, v.access_policy_id, v.pipeline_fingerprint
+                FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
+                WHERE d.realm_id=:realmId AND d.id=:documentId AND d.active ORDER BY v.version_number DESC LIMIT 1
                 """)
             .param("realmId", realmId).param("documentId", documentId)
             .query(SourceJdbcRepository::mapVersion).optional();

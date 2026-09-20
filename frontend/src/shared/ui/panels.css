@@ -1,13 +1,12 @@
 .panel {
-  border: 1px solid var(--line);
+  border: 0;
   background: var(--panel);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.24);
 }
 
 .panel-heading {
   min-height: 105px;
   display: grid;
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: 1fr auto;
   align-items: center;
   gap: 1rem;
   padding: 1.4rem 1.5rem;
@@ -38,8 +37,6 @@
   display: grid;
   place-items: center;
   color: var(--muted);
-  border: 1px solid var(--line);
-  border-radius: 50%;
+  border: 0;
   font-size: 0.8rem;
 }
-

@@ -1,6 +1,7 @@
 package dev.codexofrealms.qa.application.answering;
 
 import dev.codexofrealms.lore.LoreSearch;
+import dev.codexofrealms.lore.LoreEvidence;
 import dev.codexofrealms.lore.RetrievalResult;
 import dev.codexofrealms.qa.AnswerFailureReason;
 import dev.codexofrealms.qa.AnswerProvenance;
@@ -18,7 +19,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class QuestionAnsweringService {
 
+    @org.springframework.beans.factory.annotation.Value("${codex.qa.complete-selection-enabled:false}")
+    private boolean completeSelectionEnabled;
     private final LoreSearch loreSearch;
+    private final LoreEvidence loreEvidence;
     private final GroundedAnswerModel model;
     private final EvidenceGate evidenceGate;
     private final AnswerValidator validator;
@@ -27,6 +31,7 @@ public class QuestionAnsweringService {
 
     QuestionAnsweringService(
         LoreSearch loreSearch,
+        LoreEvidence loreEvidence,
         GroundedAnswerModel model,
         EvidenceGate evidenceGate,
         AnswerValidator validator,
@@ -34,6 +39,7 @@ public class QuestionAnsweringService {
         AnsweringProperties properties
     ) {
         this.loreSearch = loreSearch;
+        this.loreEvidence = loreEvidence;
         this.model = model;
         this.evidenceGate = evidenceGate;
         this.validator = validator;
@@ -58,16 +64,31 @@ public class QuestionAnsweringService {
                 return LoreAnswer.insufficient(provenance, gateFailure(decision.reason()));
             }
 
+            EvidenceGateDecision passages = evidenceGate.screenPassages(retrieval.question(), loreEvidence.passages(
+                realmId, userId, retrieval.question(), decision.evidence(), properties.maxEvidenceChunks()));
+            if (!passages.sufficient()) {
+                metrics.refused(sample, "gate", passages.reason().metricValue());
+                return LoreAnswer.insufficient(provenance, gateFailure(passages.reason()));
+            }
             Optional<GroundedAnswerDraft> draft = generate(
-                new GroundedAnswerRequest(retrieval.question(), decision.evidence())
+                new GroundedAnswerRequest(retrieval.question(), passages.evidence())
             );
             if (draft.isEmpty()) {
                 metrics.refused(sample, "model", "model_unavailable");
                 return LoreAnswer.insufficient(provenance, AnswerFailureReason.MODEL_UNAVAILABLE);
             }
             LoreAnswer answer = validator.validate(
-                realmId, draft.orElseThrow(), decision.evidence(), provenance
+                realmId, draft.orElseThrow(), passages.evidence(), provenance
             );
+            if (answer.outcome() == dev.codexofrealms.qa.AnswerOutcome.ANSWERED) {
+                var selected = passages.evidence().stream()
+                    .filter(item -> draft.orElseThrow().passageIds().contains(item.passageId())).toList();
+                if (completeSelectionEnabled && !SelectionCompleteness.missing(retrieval.question(), passages.evidence(), selected).isEmpty()) {
+                    answer = LoreAnswer.insufficient(provenance, AnswerFailureReason.VALIDATION_FAILED);
+                } else if (!loreEvidence.stillVisible(realmId, userId, selected)) {
+                    answer = LoreAnswer.insufficient(provenance, AnswerFailureReason.NO_EVIDENCE);
+                }
+            }
             metrics.completed(sample, answer);
             return answer;
         } catch (RuntimeException exception) {

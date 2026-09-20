@@ -13,10 +13,11 @@ interface RelationListProps {
   readonly onDelete: (relation: LoreRelationView) => Promise<void>
   readonly onEdit: (relation: LoreRelationView) => void
   readonly onOpenEvidence: (evidence: SourceEvidence) => void
+  readonly onOpenEntity: (id: string) => void
   readonly onPromote: (relation: LoreRelationView) => Promise<void>
 }
 
-export function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, onPromote }: RelationListProps) {
+export function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, onOpenEntity, onPromote }: RelationListProps) {
   if (loading) return <div className="catalogue-list"><p className="muted">Trazando relaciones…</p></div>
   return (
     <div className="catalogue-list">
@@ -35,6 +36,7 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
           onDelete={() => void onDelete(relation)}
           onEdit={() => onEdit(relation)}
           onOpenEvidence={onOpenEvidence}
+          onOpenEntity={onOpenEntity}
           onPromote={() => void onPromote(relation)}
         />
       ))}
@@ -42,7 +44,7 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
   )
 }
 
-function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence }: Readonly<{
+function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence, onOpenEntity }: Readonly<{
   relation: LoreRelationView
   policy?: AccessPolicyView
   canEdit: boolean
@@ -51,14 +53,15 @@ function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, on
   onPromote: () => void
   onDelete: () => void
   onOpenEvidence: (evidence: SourceEvidence) => void
+  onOpenEntity: (id: string) => void
 }>) {
   return (
     <article className="catalogue-card relation-card">
       <header>
         <div className="relation-title">
-          <strong>{relation.sourceEntityName}</strong>
+          <button className="citation-link" type="button" aria-label={`Ver ficha de ${relation.sourceEntityName}`} onClick={() => onOpenEntity(relation.sourceEntityId)}>{relation.sourceEntityName}</button>
           <span>{relation.relationType.replaceAll('_', ' ').toLocaleLowerCase('es')}</span>
-          <strong>{relation.targetEntityName}</strong>
+          <button className="citation-link" type="button" aria-label={`Ver ficha de ${relation.targetEntityName}`} onClick={() => onOpenEntity(relation.targetEntityId)}>{relation.targetEntityName}</button>
         </div>
         <CanonBadge status={relation.canonStatus} />
       </header>

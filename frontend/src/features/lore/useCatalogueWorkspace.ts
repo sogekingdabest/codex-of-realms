@@ -26,6 +26,7 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
   const [relations, setRelations] = useState<LoreRelationView[]>([])
   const [section, setSection] = useState<CatalogueSection>('entities')
   const [search, setSearch] = useState('')
+  const [focusedEntityId, setFocusedEntityId] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<EntityType | 'ALL'>('ALL')
   const [canonFilter, setCanonFilter] = useState<CanonStatus | 'ALL'>('ALL')
   const [entityDraft, setEntityDraft] = useState<LoreEntityInput>(() => emptyEntity(policies[0]?.id))
@@ -105,8 +106,11 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
         : await loreApi.createLoreEntity(realmId, effectiveEntityDraft)
       setEntities((current) => upsert(current, saved))
       cancelEntityEdit()
+      openEntity(saved.id)
+      return true
     } catch (reason) {
       setError(errorMessage(reason))
+      return false
     } finally {
       setSaving(false)
     }
@@ -128,8 +132,10 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
         : await loreApi.createLoreRelation(realmId, effectiveRelationDraft)
       setRelations((current) => upsert(current, saved))
       cancelRelationEdit()
+      return true
     } catch (reason) {
       setError(errorMessage(reason))
+      return false
     } finally {
       setSaving(false)
     }
@@ -154,6 +160,8 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     await runMutation(async () => {
       await loreApi.deleteLoreEntity(realmId, entity.id)
       setEntities((current) => current.filter((item) => item.id !== entity.id))
+      setRelations((current) => current.filter((item) => item.sourceEntityId !== entity.id && item.targetEntityId !== entity.id))
+      setFocusedEntityId((current) => current === entity.id ? null : current)
     })
   }
 
@@ -191,6 +199,14 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     })
   }
 
+  function openEntity(id: string) {
+    setFocusedEntityId(id)
+    setSection('entities')
+    setSearch('')
+    setCanonFilter('ALL')
+    setTypeFilter('ALL')
+  }
+
   function cancelEntityEdit() {
     setEditingEntityId(null)
     setEntityDraft(emptyEntity(policies[0]?.id))
@@ -225,6 +241,9 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     effectiveRelationDraft,
     entities,
     error,
+    focusedEntityId,
+    openEntity,
+    setFocusedEntityId,
     loading,
     promoteEntity,
     promoteRelation,

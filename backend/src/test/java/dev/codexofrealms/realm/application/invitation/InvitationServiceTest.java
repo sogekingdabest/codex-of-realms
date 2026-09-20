@@ -7,9 +7,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import dev.codexofrealms.realm.AuthenticatedUser;
 import dev.codexofrealms.realm.application.access.RealmAuthorizationService;
-import dev.codexofrealms.realm.application.identity.AuthenticatedUser;
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.InvitationRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
 import dev.codexofrealms.realm.application.port.UserRepository;
 import dev.codexofrealms.realm.domain.InvitationStatus;
 import dev.codexofrealms.realm.domain.RealmRole;
@@ -20,18 +21,20 @@ import org.junit.jupiter.api.Test;
 
 class InvitationServiceTest {
 
-    private final RealmRepository realmRepository = mock(RealmRepository.class);
+    private final InvitationRepository invitationRepository = mock(InvitationRepository.class);
+    private final MembershipRepository membershipRepository = mock(MembershipRepository.class);
     private final UserRepository userRepository = mock(UserRepository.class);
     private final RealmAuthorizationService authorizationService =
         mock(RealmAuthorizationService.class);
     private final InvitationService service = new InvitationService(
-        realmRepository,
+        invitationRepository,
+        membershipRepository,
         userRepository,
         authorizationService
     );
 
     @Test
-    void normalizesEmailAndAcceptsImmediatelyForExistingUser() {
+    void normalizesEmailAndKeepsExistingUserPending() {
         UUID realmId = UUID.randomUUID();
         UUID currentUserId = UUID.randomUUID();
         UUID invitedUserId = UUID.randomUUID();
@@ -43,36 +46,35 @@ class InvitationServiceTest {
         InvitationView pending = invitation(
             invitationId, realmId, email, InvitationStatus.PENDING, null
         );
-        InvitationView accepted = invitation(
-            invitationId, realmId, email, InvitationStatus.ACCEPTED, invitedUserId
-        );
         when(userRepository.findByEmail(email)).thenReturn(Optional.of(user));
-        when(realmRepository.createInvitation(
+        when(invitationRepository.createInvitation(
             any(UUID.class),
             org.mockito.ArgumentMatchers.eq(realmId),
             org.mockito.ArgumentMatchers.eq(email),
             org.mockito.ArgumentMatchers.eq(RealmRole.PLAYER),
             org.mockito.ArgumentMatchers.eq(currentUserId)
         )).thenReturn(pending);
-        when(realmRepository.findInvitation(realmId, invitationId))
-            .thenReturn(Optional.of(accepted));
+        when(invitationRepository.findInvitation(realmId, invitationId))
+            .thenReturn(Optional.of(pending));
 
         InvitationView result = service.inviteMember(
             realmId, currentUserId, "  PLAYER@EXAMPLE.TEST  ", RealmRole.PLAYER
         );
 
-        assertThat(result.status()).isEqualTo(InvitationStatus.ACCEPTED);
-        verify(realmRepository).hasPendingInvitation(realmId, email);
+        assertThat(result.status()).isEqualTo(InvitationStatus.PENDING);
+        verify(invitationRepository).hasPendingInvitation(realmId, email);
         verify(userRepository).findByEmail(email);
-        verify(realmRepository).upsertMembership(realmId, invitedUserId, RealmRole.PLAYER);
-        verify(realmRepository).acceptInvitation(invitationId, invitedUserId);
+        verify(membershipRepository, org.mockito.Mockito.never()).upsertMembership(
+            realmId, invitedUserId, RealmRole.PLAYER
+        );
+        verify(invitationRepository, org.mockito.Mockito.never()).acceptInvitation(invitationId, invitedUserId);
     }
 
     @Test
     void rejectsDuplicatePendingInvitation() {
         UUID realmId = UUID.randomUUID();
         UUID currentUserId = UUID.randomUUID();
-        when(realmRepository.hasPendingInvitation(realmId, "player@example.test"))
+        when(invitationRepository.hasPendingInvitation(realmId, "player@example.test"))
             .thenReturn(true);
 
         assertThatThrownBy(() -> service.inviteMember(

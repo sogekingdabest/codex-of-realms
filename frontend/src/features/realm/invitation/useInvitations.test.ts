@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createRealmApi } from '../../../test/realmApi'
+import { createRealmInvitationApi } from '../../../test/realmApi'
 import type { InvitationView } from '../model'
 import { useInvitations } from './useInvitations'
 
@@ -13,7 +13,7 @@ const pending: InvitationView = {
 describe('useInvitations', () => {
   it('deduplica invitaciones, refresca membresías y permite revocarlas', async () => {
     const updated = { ...pending, email: 'updated@example.test' }
-    const api = createRealmApi({
+    const api = createRealmInvitationApi({
       listInvitations: vi.fn().mockResolvedValue([pending]),
       inviteMember: vi.fn().mockResolvedValue(updated),
     })
@@ -40,7 +40,7 @@ describe('useInvitations', () => {
   })
 
   it('no consulta ni muta invitaciones cuando no es owner', async () => {
-    const api = createRealmApi()
+    const api = createRealmInvitationApi()
     const onError = vi.fn()
     const onMembershipsChanged = vi.fn().mockResolvedValue(true)
     const { result } = renderHook(() => useInvitations({
@@ -61,7 +61,7 @@ describe('useInvitations', () => {
   })
 
   it('informa fallos de invitación y revocación', async () => {
-    const api = createRealmApi({
+    const api = createRealmInvitationApi({
       inviteMember: vi.fn().mockRejectedValue(new Error('invite failed')),
       revokeInvitation: vi.fn().mockRejectedValue(new Error('revoke failed')),
     })

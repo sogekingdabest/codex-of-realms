@@ -12,7 +12,9 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "test:watch": "vitest"
+    "verify": "npm run lint && npm run test:coverage && node -e \"const report = require('node:fs').statSync('coverage/lcov.info'); if (!report.isFile() || report.size === 0) throw new Error('Coverage report is empty');\" && npm run build",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "keycloak-js": "26.2.4",
@@ -21,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
     "@testing-library/jest-dom": "7.0.1",
     "@testing-library/react": "16.3.3",
     "@types/react": "19.2.18",

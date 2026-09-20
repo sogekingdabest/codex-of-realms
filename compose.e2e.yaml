@@ -1,0 +1,100 @@
+name: codex-of-realms-e2e
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.6-pg18-trixie
+    environment:
+      POSTGRES_DB: codex_of_realms
+      POSTGRES_USER: codex
+      POSTGRES_PASSWORD: isolated-test-password
+    healthcheck:
+      test: [CMD-SHELL, pg_isready -U codex -d codex_of_realms]
+      interval: 2s
+      timeout: 3s
+      retries: 40
+    volumes: [e2e-postgres:/var/lib/postgresql]
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.7.2
+    command: [start-dev, --import-realm]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_BOOTSTRAP_ADMIN_PASSWORD: isolated-test-admin
+      KC_HOSTNAME: http://localhost:28180
+      KC_HEALTH_ENABLED: 'true'
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/codex_of_realms
+      KC_DB_SCHEMA: keycloak
+      KC_DB_USERNAME: codex
+      KC_DB_PASSWORD: isolated-test-password
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          exec 3<>/dev/tcp/127.0.0.1/9000;
+          printf 'GET /health/ready HTTP/1.1\r\nhost: localhost\r\nConnection: close\r\n\r\n' >&3;
+          grep -q '200 OK' <&3
+      interval: 3s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+    ports: ['127.0.0.1:28180:8080']
+    volumes: ['./infra/e2e/realm.json:/opt/keycloak/data/import/realm.json:ro']
+    depends_on:
+      mailpit: {condition: service_started}
+      keycloak-db-init: {condition: service_completed_successfully}
+  keycloak-db-init:
+    image: pgvector/pgvector:0.8.6-pg18-trixie
+    environment:
+      PGPASSWORD: isolated-test-password
+    command: [psql, --host=postgres, --username=codex, --dbname=codex_of_realms, '--command=CREATE SCHEMA IF NOT EXISTS keycloak AUTHORIZATION codex']
+    depends_on:
+      postgres: {condition: service_healthy}
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports: ['127.0.0.1:28025:8025']
+  ollama:
+    image: node:24.20.0-alpine
+    command: [node, /test/ollama.mjs]
+    volumes: ['./infra/e2e/ollama.mjs:/test/ollama.mjs:ro']
+    ports: ['127.0.0.1:21434:11434']
+  app:
+    build: ./backend
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/codex_of_realms
+      DB_USERNAME: codex
+      DB_PASSWORD: isolated-test-password
+      OIDC_ISSUER_URI: http://localhost:28180/realms/codex-of-realms
+      OIDC_JWK_SET_URI: http://keycloak:8080/realms/codex-of-realms/protocol/openid-connect/certs
+      OIDC_AUDIENCE: codex-api
+      OLLAMA_BASE_URL: http://ollama:11434
+      AI_CHAT_PROVIDER: ollama
+      AI_CHAT_MODEL: deterministic-chat
+      AI_EMBEDDING_PROVIDER: ollama
+      AI_EMBEDDING_MODEL: deterministic-embedding
+      CODEX_SOURCE_STORAGE: /app/data/sources
+      SOURCE_WORKER_POLL_MS: 250
+    depends_on:
+      postgres: {condition: service_healthy}
+      keycloak: {condition: service_healthy}
+      ollama: {condition: service_started}
+    healthcheck:
+      test: [CMD, wget, -q, --spider, http://localhost:8080/actuator/health/readiness]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+      start_period: 20s
+    volumes: [e2e-sources:/app/data/sources]
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_BASE_URL: /api/v1
+        VITE_KEYCLOAK_URL: http://localhost:28180
+        VITE_KEYCLOAK_REALM: codex-of-realms
+        VITE_KEYCLOAK_CLIENT_ID: codex-web
+    ports: ['127.0.0.1:25173:8080']
+    volumes: ['./infra/e2e/nginx.conf:/etc/nginx/conf.d/default.conf:ro']
+    depends_on:
+      app: {condition: service_healthy}
+volumes:
+  e2e-postgres:
+  e2e-sources:

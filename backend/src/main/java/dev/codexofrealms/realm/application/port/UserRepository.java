@@ -1,6 +1,6 @@
 package dev.codexofrealms.realm.application.port;
 
-import dev.codexofrealms.realm.application.identity.AuthenticatedUser;
+import dev.codexofrealms.realm.AuthenticatedUser;
 import dev.codexofrealms.realm.application.identity.ExternalIdentity;
 import java.util.Optional;
 import java.util.UUID;

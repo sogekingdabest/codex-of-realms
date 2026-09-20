@@ -1,0 +1,15 @@
+{
+  "reportVersion" : 2,
+  "answerMode" : "EXTRACTIVE",
+  "datasetVersion" : 2,
+  "corpusSources" : 7,
+  "evaluationCases" : 22,
+  "execution" : "deterministic-ci",
+  "answeredCasesPassed" : 13,
+  "retrievalRecallAt10" : 1.0,
+  "refusalAccuracy" : 1.0,
+  "citationCorrectness" : 1.0,
+  "literalExcerptRate" : 1.0,
+  "securityAttackPassRate" : 1.0,
+  "securityAttackCases" : 8
+}

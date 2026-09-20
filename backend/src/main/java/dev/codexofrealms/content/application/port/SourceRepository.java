@@ -19,6 +19,8 @@ public interface SourceRepository {
 
     Optional<SourceVersion> findActiveVersion(UUID realmId, UUID documentId);
 
+    Optional<SourceVersion> findLatestVersion(UUID realmId, UUID documentId);
+
     Optional<SourceEvidence> findActiveEvidence(UUID realmId, UUID accessPolicyId, UUID chunkId);
 
     List<SourceChunkView> listActiveChunks(UUID realmId, UUID documentId);

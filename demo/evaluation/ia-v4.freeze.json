@@ -1,0 +1,53 @@
+{
+  "frozenAt": "2026-09-08T19:30:21.673Z",
+  "calibrationFamily": [
+    "canal",
+    "reloj"
+  ],
+  "validationFamily": [
+    "jardin",
+    "mina"
+  ],
+  "files": [
+    {
+      "path": "demo/evaluation/ia-v4.json",
+      "sha256": "8f9635b8f0a36cd5f9a07c3fd9b5c25b731bd7d073eb88b98ef60ad59343cbe3"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-canal.md",
+      "sha256": "ba5ecd3e03ada8b9f3c29a29150015b6cfda24f91b56eea24c0515607b7f1d5e"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-reloj.md",
+      "sha256": "8aa2d564ae9a4e0fdb6dee8184cacb2f40c2ad2930d06a85189c1fd33ef27c6d"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-canal-secret.md",
+      "sha256": "128132258a776866c9409b9888d2d7901ff8bba0c638d0ac28ea19470fa013ac"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-reveal.md",
+      "sha256": "c27a4c226a9bd87ac0fab7327f15e5d93a410614e9444762489ae6a91b16e617"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-garden.md",
+      "sha256": "e1dca01a3f8e4b9f2da98488c87061e3dfe4afb3d2e34fe6440370546ac53ebc"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-mine.md",
+      "sha256": "2de8591db48bae105d728940ce19a550eaf0b49c6c2469ceb05edd1aa2172585"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-garden-secret.md",
+      "sha256": "6398245da105aae67c2c49d5bbe7f219a9643cb05fa7cd47883bdceb7bf86ff1"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-mine-reveal.md",
+      "sha256": "4d6d551ba26e365267a7602f766209b085b7f03981b8153ca94122ee23d7b541"
+    },
+    {
+      "path": "demo/evaluation/ia-v4-sources/v4-distractor.md",
+      "sha256": "99dfce0b49aa8634d24eb5df7abb466d1c4d052473b02a08039d4f3644d1daf1"
+    }
+  ]
+}

@@ -18,6 +18,7 @@ export default defineConfig({
     strictPort: true,
   },
   test: {
+    include: ['src/**/*.test.{ts,tsx}'],
     environment: 'jsdom',
     setupFiles: './src/test/setup.ts',
     css: true,

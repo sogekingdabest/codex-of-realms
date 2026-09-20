@@ -19,6 +19,8 @@ export interface AnswerProvenance {
 }
 
 export interface LoreAnswer {
+  answerMode: 'EXTRACTIVE'
+  excerpts: { text: string; citationRank: number }[]
   outcome: 'ANSWERED' | 'INSUFFICIENT_EVIDENCE'
   answer: string | null
   citations: Citation[]

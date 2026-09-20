@@ -1,93 +1,22 @@
 :root {
-  color: #e8e8df;
-  background: #101310;
-  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  --ink: #e8e8df;
-  --muted: #969b91;
-  --line: rgba(232, 232, 223, 0.12);
-  --panel: rgba(26, 30, 26, 0.82);
-  --panel-strong: #1d221d;
-  --moss: #b7cf80;
-  --moss-deep: #718d48;
-  --gold: #d6b56d;
-  --danger: #ef9a86;
+  color: var(--ink); background: var(--page); color-scheme: dark;
+  font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  font-synthesis: none; text-rendering: optimizeLegibility;
+  --page: #242522; --sidebar: #1d1e1b; --ink: #ecebe4; --muted: #b3b4a9;
+  --line: #45463e; --panel: #242522; --panel-strong: #363830;
+  --accent: #e8a2a6; --accent-ink: #291b1e; --danger: #f1a59b;
+  --moss: var(--accent); --moss-deep: #ba8488; --gold: var(--accent);
+  --reading-font: Georgia, 'Times New Roman', serif;
 }
-
-* {
-  box-sizing: border-box;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background:
-    radial-gradient(circle at 76% 6%, rgba(96, 119, 69, 0.18), transparent 28rem),
-    linear-gradient(rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.015) 1px, transparent 1px),
-    #101310;
-  background-size: auto, 32px 32px, 32px 32px, auto;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  border: 1px solid var(--moss);
-  border-radius: 2px;
-  color: #11140f;
-  background: var(--moss);
-  padding: 0.72rem 1rem;
-  font-weight: 750;
-  cursor: pointer;
-  transition: background 140ms ease, color 140ms ease, transform 140ms ease;
-}
-
-button:hover:not(:disabled) {
-  background: #c9df97;
-  transform: translateY(-1px);
-}
-
-button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 3px;
-}
-
-button:disabled {
-  cursor: wait;
-  opacity: 0.55;
-}
-
-input,
-select,
-textarea {
-  width: 100%;
-  color: var(--ink);
-  background: rgba(8, 11, 8, 0.7);
-  border: 1px solid var(--line);
-  border-radius: 2px;
-  padding: 0.78rem 0.85rem;
-}
-
-textarea {
-  resize: vertical;
-  line-height: 1.6;
-}
-
-label {
-  display: grid;
-  gap: 0.42rem;
-  color: #c6c9c0;
-  font-size: 0.82rem;
-  font-weight: 650;
-}
-
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 0; min-height: 100vh; background: var(--page); font-size: 14px; line-height: 1.5; }
+button, input, select, textarea { font: inherit; }
+button { border: 1px solid var(--accent); border-radius: 3px; color: var(--accent-ink); background: var(--accent); padding: .6rem .85rem; font-weight: 500; cursor: pointer; transition: background 140ms ease, color 140ms ease; }
+button:hover:not(:disabled) { background: #f3b7ba; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+input, select, textarea { width: 100%; min-width: 0; color: var(--ink); background: var(--sidebar); border: 1px solid var(--line); border-radius: 3px; padding: .6rem .7rem; }
+textarea { resize: vertical; line-height: 1.6; }
+label { display: grid; gap: .42rem; color: var(--ink); font-size: .82rem; font-weight: 500; }
+::selection { color: var(--ink); background: #674149; }
+h1, h2, h3, p, button, a { overflow-wrap: anywhere; }

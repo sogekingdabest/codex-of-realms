@@ -7,6 +7,7 @@ export interface AuthenticatedUser {
   subject: string
   displayName: string
   email: string | null
+  emailVerified: boolean
 }
 
 export interface RealmSummary {

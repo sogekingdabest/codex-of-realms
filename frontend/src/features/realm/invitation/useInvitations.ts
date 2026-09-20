@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { isAbortError } from '../../../shared/lib/errors'
-import type { RealmApi } from '../api'
+import type { RealmInvitationApi } from '../api'
 import type { InvitationView } from '../model'
 
 export interface InvitationInput {
@@ -10,7 +10,7 @@ export interface InvitationInput {
 }
 
 interface UseInvitationsOptions {
-  readonly api: RealmApi
+  readonly api: RealmInvitationApi
   readonly enabled: boolean
   readonly realmId: string
   readonly onError: (error: unknown) => void

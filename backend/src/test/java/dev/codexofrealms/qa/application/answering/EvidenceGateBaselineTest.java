@@ -27,6 +27,7 @@ class EvidenceGateBaselineTest {
             var decision = gate.evaluate(
                 evaluationCase.get("question").asString(), visibleEvidence(actor)
             );
+            if (decision.sufficient()) decision = gate.screenPassages(evaluationCase.get("question").asString(), decision.evidence());
             assertThat(decision.sufficient())
                 .as(evaluationCase.get("id").asString())
                 .isEqualTo("ANSWERED".equals(expected));

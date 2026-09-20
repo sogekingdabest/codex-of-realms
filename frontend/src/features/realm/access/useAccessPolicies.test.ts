@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createRealmApi } from '../../../test/realmApi'
+import { createRealmAccessPolicyApi } from '../../../test/realmApi'
 import type { AccessPolicyView, MembershipView } from '../model'
 import { useAccessPolicies } from './useAccessPolicies'
 
@@ -17,7 +17,7 @@ const player: MembershipView = {
 
 describe('useAccessPolicies', () => {
   it('carga grants sólo para spoilers y mantiene una selección válida', async () => {
-    const api = createRealmApi({
+    const api = createRealmAccessPolicyApi({
       listPolicies: vi.fn().mockResolvedValue([publicPolicy, spoilerPolicy]),
       listPolicyGrants: vi.fn().mockResolvedValue([player]),
     })
@@ -35,7 +35,7 @@ describe('useAccessPolicies', () => {
 
   it('crea políticas, alterna grants y olvida miembros retirados', async () => {
     const created = { ...spoilerPolicy, id: 'new-policy', name: 'Nuevo secreto' }
-    const api = createRealmApi({
+    const api = createRealmAccessPolicyApi({
       listPolicies: vi.fn().mockResolvedValue([spoilerPolicy]),
       listPolicyGrants: vi.fn().mockResolvedValue([player]),
       createPolicy: vi.fn().mockResolvedValue(created),
@@ -63,7 +63,7 @@ describe('useAccessPolicies', () => {
   })
 
   it('no hace peticiones ni mutaciones para jugadores', async () => {
-    const api = createRealmApi()
+    const api = createRealmAccessPolicyApi()
     const onError = vi.fn()
     const { result } = renderHook(() => useAccessPolicies({
       api, enabled: false, realmId: 'realm-1', onError,
@@ -79,7 +79,7 @@ describe('useAccessPolicies', () => {
   })
 
   it('informa fallos de creación y grants sin actualizar el estado', async () => {
-    const api = createRealmApi({
+    const api = createRealmAccessPolicyApi({
       createPolicy: vi.fn().mockRejectedValue(new Error('create failed')),
       grantPolicy: vi.fn().mockRejectedValue(new Error('grant failed')),
     })

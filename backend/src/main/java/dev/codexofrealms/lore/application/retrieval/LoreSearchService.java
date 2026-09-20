@@ -47,7 +47,7 @@ public class LoreSearchService implements LoreSearch {
             EmbeddingDescriptor descriptor = embedding.descriptor();
             float[] queryEmbedding = embedding.embed(question);
             List<RetrievedEvidence> evidence = retriever.retrieve(new RetrievalQuery(
-                realmId, userId, queryEmbedding, descriptor, limit
+                realmId, userId, queryEmbedding, descriptor, limit, question
             ));
             metrics.success(sample, evidence);
             return new RetrievalResult(question, descriptor.provider(), descriptor.model(), evidence);

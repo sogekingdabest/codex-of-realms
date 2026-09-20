@@ -79,8 +79,13 @@ function catalogueApi(entities: LoreEntityView[] = [], relations: LoreRelationVi
   return {
     listSources: vi.fn(),
     uploadSource: vi.fn(),
+    replaceSource: vi.fn(),
+    reprocessSource: vi.fn(),
+    listSourceJobs: vi.fn().mockResolvedValue([]),
+    getSourceJob: vi.fn(),
+    retrySourceJob: vi.fn(),
     deleteSource: vi.fn(),
-    getSourceContent: vi.fn(),
+    getSourceContent: vi.fn().mockResolvedValue({ content: 'Nara Vey custodia el paso oriental de Lumbrevela.' }),
     listLoreEntities: vi.fn().mockResolvedValue(entities),
     listLoreRelations: vi.fn().mockResolvedValue(relations),
     listSourceChunks: vi.fn().mockResolvedValue([
@@ -108,6 +113,24 @@ function catalogueApi(entities: LoreEntityView[] = [], relations: LoreRelationVi
 }
 
 describe('CatalogueWorkspace', () => {
+  it('navega de una relación a su ficha exacta y permite volver a las relaciones', async () => {
+    const api = catalogueApi([entity('entity-1', 'Nara Vey'), entity('entity-2', 'Lumbrevela')], [relation()])
+    render(<CatalogueWorkspace contentApi={api} loreApi={api} canEdit policies={[publicPolicy]} realmId="realm-1" sources={[]} onOpenEvidence={vi.fn()} />)
+    await screen.findByRole('heading', { name: 'Nara Vey' })
+    fireEvent.click(screen.getByRole('button', { name: 'Relaciones' }))
+    fireEvent.click(screen.getByRole('button', { name: 'Ver ficha de Lumbrevela' }))
+    expect(screen.getByText('Lumbrevela custodia el paso.')).toBeVisible()
+    expect(screen.queryByText('Nara Vey custodia el paso.')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Lumbrevela' })).toHaveFocus()
+    expect(screen.queryByRole('heading', { name: 'Registrar concepto' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Relaciones' }))
+    expect(screen.getByText('Nara vive en Lumbrevela.')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Ver ficha de Nara Vey' }))
+    expect(screen.getByText('Nara Vey custodia el paso.')).toBeVisible()
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir ficha de Lumbrevela' }))
+    expect(screen.getByText('Lumbrevela custodia el paso.')).toBeVisible()
+  })
+
   it('ofrece a un jugador únicamente el catálogo visible en modo lectura', async () => {
     const api = catalogueApi([entity('entity-1', 'Nara Vey', 'CANON')], [relation()])
 
@@ -123,7 +146,7 @@ describe('CatalogueWorkspace', () => {
       />,
     )
 
-    expect(await screen.findByText('Nara Vey')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Nara Vey' })).toBeInTheDocument()
     expect(screen.queryByText('Registrar concepto')).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Editar' })).not.toBeInTheDocument()
     expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
@@ -161,6 +184,8 @@ describe('CatalogueWorkspace', () => {
       />,
     )
 
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Nueva ficha' })).toBeEnabled())
+    fireEvent.click(screen.getByRole('button', { name: 'Nueva ficha' }))
     fireEvent.change(screen.getByLabelText('Nombre'), { target: { value: 'Nara Vey' } })
     fireEvent.change(screen.getByLabelText('Descripción'), {
       target: { value: 'Nara Vey custodia el paso oriental.' },
@@ -177,7 +202,8 @@ describe('CatalogueWorkspace', () => {
       accessPolicyId: 'policy-public',
       evidenceChunkIds: ['chunk-1'],
     }))
-    expect((await screen.findAllByText('Atlas público')).length).toBeGreaterThan(1)
+    expect(await screen.findByRole('button', { name: /Atlas público/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'Registrar concepto' })).not.toBeInTheDocument()
   })
 
   it('promueve una propuesta a canon mediante una decisión explícita', async () => {
@@ -200,7 +226,7 @@ describe('CatalogueWorkspace', () => {
 
     fireEvent.click(await screen.findByRole('button', { name: 'Promover a canon' }))
     await waitFor(() => expect(api.promoteLoreEntity).toHaveBeenCalledWith('realm-1', 'entity-1'))
-    await waitFor(() => expect(screen.getAllByText('Canon').length).toBeGreaterThan(1))
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Promover a canon' })).not.toBeInTheDocument())
   })
 
   it('permite editar, promover y retirar fichas y relaciones visibles', async () => {
@@ -225,11 +251,12 @@ describe('CatalogueWorkspace', () => {
       />,
     )
 
-    await screen.findByText('Nara Vey')
+    await screen.findByRole('heading', { name: 'Nara Vey' })
     fireEvent.click(screen.getByRole('button', { name: 'Relaciones' }))
     await screen.findByText('Nara vive en Lumbrevela.')
     fireEvent.click(screen.getByRole('button', { name: 'Editar' }))
     expect(screen.getByRole('heading', { name: 'Editar relación' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
     fireEvent.click(screen.getByRole('button', { name: 'Promover a canon' }))
     await waitFor(() => expect(api.promoteLoreRelation).toHaveBeenCalledWith('realm-1', 'relation-1'))
     fireEvent.click(screen.getByRole('button', { name: 'Retirar' }))
@@ -238,6 +265,7 @@ describe('CatalogueWorkspace', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Fichas' }))
     fireEvent.click(screen.getAllByRole('button', { name: 'Editar' })[0])
     expect(screen.getByRole('heading', { name: 'Editar concepto' })).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
     fireEvent.click(screen.getAllByRole('button', { name: 'Retirar' })[0])
     await waitFor(() => expect(api.deleteLoreEntity).toHaveBeenCalled())
     confirm.mockRestore()

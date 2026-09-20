@@ -3,6 +3,8 @@
   inset: 0;
   width: 100%;
   max-width: none;
+  max-height: none;
+  color: inherit;
   height: 100%;
   margin: 0;
   display: grid;
@@ -14,12 +16,17 @@
   z-index: 20;
 }
 
+.source-dialog-backdrop:not([open]) { display: none; }
+.source-dialog-backdrop::backdrop { background: rgba(5, 8, 7, 0.6); }
+.reader-controls { padding: 1rem 1.5rem 0; }
+
 .source-dialog {
-  width: min(880px, 96vw);
+  width: min(880px, 100%);
+  min-width: 0;
   max-height: 88vh;
   overflow: auto;
-  background: #121715;
-  border: 1px solid rgba(214, 181, 109, 0.32);
+  background: var(--page);
+  border: 1px solid var(--line);
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
 }
 
@@ -31,7 +38,7 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1.3rem 1.5rem;
-  background: #121715;
+  background: var(--page);
   border-bottom: 1px solid var(--line);
 }
 
@@ -47,6 +54,8 @@
 }
 
 .source-dialog header button {
+  min-width: 44px;
+  min-height: 44px;
   padding: 0;
   color: var(--muted);
   background: transparent;
@@ -57,9 +66,8 @@
 .source-dialog pre {
   margin: 0;
   padding: 1.7rem;
-  color: #d8ddd7;
-  font: 0.88rem/1.75 ui-monospace, SFMono-Regular, Consolas, monospace;
+  color: var(--ink);
+  font: 1rem/1.8 Georgia, serif;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
-

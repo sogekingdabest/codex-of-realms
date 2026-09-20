@@ -1,8 +1,19 @@
 services:
+  mailpit:
+    ports: !reset []
   postgres:
     ports: !reset []
 
   keycloak:
+    ports: !reset []
+
+  app:
+    ports: !reset []
+
+  web:
+    ports: !reset []
+
+  ollama:
     ports: !reset []
 
   source-verifier:

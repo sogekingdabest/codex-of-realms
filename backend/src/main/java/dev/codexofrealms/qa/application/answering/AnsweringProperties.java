@@ -8,21 +8,19 @@ public record AnsweringProperties(
     int maxEvidenceChunks,
     double minimumSimilarity,
     double minimumQuestionCoverage,
-    double minimumClaimCoverage,
-    int maxClaims,
+    int maxExcerpts,
     int maxAnswerCharacters
 ) {
     public AnsweringProperties {
         if (retrievalLimit < 1 || retrievalLimit > 20) {
             throw new IllegalArgumentException("QA retrieval limit must be between 1 and 20.");
         }
-        if (maxEvidenceChunks < 1 || maxEvidenceChunks > retrievalLimit) {
+        if (maxEvidenceChunks < 1 || maxEvidenceChunks > retrievalLimit || maxEvidenceChunks > 6) {
             throw new IllegalArgumentException("QA evidence limit is invalid.");
         }
         requireProbability(minimumSimilarity, "minimum similarity");
         requireProbability(minimumQuestionCoverage, "minimum question coverage");
-        requireProbability(minimumClaimCoverage, "minimum claim coverage");
-        if (maxClaims < 1 || maxClaims > 10 || maxAnswerCharacters < 100 || maxAnswerCharacters > 10000) {
+        if (maxExcerpts < 1 || maxExcerpts > 3 || maxAnswerCharacters < 100 || maxAnswerCharacters > 6000) {
             throw new IllegalArgumentException("QA output limits are invalid.");
         }
     }

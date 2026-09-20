@@ -1,0 +1,593 @@
+{
+  "run": "ia-20260908-143717",
+  "decision": {
+    "status": "NO_ELIGIBLE_MODEL",
+    "model": "qwen3.5:4b",
+    "threshold": 0.7,
+    "applied": false
+  },
+  "calibration": {
+    "dataset": "90DEA9B1E8705174864440C429C0EE8163BF140A0AFABDE01BBC56FFDB29839A",
+    "frozenAt": "2026-09-08T12:56:47.3368284Z",
+    "threshold": 0.7
+  },
+  "models": [
+    {
+      "name": "ministral-3:3b-instruct-2512-q4_K_M",
+      "digest": "f04aa1c738f64e13c625b82ae92504fc0260fa6723b509ed1ece0fa188179b1d"
+    },
+    {
+      "name": "bge-m3:latest",
+      "digest": "7907646426070047a77226ac3e684fbbe8410524f7b4a74d02837e43f2146bab"
+    },
+    {
+      "name": "qwen3.5:4b",
+      "digest": "2a654d98e6fba55d452b7043684e9b57a947e393bbffa62485a7aac05ee4eefd"
+    },
+    {
+      "name": "gemma4:e2b-it-qat",
+      "digest": "07ea59a474013479c8b6b802bef095c40e964a1d776ba02f264c0e30e1aede0c"
+    }
+  ],
+  "reports": [
+    {
+      "file": "reference-validation.json",
+      "model": {
+        "provider": "ollama",
+        "model": "qwen3.5:4b"
+      },
+      "pipeline": "reference",
+      "coldStartMillis": 62170,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.6923076923076923,
+          "structuredOutput": 1,
+          "citationSuccess": 0.6428571428571429,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": false,
+          "warmP95Millis": 11523,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.6923076923076923,
+          "structuredOutput": 1,
+          "citationSuccess": 0.6428571428571429,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": false,
+          "warmP95Millis": 9497,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.6923076923076923,
+          "structuredOutput": 1,
+          "citationSuccess": 0.6428571428571429,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": false,
+          "warmP95Millis": 7784,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 1,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "ia-val-neg",
+          "repetition": 1,
+          "reason": null,
+          "sources": [
+            "ia-short-names",
+            "meridian-public-routes"
+          ],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-condition",
+          "repetition": 1,
+          "reason": "NO_EVIDENCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 1,
+          "reason": null,
+          "sources": [
+            "ia-short-names"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 2,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "ia-val-neg",
+          "repetition": 2,
+          "reason": null,
+          "sources": [
+            "ia-short-names",
+            "meridian-public-routes"
+          ],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-condition",
+          "repetition": 2,
+          "reason": "NO_EVIDENCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 2,
+          "reason": null,
+          "sources": [
+            "ia-short-names"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 3,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "ia-val-neg",
+          "repetition": 3,
+          "reason": null,
+          "sources": [
+            "ia-short-names",
+            "meridian-public-routes"
+          ],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-condition",
+          "repetition": 3,
+          "reason": "NO_EVIDENCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 1
+        },
+        {
+          "id": "ia-val-multi",
+          "repetition": 3,
+          "reason": null,
+          "sources": [
+            "ia-short-names"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        }
+      ],
+      "nonliteral": [],
+      "contextFailures": [
+        "ia-val-neg",
+        "ia-val-condition",
+        "ia-val-multi",
+        "ia-val-neg",
+        "ia-val-condition",
+        "ia-val-multi",
+        "ia-val-neg",
+        "ia-val-condition",
+        "ia-val-multi"
+      ]
+    },
+    {
+      "file": "validation-0.json",
+      "model": {
+        "provider": "ollama",
+        "model": "qwen3.5:4b"
+      },
+      "pipeline": "current",
+      "coldStartMillis": 22102,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 11090,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 9475,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.96,
+          "factCoverage": 0.8076923076923077,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 1,
+          "mandatoryPassed": false,
+          "warmP95Millis": 9807,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 1,
+          "reason": null,
+          "sources": [
+            "meridian-gm-needle-truth"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 2,
+          "reason": null,
+          "sources": [
+            "meridian-gm-needle-truth"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-003",
+          "repetition": 3,
+          "reason": null,
+          "sources": [
+            "meridian-gm-needle-truth"
+          ],
+          "literal": true,
+          "matchedFacts": 1,
+          "facts": 2
+        }
+      ],
+      "nonliteral": [],
+      "contextFailures": []
+    },
+    {
+      "file": "validation-1.json",
+      "model": {
+        "provider": "ollama",
+        "model": "ministral-3:3b-instruct-2512-q4_K_M"
+      },
+      "pipeline": "current",
+      "coldStartMillis": 94195,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.92,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 2,
+          "mandatoryPassed": true,
+          "warmP95Millis": 8260,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.92,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 2,
+          "mandatoryPassed": true,
+          "warmP95Millis": 8102,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.92,
+          "factCoverage": 0.7692307692307693,
+          "structuredOutput": 1,
+          "citationSuccess": 0.8571428571428571,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 2,
+          "mandatoryPassed": true,
+          "warmP95Millis": 8122,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-001",
+          "repetition": 1,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-001",
+          "repetition": 2,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-001",
+          "repetition": 3,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        }
+      ],
+      "nonliteral": [],
+      "contextFailures": []
+    },
+    {
+      "file": "validation-2.json",
+      "model": {
+        "provider": "ollama",
+        "model": "gemma4:e2b-it-qat"
+      },
+      "pipeline": "current",
+      "coldStartMillis": 232936,
+      "repetitions": [
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.7307692307692307,
+          "structuredOutput": 1,
+          "citationSuccess": 0.7857142857142857,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": true,
+          "warmP95Millis": 3194,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.7307692307692307,
+          "structuredOutput": 1,
+          "citationSuccess": 0.7857142857142857,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": true,
+          "warmP95Millis": 2828,
+          "eligible": false
+        },
+        {
+          "outcomeAccuracy": 0.88,
+          "factCoverage": 0.7307692307692307,
+          "structuredOutput": 1,
+          "citationSuccess": 0.7857142857142857,
+          "securityFailures": 0,
+          "unexpectedAnswers": 0,
+          "answerableRefusals": 3,
+          "mandatoryPassed": true,
+          "warmP95Millis": 2767,
+          "eligible": false
+        }
+      ],
+      "failures": [
+        {
+          "id": "gm-002",
+          "repetition": 1,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 1,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 1,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 2,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 2,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 2,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "gm-002",
+          "repetition": 3,
+          "reason": "LOW_RELEVANCE",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-001",
+          "repetition": 3,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        },
+        {
+          "id": "spoiler-002",
+          "repetition": 3,
+          "reason": "VALIDATION_FAILED",
+          "sources": [],
+          "literal": true,
+          "matchedFacts": 0,
+          "facts": 2
+        }
+      ],
+      "nonliteral": [],
+      "contextFailures": []
+    }
+  ]
+}

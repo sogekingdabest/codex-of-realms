@@ -34,11 +34,7 @@ jobs:
 
       - name: Verify web application
         working-directory: frontend
-        run: |
-          npm run lint
-          npm run test:coverage
-          npm run build
-          test -s coverage/lcov.info
+        run: npm run verify
 
       - name: Validate frontend Sonar configuration
         if: ${{ vars.SONAR_ENFORCE == 'true' }}
@@ -128,3 +124,39 @@ jobs:
           docker compose config --quiet
           docker compose -f compose.yaml -f compose.restore-check.yaml config --quiet
           docker compose -f compose.yaml -f compose.observability.yaml --profile observability config --quiet
+          docker compose -f compose.e2e.yaml config --quiet
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24.20.0"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install browser test dependencies
+        working-directory: frontend
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+
+      - name: Start isolated browser stack
+        run: docker compose -f compose.e2e.yaml up -d --build --wait --wait-timeout 300
+
+      - name: Verify browser workflows
+        working-directory: frontend
+        run: npm run test:e2e
+
+      - name: Print service diagnostics on failure
+        if: failure()
+        run: docker compose -f compose.e2e.yaml logs --tail 100
+
+      - name: Remove isolated test resources
+        if: always()
+        run: docker compose -f compose.e2e.yaml down --volumes --remove-orphans

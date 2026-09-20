@@ -21,15 +21,21 @@ public class RealmAccess {
         this.authorizationService = authorizationService;
     }
 
-    public UUID synchronizeIdentity(
+    public AuthenticatedUser synchronizeIdentity(
         String issuer,
         String subject,
         String displayName,
         String email
     ) {
+        return synchronizeIdentity(issuer, subject, displayName, email, false);
+    }
+
+    public AuthenticatedUser synchronizeIdentity(
+        String issuer, String subject, String displayName, String email, boolean emailVerified
+    ) {
         return userService.synchronize(
-            new ExternalIdentity(issuer, subject, displayName, email)
-        ).id();
+            new ExternalIdentity(issuer, subject, displayName, email, emailVerified)
+        );
     }
 
     public void requireEditor(UUID realmId, UUID userId) {

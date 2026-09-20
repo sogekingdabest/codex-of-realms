@@ -10,6 +10,16 @@
   ],
   "defaultLocale": "es",
   "registrationAllowed": true,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "codex@demo.local",
+    "fromDisplayName": "Codex of Realms",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
   "registrationEmailAsUsername": true,
   "resetPasswordAllowed": true,
   "loginWithEmailAllowed": true,

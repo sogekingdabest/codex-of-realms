@@ -20,10 +20,11 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
 }>) {
   return (
     <section className="panel question-panel">
-      <div className="panel-heading"><span className="panel-number">02</span><div><p className="eyebrow">Consulta fundamentada</p><h2>Pregunta al archivo</h2></div></div>
+      <div className="panel-heading"><div><p className="eyebrow">Consulta fundamentada</p><h2>Pregunta al archivo</h2></div></div>
       <form className="question-form" onSubmit={(event) => void onSubmit(event)}>
         <label htmlFor="question">¿Qué quieres saber?</label>
         <textarea id="question" name="question" maxLength={1000} required placeholder="¿Por qué la Aguja conserva una deuda antigua?" rows={5} />
+        <p className="muted">Las consultas usan las fuentes publicadas. Las fichas del atlas se mantienen por separado.</p>
         <div className="question-footer"><small>Solo responderé con evidencia que puedas ver.</small><button disabled={asking || loadingRealm} type="submit">{asking ? 'Buscando evidencia…' : 'Consultar'}</button></div>
       </form>
       <div className="answer-region" aria-live="polite">
@@ -33,9 +34,17 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
         )}
         {answer?.outcome === 'ANSWERED' && (
           <article className="answer-card">
-            <p className="eyebrow">Respuesta verificada</p><div className="answer-copy">{answer.answer}</div>
+            <p className="eyebrow">Fragmentos de las fuentes</p>
+            <p className="muted">Pasajes literales seleccionados para tu consulta. Las fuentes pueden ser incompletas o discrepar.</p>
+            {answer.excerpts.map((excerpt) => {
+              const citation = answer.citations.find((item) => item.rank === excerpt.citationRank)
+              return <div key={excerpt.citationRank} className="answer-copy">
+                <blockquote className="answer-excerpt">{excerpt.text}</blockquote>
+                {citation && <button className="citation-link" disabled={loadingCitation} type="button" onClick={() => void onInspectCitation(citation)}>Abrir contexto [{citation.rank}]</button>}
+              </div>
+            })}
             <div className="citations"><h3>Fuentes citadas</h3><ol>{answer.citations.map((citation) => (
-              <li key={citation.chunkId}><span>{citation.rank}</span><div><strong>{citation.sourceTitle}</strong><p>{citation.heading || 'Documento'} · v{citation.versionNumber} · caracteres {citation.startOffset}–{citation.endOffset}</p><button className="citation-link" disabled={loadingCitation} type="button" onClick={() => void onInspectCitation(citation)}>Abrir evidencia exacta</button></div></li>
+              <li key={citation.rank}><span>{citation.rank}</span><div><strong>{citation.sourceTitle}</strong><p>{citation.heading || 'Documento'} · v{citation.versionNumber} · caracteres {citation.startOffset}–{citation.endOffset}</p><button className="citation-link" disabled={loadingCitation} type="button" onClick={() => void onInspectCitation(citation)}>Abrir evidencia exacta</button></div></li>
             ))}</ol></div>
             <footer>{answer.provenance.chatProvider}/{answer.provenance.chatModel} · {answer.provenance.embeddingProvider}/{answer.provenance.embeddingModel}</footer>
           </article>

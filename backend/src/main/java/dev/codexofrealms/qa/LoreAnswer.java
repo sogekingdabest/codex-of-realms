@@ -7,8 +7,14 @@ public record LoreAnswer(
     String answer,
     List<Citation> citations,
     AnswerProvenance provenance,
-    AnswerFailureReason failureReason
+    AnswerFailureReason failureReason,
+    String answerMode,
+    List<AnswerExcerpt> excerpts
 ) {
+    public LoreAnswer(AnswerOutcome outcome, String answer, List<Citation> citations,
+                      AnswerProvenance provenance, AnswerFailureReason failureReason) {
+        this(outcome, answer, citations, provenance, failureReason, "EXTRACTIVE", List.of());
+    }
     public LoreAnswer(
         AnswerOutcome outcome,
         String answer,
@@ -28,6 +34,8 @@ public record LoreAnswer(
 
     public LoreAnswer {
         citations = List.copyOf(citations);
+        excerpts = List.copyOf(excerpts);
+        if (!"EXTRACTIVE".equals(answerMode)) throw new IllegalArgumentException("Unsupported answer mode.");
         if (outcome == AnswerOutcome.ANSWERED && (answer == null || answer.isBlank() || citations.isEmpty())) {
             throw new IllegalArgumentException("An answered result requires text and citations.");
         }

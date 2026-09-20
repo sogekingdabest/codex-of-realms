@@ -1,10 +1,12 @@
 # Baseline RAG evaluation
 
-[`baseline.json`](baseline.json) describes expected evidence and authorization outcomes without prescribing exact generated wording. It is both a product specification and the seed for automated evaluation in M4 and M5.
+Use [IA.md](IA.md) for the end-to-end evaluation, its isolated environment and promotion criteria. [IA-V4.md](IA-V4.md) and [IA-V5.md](IA-V5.md) describe later experiments.
+
+[`baseline.json`](baseline.json) records which source passages each actor may use and the expected result for each question. Backend tests and model evaluations share these cases.
 
 ## Dataset design
 
-Cases cover four categories:
+Cases cover six categories:
 
 - `public_answerable`: visible evidence should support an answer.
 - `privileged_answerable`: the actor may use restricted evidence.
@@ -15,7 +17,7 @@ Cases cover four categories:
 
 ## Expected outcomes
 
-- `ANSWERED`: the response may be generated only from `expected_sources` and other visible corroborating sources. Every factual claim requires a valid citation.
+- `ANSWERED`: the backend copies one to three original paragraphs from visible sources. Every excerpt references its citation and exact original offsets. The model returns only `outcome` and `passageIds`.
 - `INSUFFICIENT_EVIDENCE`: the response must not reveal hidden facts, hidden source titles, or the existence of restricted material.
 - `FORBIDDEN`: authorization fails before retrieval.
 
@@ -31,7 +33,8 @@ Cases cover four categories:
 ### Answering
 
 - Expected fact coverage
-- Unsupported factual claim count
+- Literal text and offsets checked against the original visible source
+- Selection relevance (lexical fact coverage is a relevance proxy, not a truth validator)
 - Citation validity and citation correctness
 - Refusal accuracy
 - Hidden fact leakage
@@ -42,9 +45,15 @@ Cases cover four categories:
 - Change `datasetVersion` when expected semantics change.
 - Record the corpus commit, model identifiers, retrieval parameters, and hardware with every result.
 - Do not replace an expected fact with exact prose matching.
-- Security failures are release blockers even if aggregate quality metrics improve.
+- Any security failure blocks a release, regardless of the average quality score.
 
-## Automated M5 coverage
+## Extractive evaluation (report version 3)
+
+Reports use `EXTRACTIVE_SELECTION_WITH_ORACLE_VISIBLE_EVIDENCE`. The fixture ranks candidate passages (whole paragraphs or sentence windows) by question overlap within the actor-visible oracle sources, then applies the same six-candidate, three-excerpt limits and selection adapter as the application. This measures the selector and exact copying; it does not measure vector retrieval or replace authenticated authorization tests. Every answered case checks literal text and offsets. Historical report versions 1–2 describe generation and must not be reused as evidence for this contract.
+
+Run `scripts/evaluate-local-models.ps1` with explicit installed model tags. It records rejection, relevance proxies, valid structured output and latency separately. No model downloads occur.
+
+## Historical M5 coverage
 
 `EvidenceGateBaselineTest` loads this dataset and verifies that every answerable Spanish case reaches generation while restricted, unsupported, and adversarial cases stop before the model. `RealmAuthorizationIntegrationTest` applies the same cases through the authenticated HTTP endpoint with deterministic embedding and chat doubles; the outsider remains non-disclosing and every accepted answer carries visible immutable citations.
 

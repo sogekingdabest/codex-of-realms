@@ -3,10 +3,10 @@ package dev.codexofrealms.qa.application.port;
 import dev.codexofrealms.qa.AnswerOutcome;
 import java.util.List;
 
-public record GroundedAnswerDraft(AnswerOutcome outcome, List<DraftClaim> claims) {
+public record GroundedAnswerDraft(AnswerOutcome outcome, List<String> passageIds) {
 
     public GroundedAnswerDraft {
-        claims = claims == null ? List.of() : List.copyOf(claims);
+        passageIds = passageIds == null ? List.of() : List.copyOf(passageIds);
     }
 
     public static GroundedAnswerDraft insufficient() {

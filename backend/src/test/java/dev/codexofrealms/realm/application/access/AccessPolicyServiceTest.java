@@ -7,7 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.codexofrealms.realm.application.membership.MembershipView;
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.AccessPolicyRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
 import dev.codexofrealms.realm.domain.AccessClassification;
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.util.Optional;
@@ -16,11 +17,14 @@ import org.junit.jupiter.api.Test;
 
 class AccessPolicyServiceTest {
 
-    private final RealmRepository realmRepository = mock(RealmRepository.class);
+    private final AccessPolicyRepository accessPolicyRepository =
+        mock(AccessPolicyRepository.class);
+    private final MembershipRepository membershipRepository = mock(MembershipRepository.class);
     private final RealmAuthorizationService authorizationService =
         mock(RealmAuthorizationService.class);
     private final AccessPolicyService service = new AccessPolicyService(
-        realmRepository,
+        accessPolicyRepository,
+        membershipRepository,
         authorizationService
     );
 
@@ -33,15 +37,15 @@ class AccessPolicyServiceTest {
         UUID membershipId = UUID.randomUUID();
         when(authorizationService.requireLockedEditablePolicy(realmId, policyId, editorId))
             .thenReturn(policy(policyId, realmId, AccessClassification.SPOILER));
-        when(realmRepository.findActiveMembership(realmId, playerId)).thenReturn(Optional.of(
+        when(membershipRepository.findActiveMembership(realmId, playerId)).thenReturn(Optional.of(
             new MembershipView(playerId, "Player", "player@example.test", RealmRole.PLAYER)
         ));
-        when(realmRepository.findActiveMembershipId(realmId, playerId))
+        when(membershipRepository.findActiveMembershipId(realmId, playerId))
             .thenReturn(Optional.of(membershipId));
 
         service.grantSpoilerAccess(realmId, policyId, editorId, playerId);
 
-        verify(realmRepository).grantPolicy(realmId, policyId, membershipId);
+        verify(accessPolicyRepository).grantPolicy(realmId, policyId, membershipId);
     }
 
     @Test
@@ -67,7 +71,7 @@ class AccessPolicyServiceTest {
         UUID targetId = UUID.randomUUID();
         when(authorizationService.requireLockedEditablePolicy(realmId, policyId, editorId))
             .thenReturn(policy(policyId, realmId, AccessClassification.SPOILER));
-        when(realmRepository.findActiveMembership(realmId, targetId)).thenReturn(Optional.of(
+        when(membershipRepository.findActiveMembership(realmId, targetId)).thenReturn(Optional.of(
             new MembershipView(targetId, "Editor", "editor@example.test", RealmRole.EDITOR)
         ));
 

@@ -1,123 +1,69 @@
 # Codex of Realms
 
-Codex of Realms is an evidence-first lore assistant for fictional worlds and tabletop role-playing campaigns. It turns curated source documents into an access-aware knowledge base that can answer natural-language questions, cite the exact evidence it used, and decline to answer when the available evidence is insufficient.
+A shared archive for tabletop role-playing campaigns. Keep session notes, characters and places together, and let each player see only what their character is allowed to know.
 
-The product is deliberately narrower than a general-purpose worldbuilding suite. Its core promise is trustworthy canon retrieval: every factual answer is grounded in visible sources, spoiler rules are enforced before retrieval, and AI-generated suggestions never become canon without an explicit human decision.
+For example, the Game Master can keep the truth about an ancient tower private, share its public history with everyone, and reveal a clue to one player. Each person can browse their sources or ask a question and open the passages behind the answer.
 
-## Project status
+The interface is in Spanish. The application runs locally and is being prepared for its first beta.
 
-**M9 — Canon workspace** is complete. The Spanish web application now joins the evidence-first archive with an
-access-aware **Atlas del canon**. Owners and editors can create characters, places, factions, objects, events, and
-directional relations; attach exact source fragments; edit proposals; and explicitly promote them to canon. Players
-receive the same navigable catalogue filtered by their effective access, without mutation controls.
+## What you can do
 
-The earlier M8.2 release gate remains the reproducible local-product baseline: Keycloak identity persists in
-PostgreSQL, coordinated backup/restore covers the database and raw sources, and live-model comparison stays parked
-rather than blocking catalogue development.
+- Upload and read Markdown or text files, search by title or filename, and replace a document while its previous version stays available.
+- Organize characters, places, factions, objects and events in the **Atlas del canon**, with relationships and source references.
+- Invite editors and players, keep Game Master notes private and reveal spoilers to selected members.
+- Ask questions about published sources and inspect the original text behind each citation.
 
-The deterministic backend suite includes PostgreSQL/pgvector acceptance of invitation activation, role and grant
-boundaries, player-visible source browsing, ingestion, retrieval, grounded answers, and catalogue invariants. The
-frontend adds owner/editor/player component and API-client tests plus lint and production-build checks. Baseline v2 covers 22
-cases over seven original Spanish sources; real-model promotion still requires the reviewed M5.1 comparison.
+The atlas is curated manually. Questions use uploaded documents; editing an atlas entry does not change those documents.
 
-The M0 product foundation remains the source of truth for scope, domain language, security invariants, original Spanish demonstration lore, and the RAG evaluation baseline.
+## Run locally
 
-## Product principles
+You need Docker with Compose. Copy `.env.example` to `.env`, set the local passwords, then run from the repository root:
 
-- Evidence before eloquence.
-- Authorization before retrieval.
-- Canon is controlled by people, not by the model.
-- Start as a modular monolith and split only when measured needs justify it.
-- Prefer a small, demonstrable vertical slice over a broad feature catalogue.
-- Treat documents, prompts, and model output as untrusted input.
-
-## M1 technology baseline
-
-- Eclipse Temurin JDK 21 and Spring Boot 4.1.1
-- Spring AI 2.0.1 and Spring Security
-- Spring Modulith 2.1.1
-- PostgreSQL 18 with pgvector 0.8.6
-- Keycloak 26.7.2 as the local OpenID Connect provider
-- Ollama 0.32.5 as the default local model runtime
-- Flyway, Actuator, OpenAPI, Docker Compose, Testcontainers, and GitHub Actions
-
-M8 adds React 19.2, TypeScript 6, Vite 8, Node.js 24 LTS, the official Keycloak JavaScript adapter, and an unprivileged Nginx runtime container.
-
-M3 selects `bge-m3` as the first Spanish-capable embedding baseline. `qwen3:4b` remains the incumbent chat model for the 6 GB GPU target until M5.1 produces reviewed evidence for a replacement. The application and evaluation script never download models implicitly.
-
-## Project references
-
-- [Roadmap](ROADMAP.md)
-- [Original Spanish demo realm](demo/README.md)
-- [Baseline RAG evaluation set](demo/evaluation/README.md)
-
-## Repository shape
-
-```text
-backend/                 Java 21 Spring Boot application
-frontend/                React and TypeScript web application
-demo/lore/               Original Spanish canonical source documents
-demo/evaluation/         Versioned RAG evaluation cases
-infra/keycloak/          Importable local OIDC realm
-ops/                     Local observability assets (introduced when needed)
+```sh
+docker compose up -d --build --wait
+docker compose exec ollama ollama pull bge-m3
+docker compose exec ollama ollama pull qwen3.5:4b
 ```
 
-## Current constraints
+The model downloads are needed once per Ollama volume. If you change the model tags in `.env`, download those tags instead.
 
-The initial development target has 16 GB of system RAM, an NVIDIA RTX 3060 Mobile with 6 GB of VRAM, and an AMD Ryzen 7 5800H. The MVP therefore targets small, quantized local chat models and a multilingual embedding model. Browser-side inference through WebLLM or LiteRT-LM is a possible later capability, not an MVP dependency.
+Open [the application](http://localhost:5173), register, and follow the verification email in [Mailpit](http://localhost:8025). Finish setting your password, create a universe, then upload a file from [the public demo sources](demo/lore/public/) with **Público** visibility. Reload the application if you prepared the models after opening it.
 
-## Running and testing
+The [demo guide](docs/operations/DEMO.md) walks through a campaign with a Game Master and two players. For requirements, GPU setup and troubleshooting, see [local development](docs/operations/LOCAL_DEVELOPMENT.md). Existing installations should follow the [upgrade steps](OPERATIONS.md#upgrade-an-existing-installation).
 
-Copy **.env.example** to **.env**, set both local passwords, then start the stack:
+Stop with `docker compose down` to keep your data.
 
-~~~powershell
-docker compose up --build
-~~~
+## Built with
 
-Then open <http://localhost:5173>.
+React and TypeScript provide the client. A Java 21 Spring Boot application handles permissions, ingestion and questions. PostgreSQL stores campaign data and pgvector embeddings; Keycloak handles login, and Ollama runs the models.
 
-Run the complete test suite from **backend**:
+The backend filters sources by permission before ranking search results. The model selects passages, and the server copies the original text into the answer. Document processing uses persistent jobs so failed work can be retried.
 
-~~~powershell
-.\mvnw.cmd --batch-mode --no-transfer-progress verify
-~~~
+Read the [architecture](docs/architecture/ARCHITECTURE.md) for the reasoning behind these choices.
 
-Verify the web application from **frontend**:
+## Checks
 
-~~~powershell
+With Java 21 and Docker available, run from `backend/`:
+
+```sh
+./mvnw --batch-mode --no-transfer-progress verify
+```
+
+On Windows, use `.\mvnw.cmd`. With Node.js 24, run from `frontend/`:
+
+```sh
 npm ci
-npm run lint
-npm run test:coverage
-npm run build
-~~~
+npm run verify
+```
 
-Docker must be running because the integration suite starts PostgreSQL/pgvector through Testcontainers.
+These commands run the backend tests and frontend lint, tests, coverage checks and build. Browser tests, recovery drills and model evaluation have [separate instructions](OPERATIONS.md#reproducible-acceptance).
 
-Run the reviewer workflow from the repository root:
+## Before you try it
 
-~~~powershell
-.\scripts\demo.ps1
-~~~
+The supplied setup is for local use. Uploads support Markdown/TXT up to 1 MiB by default. AI answers can miss useful context, so the source reader remains available to check them. See [current limitations](docs/product/LIMITATIONS.md) for the remaining beta work.
 
-Use `-StartStack` after configuring `.env`, and add `-WithObservability` for the optional Prometheus/Grafana overlay.
+[Documentation](docs/README.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 
-With the normal stack running, execute the complete deterministic product and recovery gate:
+## License
 
-~~~powershell
-.\scripts\verify-m8.2.ps1
-~~~
-
-This does not require installed model weights. Add `-WithLiveModel` only when deliberately running the separate M5.1
-quality benchmark.
-
-Once Ollama and the candidate weights are prepared, run the opt-in Spanish model comparison from the repository root:
-
-~~~powershell
-.\scripts\evaluate-local-models.ps1 -Repetitions 3
-~~~
-
-Review the generated comparison results before promoting a model change.
-
-## Intellectual property
-
-All demonstration lore in this repository is original project material. It must not contain names, text, maps, logos, or other protected assets from existing fantasy franchises.
+[MIT](LICENSE). The demonstration campaign is original project material. Dependencies retain their own licenses.

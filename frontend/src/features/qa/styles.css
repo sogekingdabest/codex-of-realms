@@ -20,6 +20,8 @@
   color: var(--muted);
 }
 
+.answer-region:empty { display: none; }
+
 .answer-region {
   min-height: 290px;
 }
@@ -37,7 +39,7 @@
   color: var(--muted);
 }
 
-.thinking span {
+.thinking span:first-child {
   width: 0.75rem;
   height: 0.75rem;
   border: 1px solid var(--moss);
@@ -95,8 +97,7 @@
   display: grid;
   place-items: center;
   color: var(--gold);
-  border: 1px solid rgba(214, 181, 109, 0.35);
-  border-radius: 50%;
+  border: 0;
   font-family: Georgia, serif;
   font-size: 0.75rem;
 }
@@ -113,8 +114,10 @@
 
 .answer-card footer {
   margin-top: 1.5rem;
-  color: #6f756c;
+  color: var(--muted);
   font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
   font-size: 0.63rem;
 }
 
+
+.answer-excerpt { white-space: pre-wrap; overflow-wrap: anywhere; }

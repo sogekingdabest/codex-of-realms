@@ -25,6 +25,14 @@ class EvidenceGate {
         Pattern.compile("\\b(begin|inicio)\\s+(system|instructions|instrucciones)\\b")
     );
 
+    @org.springframework.beans.factory.annotation.Value("${codex.retrieval.lexical-minimum-coverage:1.0}")
+    private double lexicalMinimumCoverage = 1.0;
+
+    @jakarta.annotation.PostConstruct
+    void validateLexicalThreshold() {
+        if (!Double.isFinite(lexicalMinimumCoverage) || lexicalMinimumCoverage < 0 || lexicalMinimumCoverage > 1)
+            throw new IllegalArgumentException("Lexical coverage must be between zero and one.");
+    }
     private final AnsweringProperties properties;
 
     EvidenceGate(AnsweringProperties properties) {
@@ -36,7 +44,7 @@ class EvidenceGate {
         if (retrieved.isEmpty()) return EvidenceGateDecision.reject(NO_EVIDENCE);
 
         List<RetrievedEvidence> evidence = retrieved.stream()
-            .limit(properties.maxEvidenceChunks())
+            .limit(properties.retrievalLimit())
             .toList();
         if (evidence.stream().map(RetrievedEvidence::content).anyMatch(EvidenceGate::containsInjection)) {
             return EvidenceGateDecision.reject(INDIRECT_INJECTION);
@@ -45,24 +53,30 @@ class EvidenceGate {
             .mapToDouble(RetrievedEvidence::similarity)
             .max()
             .orElse(Double.NEGATIVE_INFINITY);
-        if (bestSimilarity < properties.minimumSimilarity()) {
+        if (bestSimilarity < properties.minimumSimilarity()
+            && evidence.stream().noneMatch(p -> p.retrievalSignals().sufficient(lexicalMinimumCoverage))) {
             return EvidenceGateDecision.reject(LOW_SIMILARITY);
         }
 
-        String combinedEvidence = evidence.stream()
-            .map(RetrievedEvidence::content)
-            .reduce("", (left, right) -> left + "\n" + right);
-        double coverage = TextTerms.coverage(question, combinedEvidence);
-        if (coverage < properties.minimumQuestionCoverage()) {
-            return EvidenceGateDecision.reject(LOW_QUESTION_COVERAGE);
-        }
         return EvidenceGateDecision.accept(evidence);
     }
 
     private static boolean containsInjection(String text) {
         String normalized = Normalizer.normalize(text.toLowerCase(Locale.ROOT), Normalizer.Form.NFD)
-            .replaceAll("\\p{M}+", " ")
+            .replaceAll("\\p{M}+", "")
             .replaceAll("\\s+", " ");
         return INJECTION_PATTERNS.stream().anyMatch(pattern -> pattern.matcher(normalized).find());
+    }
+
+    EvidenceGateDecision screenPassages(String question, List<RetrievedEvidence> passages) {
+        if (passages.isEmpty()) return EvidenceGateDecision.reject(NO_EVIDENCE);
+        if (passages.stream().map(RetrievedEvidence::content).anyMatch(EvidenceGate::containsInjection)) {
+            return EvidenceGateDecision.reject(INDIRECT_INJECTION);
+        }
+        String combined = passages.stream().map(RetrievedEvidence::content).collect(java.util.stream.Collectors.joining("\n"));
+        if (dev.codexofrealms.lore.PassageRelevance.coverage(question, combined) < properties.minimumQuestionCoverage()) {
+            return EvidenceGateDecision.reject(LOW_QUESTION_COVERAGE);
+        }
+        return EvidenceGateDecision.accept(passages);
     }
 }

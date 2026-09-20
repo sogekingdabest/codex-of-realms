@@ -1,3 +1,5 @@
+import { useEffect, useId, useRef, useState } from 'react'
+import { Modal } from '../../shared/ui/Modal'
 import type { SourceContentView } from './model'
 
 export interface EvidenceReference {
@@ -9,12 +11,54 @@ export interface EvidenceReference {
   eyebrow: string
 }
 
-export function EvidenceDialog({ evidence, onClose }: Readonly<{
-  evidence: { reference: EvidenceReference; source: SourceContentView }
+export function SourceReader({ evidence, onClose }: Readonly<{
+  evidence: { source: SourceContentView; returnFocusTo?: HTMLElement | null }
   onClose: () => void
 }>) {
+  const { source } = evidence
+  const heading = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    heading.current?.focus()
+    const previousFocus = evidence.returnFocusTo
+    return () => { if (previousFocus?.isConnected) previousFocus.focus() }
+  }, [source.documentId, source.versionId, evidence.returnFocusTo])
+  return <article className="source-reader" aria-label={`Fuente: ${source.title}`}>
+    <header className="source-reader-heading">
+      <div><p className="eyebrow">Documento original</p><h2 ref={heading} tabIndex={-1}>{source.title}</h2><p className="muted">{source.originalFilename}</p></div>
+      <button className="quiet-button" type="button" onClick={onClose}>Cerrar fuente</button>
+    </header>
+    {(source.excludedSentences ?? 0) > 0 && <p role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
+    <pre className="source-reader-content" aria-label="Contenido de la fuente">{source.content}</pre>
+  </article>
+}
+
+export function EvidenceDialog({ evidence, onClose }: Readonly<{
+  evidence: { reference: EvidenceReference | null; source: SourceContentView; returnFocusTo?: HTMLElement | null }
+  onClose: () => void
+}>) {
+  const titleId = useId()
+  const [showFullSource, setShowFullSource] = useState(evidence.reference === null)
+  const { source, reference } = evidence
   return (
-    <dialog aria-labelledby="source-dialog-title" className="source-dialog-backdrop" open><div className="source-dialog"><header><div><p className="eyebrow">{evidence.reference.eyebrow}</p><h2 id="source-dialog-title">{evidence.source.title}</h2><span>{evidence.source.originalFilename} · {evidence.reference.heading || 'Documento'}</span></div><button type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button></header><pre>{citationExcerpt(evidence.source.content, evidence.reference)}</pre></div></dialog>
+    <Modal labelledBy={titleId} className="source-dialog-backdrop" onClose={onClose} restoreFocusTo={evidence.returnFocusTo}>
+      <div className="source-dialog">
+        <header>
+          <div><p className="eyebrow">{reference?.eyebrow ?? 'Lectura de fuente'}</p>
+            <h2 id={titleId}>{source.title}</h2>
+            <span>{source.originalFilename} · {reference?.heading || 'Documento'}</span>
+          </div>
+          <button data-modal-initial-focus type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button>
+        </header>
+        {(source.excludedSentences ?? 0) > 0 && <p role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
+        {reference && <div className="reader-controls">
+          <button type="button" className="quiet-button" aria-pressed={showFullSource}
+            onClick={() => setShowFullSource((current) => !current)}>
+            {showFullSource ? 'Volver al fragmento citado' : 'Leer documento completo'}
+          </button>
+        </div>}
+        <pre tabIndex={0} aria-label="Contenido de la fuente">{showFullSource || !reference ? source.content : citationExcerpt(source.content, reference)}</pre>
+      </div>
+    </Modal>
   )
 }
 

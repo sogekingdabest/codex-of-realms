@@ -1,6 +1,11 @@
 name: codex-of-realms
 
 services:
+  mailpit:
+    image: axllent/mailpit:v1.27.4
+    ports:
+      - "127.0.0.1:8025:8025"
+
   postgres:
     image: pgvector/pgvector:0.8.6-pg18-trixie
     environment:
@@ -66,7 +71,7 @@ services:
         condition: service_healthy
 
   ollama:
-    image: ollama/ollama:0.32.5
+    image: ollama/ollama:0.33.2
     environment:
       OLLAMA_MAX_LOADED_MODELS: ${OLLAMA_MAX_LOADED_MODELS:-2}
     healthcheck:
@@ -92,8 +97,13 @@ services:
       OIDC_JWK_SET_URI: http://keycloak:8080/realms/codex-of-realms/protocol/openid-connect/certs
       OIDC_AUDIENCE: codex-api
       OLLAMA_BASE_URL: ${OLLAMA_BASE_URL:-http://ollama:11434}
+      LORE_CONTEXTUAL_PASSAGES_ENABLED: ${LORE_CONTEXTUAL_PASSAGES_ENABLED:-false}
+      QA_COMPLETE_SELECTION_ENABLED: ${QA_COMPLETE_SELECTION_ENABLED:-false}
+      LORE_HYBRID_ENABLED: ${LORE_HYBRID_ENABLED:-false}
+      LORE_LEXICAL_MINIMUM_COVERAGE: ${LORE_LEXICAL_MINIMUM_COVERAGE:-1.0}
+      QA_SELECTION_PROMPT_VERSION: ${QA_SELECTION_PROMPT_VERSION:-v1}
       AI_CHAT_PROVIDER: ollama
-      AI_CHAT_MODEL: ${AI_CHAT_MODEL:-qwen3:4b}
+      AI_CHAT_MODEL: ${AI_CHAT_MODEL:-qwen3.5:4b}
       AI_EMBEDDING_PROVIDER: ollama
       AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-bge-m3}
       CODEX_SOURCE_STORAGE: /app/data/sources

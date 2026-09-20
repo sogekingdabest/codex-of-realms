@@ -7,7 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import dev.codexofrealms.realm.application.access.RealmAuthorizationService;
-import dev.codexofrealms.realm.application.port.RealmRepository;
+import dev.codexofrealms.realm.application.port.MembershipRepository;
 import dev.codexofrealms.realm.application.port.UserRepository;
 import dev.codexofrealms.realm.domain.RealmRole;
 import java.util.Optional;
@@ -16,12 +16,12 @@ import org.junit.jupiter.api.Test;
 
 class MembershipServiceTest {
 
-    private final RealmRepository realmRepository = mock(RealmRepository.class);
+    private final MembershipRepository membershipRepository = mock(MembershipRepository.class);
     private final UserRepository userRepository = mock(UserRepository.class);
     private final RealmAuthorizationService authorizationService =
         mock(RealmAuthorizationService.class);
     private final MembershipService service = new MembershipService(
-        realmRepository,
+        membershipRepository,
         userRepository,
         authorizationService
     );
@@ -31,10 +31,10 @@ class MembershipServiceTest {
         UUID realmId = UUID.randomUUID();
         UUID currentUserId = UUID.randomUUID();
         UUID ownerId = UUID.randomUUID();
-        when(realmRepository.findActiveMembership(realmId, ownerId)).thenReturn(Optional.of(
+        when(membershipRepository.findActiveMembership(realmId, ownerId)).thenReturn(Optional.of(
             new MembershipView(ownerId, "Owner", "owner@example.test", RealmRole.OWNER)
         ));
-        when(realmRepository.countActiveOwners(realmId)).thenReturn(1);
+        when(membershipRepository.countActiveOwners(realmId)).thenReturn(1);
 
         assertThatThrownBy(() -> service.removeMembership(realmId, currentUserId, ownerId))
             .isInstanceOfSatisfying(MembershipException.class, exception ->
@@ -43,7 +43,7 @@ class MembershipServiceTest {
             );
 
         verify(authorizationService).requireLockedOwner(realmId, currentUserId);
-        verify(realmRepository, never()).revokeAllGrants(realmId, ownerId);
-        verify(realmRepository, never()).deactivateMembership(realmId, ownerId);
+        verify(membershipRepository, never()).revokeAllGrants(realmId, ownerId);
+        verify(membershipRepository, never()).deactivateMembership(realmId, ownerId);
     }
 }

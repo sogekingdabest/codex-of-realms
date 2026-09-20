@@ -1,8 +1,5 @@
 # Local model evaluation results
 
-This directory receives machine-specific JSON and Markdown reports produced by
-`scripts/evaluate-local-models.ps1`. Generated reports are intentionally ignored by Git: they can contain
-model output, hardware details, timings, and results that are not reproducible without the same local setup.
+`scripts/evaluate-local-models.ps1` writes JSON and Markdown reports here. They stay out of Git because they contain model output and details of the local machine and run.
 
-To promote a result into project evidence, review it for sensitive data, copy the relevant aggregate table into
-the model-evaluation documentation, and record the model tag, Ollama version, Git commit, hardware, and run count.
+Before sharing a result, remove sensitive data and copy the relevant summary into the evaluation documentation. Include the model tag, Ollama version, Git commit, hardware and run count.

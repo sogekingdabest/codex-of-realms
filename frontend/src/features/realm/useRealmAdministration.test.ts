@@ -1,7 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
-import { createRealmApi } from '../../test/realmApi'
+import { createRealmAdministrationApi } from '../../test/realmApi'
 import type { AccessPolicyView, InvitationView, MembershipView } from './model'
 import { useRealmAdministration } from './useRealmAdministration'
 
@@ -19,7 +19,7 @@ const spoiler: AccessPolicyView = {
 describe('useRealmAdministration', () => {
   it('conserva miembros e invitaciones cuando falla la carga independiente de políticas', async () => {
     const error = new Error('Políticas temporalmente no disponibles')
-    const api = createRealmApi({
+    const api = createRealmAdministrationApi({
       listMemberships: vi.fn().mockResolvedValue([player]),
       listInvitations: vi.fn().mockResolvedValue([invitation]),
       listPolicies: vi.fn().mockRejectedValue(error),
@@ -36,7 +36,7 @@ describe('useRealmAdministration', () => {
   })
 
   it('coordina la retirada del miembro con la limpieza de grants', async () => {
-    const api = createRealmApi({
+    const api = createRealmAdministrationApi({
       listMemberships: vi.fn().mockResolvedValue([player]),
       listPolicies: vi.fn().mockResolvedValue([spoiler]),
       listPolicyGrants: vi.fn().mockResolvedValue([player]),
@@ -53,7 +53,7 @@ describe('useRealmAdministration', () => {
   })
 
   it('no activa ningún slice administrativo para jugadores', () => {
-    const api = createRealmApi()
+    const api = createRealmAdministrationApi()
     const onError = vi.fn()
     renderHook(() => useRealmAdministration({
       api, canEdit: false, isOwner: false, realmId: 'realm-1', onError,
@@ -64,7 +64,7 @@ describe('useRealmAdministration', () => {
   })
 
   it('no limpia grants cuando la membresía protegida no puede retirarse', async () => {
-    const api = createRealmApi()
+    const api = createRealmAdministrationApi()
     const onError = vi.fn()
     const owner: MembershipView = {
       userId: 'owner-1', displayName: 'Maestra', email: null, role: 'OWNER',
@@ -78,7 +78,9 @@ describe('useRealmAdministration', () => {
   })
 
   it('impide que un editor retire membresías aunque necesite cargarlas para los grants', async () => {
-    const api = createRealmApi({ listMemberships: vi.fn().mockResolvedValue([player]) })
+    const api = createRealmAdministrationApi({
+      listMemberships: vi.fn().mockResolvedValue([player]),
+    })
     const onError = vi.fn()
     const { result } = renderHook(() => useRealmAdministration({
       api, canEdit: true, isOwner: false, realmId: 'realm-1', onError,

@@ -28,9 +28,20 @@ class SpringAiEmbeddingGenerator implements TextEmbedding {
     @Override
     public List<float[]> embed(List<String> texts) {
         EmbeddingModel model = modelProvider.getIfAvailable(() -> {
-            throw IngestionException.embeddingUnavailable("No embedding model is configured.");
+            throw new dev.codexofrealms.content.application.ingestion.SourceJobException("PIPELINE_CHANGED", "No embedding model is configured.");
         });
-        return model.embed(texts);
+        try { return model.embed(texts); }
+        catch (RuntimeException exception) {
+            for (Throwable cause=exception;cause!=null;cause=cause.getCause()) {
+                if (cause instanceof org.springframework.web.client.ResourceAccessException
+                    || cause instanceof org.springframework.ai.retry.TransientAiException
+                    || cause instanceof org.springframework.web.client.RestClientResponseException response
+                        && (response.getStatusCode().is5xxServerError() || response.getStatusCode().value()==429)) {
+                    throw IngestionException.embeddingUnavailable("The embedding model is temporarily unavailable.");
+                }
+            }
+            throw new dev.codexofrealms.content.application.ingestion.SourceJobException("PIPELINE_CHANGED", "The embedding request was rejected.");
+        }
     }
 
     @Override

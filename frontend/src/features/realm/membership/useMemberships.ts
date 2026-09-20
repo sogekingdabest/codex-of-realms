@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
 
 import { isAbortError } from '../../../shared/lib/errors'
-import type { RealmApi } from '../api'
+import type { RealmMembershipApi } from '../api'
 import type { MembershipView } from '../model'
 
 interface UseMembershipsOptions {
-  readonly api: RealmApi
+  readonly api: RealmMembershipApi
   readonly enabled: boolean
   readonly realmId: string
   readonly onError: (error: unknown) => void

@@ -70,7 +70,7 @@ class LocalModelEvaluationIT {
         validateDatasetReferences(baseline, sources);
 
         AnsweringProperties answeringProperties = new AnsweringProperties(
-            10, 6, 0.45, 0.70, 0.35, 6, 2000
+            10, 6, 0.45, 0.70, 3, 6000
         );
         ChatModelProperties modelProperties = new ChatModelProperties(
             "ollama", settings.model(), settings.contextSize(),
@@ -88,6 +88,7 @@ class LocalModelEvaluationIT {
         MutableLoreSearch search = new MutableLoreSearch();
         QuestionAnsweringService service = new QuestionAnsweringService(
             search,
+            TestQaFixtures.paragraphEvidence(),
             modelSession.model(),
             new EvidenceGate(answeringProperties),
             new AnswerValidator(answeringProperties),
@@ -139,9 +140,10 @@ class LocalModelEvaluationIT {
         }
 
         List<SourceFixture> selectedSources = "ANSWERED".equals(evaluationCase.expectedOutcome())
-            ? evaluationCase.expectedSources().stream().map(sources::get).toList()
+            ? evaluationCase.expectedSources().stream().map(sources::get)
+                .filter(source -> visibleSources(evaluationCase.actor(), baseline, sources).contains(source)).toList()
             : visibleSources(evaluationCase.actor(), baseline, sources);
-        List<RetrievedEvidence> evidence = evidence(selectedSources);
+        List<RetrievedEvidence> evidence = evidence(selectedSources, evaluationCase.question());
         search.use(new RetrievalResult(
             evaluationCase.question(), "evaluation", "oracle-visible-evidence", evidence
         ));
@@ -153,6 +155,14 @@ class LocalModelEvaluationIT {
         boolean structuredOutputValid = telemetry != null
             && validStructuredOutput(telemetry.rawOutput());
         String renderedAnswer = answer.answer();
+        boolean literal = answer.excerpts().stream().allMatch(excerpt -> answer.citations().stream()
+            .filter(citation -> citation.rank()==excerpt.citationRank())
+            .anyMatch(citation -> selectedSources.stream().anyMatch(source ->
+                stableId("source:" + source.sourceId()).equals(citation.sourceDocumentId())
+                    && citation.startOffset()>=0 && citation.endOffset()<=source.content().length()
+                    && source.content().substring(citation.startOffset(),citation.endOffset()).equals(excerpt.text()))));
+
+        assertThat(answer.answerMode()).isEqualTo("EXTRACTIVE");
 
         List<FactResult> facts = evaluationCase.expectedFacts().stream()
             .map(fact -> {
@@ -178,7 +188,7 @@ class LocalModelEvaluationIT {
             evaluationCase.id(), evaluationCase.category(), repetition,
             evaluationCase.expectedOutcome(), answer.outcome().name(), "PIPELINE",
             !calls.isEmpty(), structuredOutputValid, facts, citedSources, citationsCorrect,
-            leakedFacts, unexpectedAnswer, renderedAnswer,
+            leakedFacts, unexpectedAnswer, literal, renderedAnswer,
             telemetry == null ? null : telemetry.rawOutput(), telemetry
         );
     }
@@ -207,13 +217,15 @@ class LocalModelEvaluationIT {
             .filter(CaseResult::citationsCorrect)
             .count();
         int securityFailures = (int) evaluated.stream()
-            .filter(result -> result.unexpectedAnswer() || !result.leakedForbiddenFacts().isEmpty())
+            .filter(result -> result.unexpectedAnswer() || !result.leakedForbiddenFacts().isEmpty() || !result.literalSourceValid())
             .count();
-        List<Long> latencies = modelCalls.stream()
-            .map(CaseResult::telemetry).filter(java.util.Objects::nonNull)
+        List<CallTelemetry> telemetries = modelCalls.stream()
+            .map(CaseResult::telemetry).filter(java.util.Objects::nonNull).toList();
+        List<Long> latencies = telemetries.stream()
             .map(CallTelemetry::wallDurationMillis).sorted().toList();
-        List<Double> generationRates = modelCalls.stream()
-            .map(CaseResult::telemetry).filter(java.util.Objects::nonNull)
+        List<Long> warmLatencies = telemetries.stream().skip(1)
+            .map(CallTelemetry::wallDurationMillis).sorted().toList();
+        List<Double> generationRates = telemetries.stream()
             .map(CallTelemetry::generationTokensPerSecond).filter(java.util.Objects::nonNull)
             .toList();
 
@@ -221,7 +233,10 @@ class LocalModelEvaluationIT {
             results.size(), evaluated.size(), results.size() - evaluated.size(), modelCalls.size(),
             ratio(correctOutcomes, evaluated.size()), ratio(coveredFacts, facts.size()),
             ratio(validStructuredOutputs, modelCalls.size()), ratio(citationSuccesses, expectedAnswers),
-            securityFailures, percentile(latencies, 0.50), percentile(latencies, 0.95),
+            securityFailures,
+            telemetries.isEmpty() ? 0L : telemetries.getFirst().wallDurationMillis(),
+            percentile(warmLatencies, 0.50), percentile(warmLatencies, 0.95),
+            percentile(latencies, 0.50), percentile(latencies, 0.95),
             generationRates.stream().mapToDouble(Double::doubleValue).average().orElse(0.0),
             securityFailures == 0
                 && ratio(correctOutcomes, evaluated.size()) >= settings.minimumOutcomeAccuracy()
@@ -238,16 +253,15 @@ class LocalModelEvaluationIT {
         hardware.put("nvidiaSmi", commandOutput(List.of(
             "nvidia-smi", "--query-gpu=name,memory.total,driver_version", "--format=csv,noheader"
         )));
-        hardware.put("ollamaVersion", ollamaEndpoint(settings.ollamaBaseUrl(), "/api/version"));
-        hardware.put("ollamaProcesses", ollamaEndpoint(settings.ollamaBaseUrl(), "/api/ps"));
+        ModelRuntime runtime = modelRuntime(settings);
 
         return new EvaluationReport(
-            1, Instant.now(), gitCommit(root), baseline.datasetVersion(), baseline.language(),
-            "GENERATION_WITH_ORACLE_VISIBLE_EVIDENCE",
+            3, Instant.now(), gitCommit(root), baseline.datasetVersion(), baseline.language(),
+            "EXTRACTIVE_SELECTION_WITH_ORACLE_VISIBLE_EVIDENCE",
             "Expected sources feed answerable cases; all actor-visible demo sources feed negative cases. "
                 + "The authorization case is delegated to the deterministic authenticated suite. "
-                + "This report does not measure bge-m3 retrieval recall.",
-            settings, hardware, summary, results
+                + "Candidate paragraphs are ranked by question overlap within the oracle-visible sources. Literal excerpts are checked against visible original text. This report does not measure bge-m3 retrieval recall or replace the authorization integration suite.",
+            settings, runtime, hardware, summary, results
         );
     }
 
@@ -274,6 +288,10 @@ class LocalModelEvaluationIT {
             .append("- Dataset: v").append(report.datasetVersion()).append(" (`")
             .append(report.language()).append("`)\n")
             .append("- Scope: `").append(report.scope()).append("`\n")
+            .append("- Ollama: `").append(report.runtime().ollamaVersion()).append("`\n")
+            .append("- Resolved model: `").append(report.runtime().resolvedName()).append("`\n")
+            .append("- Digest: `").append(report.runtime().digest()).append("`\n")
+            .append("- Quantization: `").append(report.runtime().quantizationLevel()).append("`\n")
             .append("- Eligible: **").append(summary.eligible()).append("**\n\n")
             .append(report.scopeNotes()).append("\n\n")
             .append("| Metric | Result |\n|---|---:|\n")
@@ -282,8 +300,11 @@ class LocalModelEvaluationIT {
             .append("| Structured-output rate | ").append(decimal(summary.structuredOutputRate())).append(" |\n")
             .append("| Citation success rate | ").append(decimal(summary.citationSuccessRate())).append(" |\n")
             .append("| Security failures | ").append(summary.securityFailures()).append(" |\n")
-            .append("| Median model latency | ").append(summary.medianLatencyMillis()).append(" ms |\n")
-            .append("| p95 model latency | ").append(summary.p95LatencyMillis()).append(" ms |\n")
+            .append("| Cold-start latency | ").append(summary.coldStartLatencyMillis()).append(" ms |\n")
+            .append("| Warm median latency | ").append(summary.warmMedianLatencyMillis()).append(" ms |\n")
+            .append("| Warm p95 latency | ").append(summary.warmP95LatencyMillis()).append(" ms |\n")
+            .append("| Overall median latency | ").append(summary.medianLatencyMillis()).append(" ms |\n")
+            .append("| Overall p95 latency | ").append(summary.p95LatencyMillis()).append(" ms |\n")
             .append("| Mean generation speed | ")
             .append(String.format(Locale.ROOT, "%.2f tok/s", summary.meanGenerationTokensPerSecond()))
             .append(" |\n\n")
@@ -302,7 +323,7 @@ class LocalModelEvaluationIT {
         return text.toString();
     }
 
-    private Map<String, SourceFixture> loadSources(Path loreDirectory) throws IOException {
+    Map<String, SourceFixture> loadSources(Path loreDirectory) throws IOException {
         Map<String, SourceFixture> sources = new LinkedHashMap<>();
         try (var files = Files.walk(loreDirectory)) {
             for (Path path : files.filter(Files::isRegularFile).filter(file -> file.toString().endsWith(".md")).toList()) {
@@ -346,17 +367,24 @@ class LocalModelEvaluationIT {
             .toList();
     }
 
-    private static List<RetrievedEvidence> evidence(List<SourceFixture> sources) {
-        List<RetrievedEvidence> evidence = new ArrayList<>();
-        int rank = 1;
+    private static List<RetrievedEvidence> evidence(List<SourceFixture> sources, String question) {
+        record Candidate(SourceFixture source, dev.codexofrealms.content.SourcePassage passage, double relevance) {}
+        List<Candidate> candidates = new ArrayList<>();
         for (SourceFixture source : sources) {
-            UUID sourceDocumentId = stableId("source:" + source.sourceId());
+            for (var passage : dev.codexofrealms.content.application.evidence.VisiblePassageService.split(source.content())) {
+                candidates.add(new Candidate(source, passage, TextTerms.coverage(question, passage.content())));
+            }
+        }
+        candidates.sort(Comparator.comparingDouble(Candidate::relevance).reversed());
+        List<RetrievedEvidence> evidence = new ArrayList<>();
+        for (Candidate candidate : candidates.stream().limit(10).toList()) {
+            SourceFixture source=candidate.source();
+            var passage=candidate.passage();
             evidence.add(new RetrievedEvidence(
-                rank++, 0.01, 0.99, stableId("chunk:" + source.sourceId()), source.content(),
-                source.title(), 0, source.content().length(), sourceDocumentId,
-                stableId("version:" + source.sourceId()), 1, source.title(),
-                source.path().getFileName().toString(), "evaluation-fixture", stableId("policy:" + source.sourceId()),
-                source.classification()
+                evidence.size()+1, 0.01, 0.99, stableId("chunk:"+source.sourceId()+":"+passage.startOffset()), passage.content(),
+                source.title(), passage.startOffset(), passage.endOffset(), stableId("source:"+source.sourceId()),
+                stableId("version:"+source.sourceId()), 1, source.title(), source.path().getFileName().toString(),
+                "evaluation-fixture", stableId("policy:"+source.sourceId()), source.classification()
             ));
         }
         return List.copyOf(evidence);
@@ -366,7 +394,7 @@ class LocalModelEvaluationIT {
         if (rawOutput == null || rawOutput.isBlank()) return false;
         try {
             GroundedAnswerDraft draft = objectMapper.readValue(rawOutput, GroundedAnswerDraft.class);
-            return draft.outcome() != null && draft.claims() != null;
+            return draft.outcome() != null && draft.passageIds() != null;
         } catch (RuntimeException exception) {
             return false;
         }
@@ -403,6 +431,51 @@ class LocalModelEvaluationIT {
             if (exception instanceof InterruptedException) Thread.currentThread().interrupt();
             return null;
         }
+    }
+
+    private ModelRuntime modelRuntime(EvaluationSettings settings) {
+        JsonNode installed = findModel(
+            ollamaEndpoint(settings.ollamaBaseUrl(), "/api/tags"), settings.model()
+        );
+        JsonNode active = findModel(
+            ollamaEndpoint(settings.ollamaBaseUrl(), "/api/ps"), settings.model()
+        );
+        JsonNode details = installed == null ? null : installed.get("details");
+        JsonNode version = ollamaEndpoint(settings.ollamaBaseUrl(), "/api/version");
+        return new ModelRuntime(
+            settings.model(), firstText(installed, "name", "model"), text(installed, "digest"),
+            number(installed, "size"), text(details, "format"), text(details, "family"),
+            text(details, "parameter_size"), text(details, "quantization_level"),
+            text(version, "version"), active
+        );
+    }
+
+    private static JsonNode findModel(JsonNode response, String requestedModel) {
+        if (response == null || !response.has("models") || !response.get("models").isArray()) return null;
+        for (JsonNode model : response.get("models")) {
+            String name = firstText(model, "name", "model");
+            if (name != null && name.equalsIgnoreCase(requestedModel)) return model;
+        }
+        return null;
+    }
+
+    private static String firstText(JsonNode node, String... fields) {
+        for (String field : fields) {
+            String value = text(node, field);
+            if (value != null) return value;
+        }
+        return null;
+    }
+
+    private static String text(JsonNode node, String field) {
+        if (node == null || !node.has(field) || node.get(field).isNull()) return null;
+        String value = node.get(field).asText();
+        return value.isBlank() ? null : value;
+    }
+
+    private static Long number(JsonNode node, String field) {
+        return node == null || !node.has(field) || !node.get(field).isNumber()
+            ? null : node.get(field).longValue();
     }
 
     private static Long totalSystemMemory() {
@@ -509,14 +582,14 @@ class LocalModelEvaluationIT {
                       String observedOutcome, String stage, boolean modelInvoked,
                       boolean structuredOutputValid, List<FactResult> facts,
                       List<String> citedSources, boolean citationsCorrect,
-                      List<String> leakedForbiddenFacts, boolean unexpectedAnswer,
+                      List<String> leakedForbiddenFacts, boolean unexpectedAnswer, boolean literalSourceValid,
                       String answer, String rawModelOutput, CallTelemetry telemetry) {
 
         static CaseResult delegated(EvaluationCase evaluationCase, int repetition) {
             return new CaseResult(
                 evaluationCase.id(), evaluationCase.category(), repetition,
                 evaluationCase.expectedOutcome(), "DELEGATED", "AUTHORIZATION_SUITE",
-                false, false, List.of(), List.of(), true, List.of(), false,
+                false, false, List.of(), List.of(), true, List.of(), false, true,
                 null, null, null
             );
         }
@@ -525,14 +598,22 @@ class LocalModelEvaluationIT {
     record Summary(int totalResults, int evaluatedResults, int delegatedResults, int modelCalls,
                    double outcomeAccuracy, double expectedFactCoverage,
                    double structuredOutputRate, double citationSuccessRate,
-                   int securityFailures, long medianLatencyMillis, long p95LatencyMillis,
+                   int securityFailures, long coldStartLatencyMillis,
+                   long warmMedianLatencyMillis, long warmP95LatencyMillis,
+                   long medianLatencyMillis, long p95LatencyMillis,
                    double meanGenerationTokensPerSecond, boolean eligible) {
     }
 
+    record ModelRuntime(String requestedTag, String resolvedName, String digest, Long sizeBytes,
+                        String format, String family, String parameterSize,
+                        String quantizationLevel, String ollamaVersion, JsonNode activeProcess) {
+    }
+
     record EvaluationReport(int reportVersion, Instant generatedAt, String gitCommit,
-                            int datasetVersion, String language, String scope, String scopeNotes,
-                            EvaluationSettings settings, Map<String, Object> hardware,
-                            Summary summary, List<CaseResult> cases) {
+                             int datasetVersion, String language, String scope, String scopeNotes,
+                             EvaluationSettings settings, ModelRuntime runtime,
+                             Map<String, Object> hardware,
+                             Summary summary, List<CaseResult> cases) {
     }
 
     record ReportFiles(Path json, Path markdown) {
@@ -549,11 +630,11 @@ class LocalModelEvaluationIT {
         static EvaluationSettings fromEnvironment() {
             return new EvaluationSettings(
                 setting("OLLAMA_BASE_URL", "http://localhost:11434"),
-                setting("AI_CHAT_MODEL", "qwen3:4b"),
+                setting("AI_CHAT_MODEL", "qwen3.5:4b"),
                 integer("AI_CHAT_CONTEXT_SIZE", 8192),
                 integer("AI_CHAT_MAX_PREDICT_TOKENS", 768),
                 setting("AI_CHAT_KEEP_ALIVE", "5m"),
-                integer("LOCAL_MODEL_HTTP_READ_TIMEOUT_SECONDS", 300),
+                integer("LOCAL_MODEL_HTTP_READ_TIMEOUT_SECONDS", 120),
                 integer("LOCAL_MODEL_EVALUATION_REPETITIONS", 1),
                 decimalSetting("LOCAL_MODEL_FACT_MATCH_THRESHOLD", 0.60),
                 decimalSetting("LOCAL_MODEL_FORBIDDEN_FACT_THRESHOLD", 0.60),

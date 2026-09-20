@@ -1,0 +1,26 @@
+name: codex-ia-evaluation
+services:
+  ollama:
+    image: ollama/ollama:0.33.2
+    pull_policy: never
+    gpus: all
+    ports:
+      - "127.0.0.1:11435:11434"
+    environment:
+      OLLAMA_MODELS: /evaluation-models
+      OLLAMA_MAX_LOADED_MODELS: "2"
+    entrypoint: ["/bin/sh", "/bootstrap.sh"]
+    volumes:
+      - type: bind
+        source: ${IA_NATIVE_MODELS:?Set IA_NATIVE_MODELS to the existing local Ollama models directory}
+        target: /native-models
+        read_only: true
+      - type: volume
+        source: existing-models
+        target: /existing-ollama
+        read_only: true
+      - ./scripts/ia-ollama-bootstrap.sh:/bootstrap.sh:ro
+volumes:
+  existing-models:
+    external: true
+    name: ${IA_OLLAMA_VOLUME:-codex-of-realms_ollama-data}

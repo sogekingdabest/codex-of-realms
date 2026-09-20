@@ -43,8 +43,8 @@ describe('feature API clients', () => {
 
   it('deja que el navegador construya el content type multipart', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ id: 'source-1' }), {
-        status: 201,
+      new Response(JSON.stringify({ documentId: 'source-1', versionId: 'version-1', job: { id: 'job-1', state: 'QUEUED' } }), {
+        status: 202,
         headers: { 'Content-Type': 'application/json' },
       }),
     )
@@ -59,11 +59,25 @@ describe('feature API clients', () => {
     const [, init] = fetchMock.mock.calls[0] as [string, RequestInit]
     const headers = new Headers(init.headers)
     expect(headers.has('Content-Type')).toBe(false)
+    expect(headers.get('Idempotency-Key')).toBeTruthy()
     expect(init.body).toBeInstanceOf(FormData)
     const body = init.body as FormData
     expect(body.get('title')).toBe('Lumbrevela')
     expect(body.get('accessPolicyId')).toBe('policy-1')
     expect(body.get('file')).toBe(file)
+  })
+
+  it('conserva la clave al repetir el mismo archivo y separa cambios de parámetros', async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => new Response('{}', { status: 202 }))
+    vi.stubGlobal('fetch', fetchMock)
+    const api = createApiClients('/api/v1', async () => 'token')
+    const file = new File(['Nara conserva 37 monedas'], 'nara.md')
+    await api.content.uploadSource('realm-1', 'Nara', 'policy-1', file)
+    await api.content.uploadSource('realm-1', 'Nara', 'policy-1', file)
+    await api.content.uploadSource('realm-1', 'Nara', 'policy-2', file)
+    const keys = fetchMock.mock.calls.map((call) => new Headers((call[1] as RequestInit).headers).get('Idempotency-Key'))
+    expect(keys[0]).toBe(keys[1])
+    expect(keys[2]).not.toBe(keys[0])
   })
 
   it('propaga AbortSignal en las lecturas cancelables', async () => {

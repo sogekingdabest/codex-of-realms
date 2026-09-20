@@ -25,6 +25,7 @@ export interface SourceContentView {
   title: string
   originalFilename: string
   content: string
+  excludedSentences?: number
 }
 
 export interface SourceChunkView {
@@ -49,3 +50,24 @@ export interface SourceEvidence {
   startOffset: number
   endOffset: number
 }
+
+export type SourceJobState = 'UPLOADING' | 'QUEUED' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'CANCELLED'
+export interface SourceJobView {
+  id: string
+  documentId: string
+  versionId: string
+  versionNumber: number
+  title: string
+  originalFilename: string
+  accessPolicyId: string
+  state: SourceJobState
+  attempts: number
+  completedChunks: number
+  totalChunks: number
+  errorCode: string | null
+  noOp: boolean
+  nextAttemptAt: string
+  createdAt: string
+  history: { state: SourceJobState; attempt: number; errorCode: string | null; createdAt: string }[]
+}
+export interface SourceSubmission { excludedSentences?: number; job: SourceJobView; documentId: string; versionId: string }

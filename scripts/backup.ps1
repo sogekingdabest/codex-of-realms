@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$DestinationRoot = "backups"
+    [string]$DestinationRoot = "backups",
+    [string]$ProjectName
 )
 
 $ErrorActionPreference = "Stop"
@@ -9,23 +10,38 @@ $timestamp = Get-Date -Format "yyyyMMdd-HHmmss"
 $destination = Join-Path (Join-Path $repositoryRoot $DestinationRoot) $timestamp
 $databaseArchive = Join-Path $destination "codex-of-realms.dump"
 $sourcesDirectory = Join-Path $destination "sources"
+$composeSelection = @()
+if ($ProjectName) {
+    if ($ProjectName -notmatch '^[a-z0-9][a-z0-9_-]*$') { throw 'Invalid Compose project name.' }
+    $composeSelection = @('--project-name', $ProjectName)
+}
 
 function Invoke-Checked {
     param([string]$Command, [string[]]$Arguments)
+    if ($Command -eq 'docker' -and $Arguments[0] -eq 'compose') {
+        $Arguments = @('compose') + $composeSelection + $Arguments[1..($Arguments.Length - 1)]
+    }
     & $Command @Arguments
     if ($LASTEXITCODE -ne 0) {
         throw "Command failed with exit code ${LASTEXITCODE}: $Command $($Arguments -join ' ')"
     }
 }
 
+$appWasRunning = $false
 Push-Location $repositoryRoot
 try {
     New-Item -ItemType Directory -Force -Path $destination | Out-Null
     New-Item -ItemType Directory -Force -Path $sourcesDirectory | Out-Null
 
-    $running = docker compose ps --status running --services
-    if ($LASTEXITCODE -ne 0 -or $running -notcontains "postgres" -or $running -notcontains "app") {
+    $running = docker compose @composeSelection ps --status running --services
+    if ($LASTEXITCODE -ne 0 -or $running -notcontains "postgres") {
         throw "Start the stack before creating a backup: docker compose up -d"
+    }
+
+    $appWasRunning = $running -contains "app"
+    if ($appWasRunning) {
+        Write-Host "Pausing the backend to coordinate database and source files..."
+        Invoke-Checked "docker" @("compose", "stop", "--timeout", "30", "app")
     }
 
     Write-Host "[1/3] Exporting PostgreSQL, including the application and Keycloak schemas..."
@@ -45,6 +61,14 @@ try {
     Invoke-Checked "docker" @("compose", "cp", "app:/app/data/sources/.", $sourcesDirectory)
 
     Write-Host "[3/3] Writing the backup manifest..."
+    $jobsTable = & docker compose @composeSelection exec -T postgres psql --username=codex --dbname=codex_of_realms --tuples-only --no-align --command="SELECT to_regclass('public.source_job')"
+    if ($LASTEXITCODE -ne 0) { throw "Could not inspect the source jobs schema." }
+    $pendingJobs = @()
+    if (($jobsTable -join '').Trim() -eq 'source_job') {
+        $pendingJobsJson = & docker compose @composeSelection exec -T postgres psql --username=codex --dbname=codex_of_realms --tuples-only --no-align --command="SELECT coalesce(json_agg(json_build_object('id',id,'versionId',version_id,'state',state)), '[]'::json) FROM source_job WHERE state IN ('UPLOADING','QUEUED','RUNNING')"
+        if ($LASTEXITCODE -ne 0) { throw "Could not record pending jobs in the backup manifest." }
+        $pendingJobs = @($pendingJobsJson | ConvertFrom-Json)
+    }
     $gitCommit = & git -c "safe.directory=$repositoryRoot" rev-parse HEAD
     if ($LASTEXITCODE -ne 0) {
         throw "Could not resolve the Git commit for the backup manifest."
@@ -65,10 +89,13 @@ try {
         sources = "sources"
         sourceFileCount = $sourceFiles.Count
         sourceFiles = $sourceFiles
+        pendingSourceJobs = $pendingJobs
     } | ConvertTo-Json -Depth 4 | Set-Content -Path (Join-Path $destination "manifest.json") -Encoding utf8
 
     Write-Host "Backup created at $destination"
 }
 finally {
-    Pop-Location
+    try {
+        if ($appWasRunning) { Invoke-Checked "docker" @("compose", "start", "app") }
+    } finally { Pop-Location }
 }

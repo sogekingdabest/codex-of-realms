@@ -3,6 +3,7 @@ param(
     [string]$BackupDirectory,
     [switch]$WithLiveModel,
     [string[]]$Models = @("qwen3.5:4b"),
+    [string]$OllamaBaseUrl = "http://localhost:11434",
     [ValidateRange(1, 10)]
     [int]$Repetitions = 3
 )
@@ -44,16 +45,14 @@ Invoke-Checked ".\mvnw.cmd" @("--batch-mode", "--no-transfer-progress", "verify"
 
 Write-Host "[3/6] Rebuilding and verifying the browser client..." -ForegroundColor Cyan
 Invoke-Checked "npm" @("ci") $frontendDirectory
-Invoke-Checked "npm" @("run", "lint") $frontendDirectory
-Invoke-Checked "npm" @("run", "test") $frontendDirectory
-Invoke-Checked "npm" @("run", "build") $frontendDirectory
+Invoke-Checked "npm" @("run", "verify") $frontendDirectory
 
 Write-Host "[4/6] Checking the running product topology..." -ForegroundColor Cyan
 $runningServices = & docker compose --project-directory $repositoryRoot ps --status running --services
 if ($LASTEXITCODE -ne 0) {
     throw "Could not inspect the running Compose stack."
 }
-$requiredServices = @("postgres", "keycloak", "ollama", "app", "web")
+$requiredServices = @("postgres", "keycloak", "mailpit", "ollama", "app", "web")
 $missingServices = @($requiredServices | Where-Object { $_ -notin $runningServices })
 if ($missingServices.Count -gt 0) {
     throw "Start the complete stack before M8.2 acceptance. Missing: $($missingServices -join ', ')"
@@ -78,8 +77,9 @@ if ([string]::IsNullOrWhiteSpace($selectedBackup)) {
 Write-Host "[6/6] Checking the opt-in live-model gate..." -ForegroundColor Cyan
 $modelStatus = "SKIPPED (requires -WithLiveModel and installed Ollama weights)"
 if ($WithLiveModel) {
-    & (Join-Path $PSScriptRoot "evaluate-local-models.ps1") -Models $Models -Repetitions $Repetitions
-    $modelStatus = "PASSED ($($Models -join ', '), $Repetitions repetitions)"
+    & (Join-Path $PSScriptRoot "evaluate-local-models.ps1") -Stage Final -Models $Models `
+        -Repetitions $Repetitions -OllamaBaseUrl $OllamaBaseUrl
+    $modelStatus = "PASSED ($($Models -join ', '), $Repetitions repetitions, $OllamaBaseUrl)"
 }
 else {
     Write-Host "Live-model evaluation skipped; deterministic acceptance remains complete." -ForegroundColor Yellow
@@ -95,7 +95,7 @@ $report = @(
     "- Finished: $($finishedAt.ToUniversalTime().ToString('o'))",
     "- Git commit: $((& git -c "safe.directory=$repositoryRoot" -C $repositoryRoot rev-parse HEAD).Trim())",
     "- Backend deterministic suite: PASSED",
-    "- Frontend lint, tests, and build: PASSED",
+    "- Frontend lint, tests, coverage thresholds, LCOV, and build (npm run verify): PASSED",
     "- Compose product topology: PASSED",
     "- Isolated restore: PASSED",
     "- Live-model evaluation: $modelStatus",

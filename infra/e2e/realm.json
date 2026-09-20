@@ -1,0 +1,80 @@
+{
+  "realm": "codex-of-realms",
+  "enabled": true,
+  "displayName": "Codex of Realms",
+  "sslRequired": "external",
+  "internationalizationEnabled": true,
+  "supportedLocales": [
+    "es",
+    "en"
+  ],
+  "defaultLocale": "en",
+  "registrationAllowed": true,
+  "verifyEmail": true,
+  "smtpServer": {
+    "host": "mailpit",
+    "port": "1025",
+    "from": "codex@demo.local",
+    "fromDisplayName": "Codex of Realms",
+    "auth": "false",
+    "ssl": "false",
+    "starttls": "false"
+  },
+  "registrationEmailAsUsername": true,
+  "resetPasswordAllowed": true,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "clients": [
+    {
+      "clientId": "codex-api",
+      "name": "Codex of Realms API",
+      "enabled": true,
+      "bearerOnly": true,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "codex-web",
+      "name": "Codex of Realms local client",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "protocol": "openid-connect",
+      "rootUrl": "http://localhost:25173",
+      "baseUrl": "/",
+      "redirectUris": [
+        "http://localhost:25173/*"
+      ],
+      "webOrigins": [
+        "http://localhost:25173"
+      ],
+      "protocolMappers": [
+        {
+          "name": "codex-api audience",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-audience-mapper",
+          "consentRequired": false,
+          "config": {
+            "included.custom.audience": "codex-api",
+            "access.token.claim": "true",
+            "id.token.claim": "false"
+          }
+        }
+      ]
+    }
+  ],
+  "roles": {
+    "realm": [
+      {
+        "name": "codex-user",
+        "description": "Can sign in to Codex of Realms; realm authorization remains application-owned."
+      }
+    ]
+  },
+  "users": []
+}

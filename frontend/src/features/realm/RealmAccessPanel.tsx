@@ -10,7 +10,6 @@ export function RealmAccessPanel({ administration }: Readonly<{
   return (
     <section className="panel access-panel">
       <div className="panel-heading">
-        <span className="panel-number">03</span>
         <div><p className="eyebrow">Colaboración sin spoilers</p><h2>Miembros y revelaciones</h2></div>
         <span className="count">{administration.members.length}</span>
       </div>

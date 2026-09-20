@@ -1,9 +1,13 @@
+import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import type { ContentApi, SourceDocumentView, SourceEvidence } from '../content'
 import type { AccessPolicyView } from '../realm'
 import type { LoreApi } from './api'
 import { entityTypeLabels } from './catalogueModel'
 import { EntityEditor } from './entity/EntityEditor'
 import { EntityList } from './entity/EntityList'
+import { EntityDocument } from './entity/EntityDocument'
+import { CatalogueEmpty } from './CataloguePrimitives'
 import type { CanonStatus, EntityType } from './model'
 import { RelationEditor } from './relation/RelationEditor'
 import { RelationList } from './relation/RelationList'
@@ -17,6 +21,8 @@ interface CatalogueWorkspaceProps {
   readonly policies: AccessPolicyView[]
   readonly sources: SourceDocumentView[]
   readonly onOpenEvidence: (evidence: SourceEvidence) => void
+  readonly indexContainer?: HTMLElement | null
+  readonly onSelectEntry?: () => void
 }
 
 export function CatalogueWorkspace({
@@ -27,40 +33,44 @@ export function CatalogueWorkspace({
   policies,
   sources,
   onOpenEvidence,
+  indexContainer,
+  onSelectEntry,
 }: CatalogueWorkspaceProps) {
   const catalogue = useCatalogueWorkspace({ loreApi, policies, realmId })
-
-  return (
-    <section className="catalogue-workspace" aria-busy={catalogue.loading}>
-      <header className="catalogue-header">
-        <div>
-          <p className="eyebrow">Conocimiento estructurado · promoción humana</p>
-          <h2>Atlas del canon</h2>
-          <p>Registra conceptos y vínculos sin permitir que el modelo decida qué es verdad.</p>
-        </div>
-        <div className="catalogue-summary" aria-label="Resumen del catálogo">
-          <span><strong>{catalogue.entities.length}</strong> fichas</span>
-          <span><strong>{catalogue.relations.length}</strong> relaciones</span>
-          <span><strong>{catalogue.entities.filter((entity) => entity.canonStatus === 'CANON').length}</strong> canónicas</span>
-        </div>
-      </header>
-
-      <CatalogueToolbar
+  const [creating, setCreating] = useState<'entity' | 'relation' | null>(null)
+  const selectedEntity = catalogue.visibleEntities.find((entity) => entity.id === catalogue.focusedEntityId) ?? catalogue.visibleEntities[0]
+  const showEntityEditor = canEdit && (creating === 'entity' || Boolean(catalogue.editingEntityId))
+  const showRelationEditor = canEdit && (creating === 'relation' || Boolean(catalogue.editingRelationId))
+  function closeEditors() {
+    setCreating(null)
+    catalogue.cancelEntityEdit()
+    catalogue.cancelRelationEdit()
+  }
+  const index = <div className="catalogue-index">
+    <h2>Atlas del canon</h2>
+    <CatalogueToolbar
         canonFilter={catalogue.canonFilter}
         search={catalogue.search}
         section={catalogue.section}
         typeFilter={catalogue.typeFilter}
-        onCanonFilterChange={catalogue.setCanonFilter}
-        onSearchChange={catalogue.setSearch}
-        onSectionChange={catalogue.setSection}
-        onTypeFilterChange={catalogue.setTypeFilter}
+        onCanonFilterChange={(filter) => { closeEditors(); catalogue.setCanonFilter(filter) }}
+        onSearchChange={(search) => { closeEditors(); catalogue.setSearch(search) }}
+        onSectionChange={(section) => { closeEditors(); catalogue.setSection(section) }}
+        onTypeFilterChange={(filter) => { closeEditors(); catalogue.setTypeFilter(filter) }}
       />
+    {catalogue.section === 'entities' && <EntityList entities={catalogue.visibleEntities} loading={catalogue.loading} selectedId={selectedEntity?.id}
+      onSelect={(id) => { closeEditors(); catalogue.setFocusedEntityId(id); onSelectEntry?.() }} />}
+    {canEdit && <div className="index-actions"><button className="quiet-button" type="button" disabled={catalogue.loading || catalogue.saving || (catalogue.section === 'relations' && catalogue.entities.length < 2)}
+      onClick={() => { closeEditors(); setCreating(catalogue.section === 'entities' ? 'entity' : 'relation'); onSelectEntry?.() }}>{catalogue.section === 'entities' ? 'Nueva ficha' : 'Nueva relación'}</button></div>}
+  </div>
 
-      {catalogue.error && <div className="catalogue-error" role="alert">{catalogue.error}</div>}
-
-      {catalogue.section === 'entities' ? (
-        <div className="catalogue-layout">
-          {canEdit && (
+  return (
+    <section className={`catalogue-workspace${indexContainer ? '' : ' with-local-index'}`} aria-busy={catalogue.loading}>
+      {indexContainer ? createPortal(index, indexContainer) : index}
+      <div className="catalogue-content">
+        {catalogue.error && <div className="catalogue-error" role="alert">{catalogue.error}</div>}
+        {catalogue.section === 'entities' ? (
+          showEntityEditor ? <div className="editor-pane">
             <EntityEditor
               contentApi={contentApi}
               draft={catalogue.effectiveEntityDraft}
@@ -69,26 +79,27 @@ export function CatalogueWorkspace({
               realmId={realmId}
               saving={catalogue.saving}
               sources={sources}
-              onCancel={catalogue.cancelEntityEdit}
+              onCancel={closeEditors}
               onChange={catalogue.setEntityDraft}
-              onSubmit={catalogue.saveEntity}
+              onSubmit={async (event) => { if (await catalogue.saveEntity(event)) setCreating(null) }}
             />
-          )}
-          <EntityList
+          </div> : selectedEntity ? <EntityDocument
+            contentApi={contentApi}
             canEdit={canEdit}
-            entities={catalogue.visibleEntities}
-            loading={catalogue.loading}
+            entity={selectedEntity}
+            relations={catalogue.relations}
             policies={policies}
             saving={catalogue.saving}
+            focusHeading={Boolean(catalogue.focusedEntityId)}
+            onOpenEntity={catalogue.openEntity}
             onDelete={catalogue.deleteEntity}
             onEdit={catalogue.editEntity}
             onOpenEvidence={onOpenEvidence}
             onPromote={catalogue.promoteEntity}
-          />
-        </div>
+          /> : <CatalogueEmpty text={catalogue.loading ? 'Abriendo el atlas…' : 'No hay fichas visibles con estos filtros.'} />
       ) : (
-        <div className="catalogue-layout">
-          {canEdit && catalogue.entities.length >= 2 && (
+        <div className="relations-workspace">
+          {showRelationEditor ? <div className="editor-pane">
             <RelationEditor
               contentApi={contentApi}
               draft={catalogue.effectiveRelationDraft}
@@ -98,12 +109,11 @@ export function CatalogueWorkspace({
               realmId={realmId}
               saving={catalogue.saving}
               sources={sources}
-              onCancel={catalogue.cancelRelationEdit}
+              onCancel={closeEditors}
               onChange={catalogue.setRelationDraft}
-              onSubmit={catalogue.saveRelation}
+              onSubmit={async (event) => { if (await catalogue.saveRelation(event)) setCreating(null) }}
             />
-          )}
-          <RelationList
+          </div> : <><header className="relations-heading"><h2>Relaciones del mundo</h2><p>Vínculos entre las fichas visibles de este universo.</p></header><RelationList
             canEdit={canEdit}
             entityCount={catalogue.entities.length}
             loading={catalogue.loading}
@@ -114,9 +124,11 @@ export function CatalogueWorkspace({
             onEdit={catalogue.editRelation}
             onOpenEvidence={onOpenEvidence}
             onPromote={catalogue.promoteRelation}
-          />
+            onOpenEntity={catalogue.openEntity}
+          /></>}
         </div>
       )}
+      </div>
     </section>
   )
 }
@@ -138,6 +150,7 @@ function CatalogueToolbar({ canonFilter, search, section, typeFilter, onCanonFil
       <div className="segmented-control" aria-label="Sección del catálogo">
         <button
           className={section === 'entities' ? 'active' : ''}
+          aria-pressed={section === 'entities'}
           type="button"
           onClick={() => onSectionChange('entities')}
         >
@@ -145,6 +158,7 @@ function CatalogueToolbar({ canonFilter, search, section, typeFilter, onCanonFil
         </button>
         <button
           className={section === 'relations' ? 'active' : ''}
+          aria-pressed={section === 'relations'}
           type="button"
           onClick={() => onSectionChange('relations')}
         >
@@ -160,6 +174,7 @@ function CatalogueToolbar({ canonFilter, search, section, typeFilter, onCanonFil
           placeholder="Nombre, alias o relación"
         />
       </label>
+      <details className="catalogue-filters"><summary>Filtrar fichas y relaciones</summary>
       {section === 'entities' && (
         <label>
           <span>Tipo</span>
@@ -179,6 +194,7 @@ function CatalogueToolbar({ canonFilter, search, section, typeFilter, onCanonFil
           <option value="PROPOSED">Propuesto</option>
         </select>
       </label>
+      </details>
     </div>
   )
 }

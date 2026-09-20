@@ -1,50 +1,78 @@
-@media (max-width: 900px) {
-  .workspace { padding-top: 3rem; }
-  .hero { align-items: stretch; flex-direction: column; }
-  .content-grid { grid-template-columns: 1fr; }
-  .realm-picker { width: 100%; }
+@media (max-width: 1150px) {
+  .workspace.has-realm { grid-template-columns: 235px minmax(0, 1fr); }
+  .entity-reading-layout { grid-template-columns: minmax(0, 1fr) 200px; }
+  .entity-document { padding-inline: 28px; }
+  .entity-context { padding-inline: 18px; }
   .access-columns { grid-template-columns: 1fr; }
   .access-section + .access-section { border-left: 0; border-top: 1px solid var(--line); }
   .invite-form, .policy-form { grid-template-columns: 1fr; }
-  .catalogue-header { align-items: stretch; flex-direction: column; }
-  .catalogue-summary { flex-wrap: wrap; }
-  .catalogue-toolbar { grid-template-columns: 1fr 1fr; }
-  .segmented-control { grid-column: 1 / -1; width: fit-content; }
-  .catalogue-layout { grid-template-columns: 1fr; }
-  .catalogue-editor { position: static; max-height: none; border-right: 0; border-bottom: 1px solid var(--line); }
 }
-
-@media (max-width: 600px) {
-  .topbar { height: auto; min-height: 72px; padding: 0.8rem 1rem; }
-  .identity > span { display: none; }
-  .workspace { width: min(94vw, 680px); }
-  .hero { margin-bottom: 2rem; }
-  .upload-form { grid-template-columns: 1fr; }
-  .question-footer { align-items: stretch; flex-direction: column; }
-  .question-footer button { width: 100%; }
-  .empty-realm { grid-template-columns: 1fr; padding: 2rem; }
-  .empty-realm form { grid-template-columns: 1fr; }
-  .runtime-notice { align-items: stretch; flex-direction: column; }
-  .runtime-notice code { white-space: normal; }
+@media (max-width: 950px) {
+  .entity-reading-layout { grid-template-columns: minmax(0, 1fr); }
+  .entity-context { border-left: 0; border-top: 1px solid var(--line); padding: 25px 28px; }
+  .entity-context .catalogue-evidence { grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+  .entity-document { padding-bottom: 32px; }
+  .source-reader-heading { flex-direction: column; gap: 10px; }
+  .question-footer { align-items: start; flex-direction: column; }
+  .runtime-notice { flex-direction: column; align-items: stretch; }
   .runtime-notice .runtime-commands { justify-items: start; }
-  .workspace-navigation { width: 100%; }
-  .workspace-navigation button { flex: 1; }
-  .catalogue-header { padding: 1.4rem; }
-  .catalogue-summary { display: grid; grid-template-columns: repeat(3, 1fr); }
-  .catalogue-summary span { min-width: 0; }
-  .catalogue-toolbar { grid-template-columns: 1fr; }
-  .segmented-control { grid-column: auto; width: 100%; }
-  .segmented-control button { flex: 1; }
-  .catalogue-card > footer { align-items: flex-start; flex-direction: column; }
-  .catalogue-card > footer > div { justify-content: flex-start; }
 }
-
+@media (max-width: 640px) {
+  .topbar { padding: 14px 16px; }
+  .brand { font-size: 21px; }
+  .identity > span { display: none; }
+  .identity button { padding: 6px 8px; font-size: 11px; }
+  .workspace.has-realm, .catalogue-workspace.with-local-index, .source-workspace.with-local-index { grid-template-columns: minmax(0, 1fr); }
+  .archive-sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .mobile-index-toggle { display: block; margin: 12px 20px; width: calc(100% - 40px); text-align: left; }
+  .archive-index-slot:not(.is-open) { display: none; }
+  .catalogue-filters { grid-column: 1 / -1; }
+  .realm-controls { padding: 20px 20px 14px; }
+  .realm-controls h1 { font-size: 27px; margin-bottom: 15px; }
+  .realm-picker { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+  .realm-picker > span { grid-column: 1 / -1; }
+  .realm-controls > button { margin-top: 8px; }
+  .workspace-navigation { padding: 0 8px 12px; }
+  .catalogue-index { padding: 16px 14px; }
+  .catalogue-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .catalogue-toolbar .segmented-control, .catalogue-toolbar label:has(input) { grid-column: 1 / -1; }
+  .entity-index-group { display: flex; flex-wrap: wrap; gap: 3px; }
+  .entity-index-group h3 { width: 100%; }
+  .entity-index button { width: auto; gap: 8px; max-width: 100%; }
+  .entity-index small { display: none; }
+  .index-actions { margin-top: 16px; }
+  .sources-panel .source-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+  .source-item { margin-bottom: 0; }
+  .sources-panel .upload-card { margin-top: 10px; padding-block: 12px; }
+  .workspace-location { padding-inline: 22px; }
+  .entity-document, .source-reader { padding: 28px 22px 36px; }
+  .entity-document h2, .source-reader-heading h2 { font-size: 36px; }
+  .entity-description { font-size: 19px; }
+  .entity-context { padding-inline: 22px; }
+  .question-workspace { padding: 8px 22px 32px; }
+  .question-workspace h2 { font-size: 31px; }
+  .question-footer button { width: 100%; }
+  .citations li { padding-inline: 0; grid-template-columns: 20px minmax(0, 1fr); }
+  .editor-pane, .catalogue-card, .relations-heading { padding: 24px 22px; }
+  .editor-pane .catalogue-editor-heading { flex-wrap: wrap; }
+  .catalogue-card > header { flex-direction: column; }
+  .archive-reading-empty { padding: 28px 22px; }
+  .archive-reading-empty h2 { font-size: 34px; }
+  .archive-reading-empty .reading-prompt { margin-top: 24px; }
+  .access-panel { margin: 0; }
+  .access-section, .panel-heading { padding-inline: 22px; }
+  .empty-realm { display: block; padding: 24px; }
+  .empty-realm form { grid-template-columns: 1fr; }
+  .empty-realm .panel-number { display: none; }
+  .source-dialog-backdrop { padding: 10px; }
+  .source-dialog header, .source-dialog pre { padding: 18px; }
+  .runtime-notice code { white-space: normal; }
+}
+@media (pointer: coarse) {
+  button, summary, select, input:not([type=checkbox]) { min-height: 44px; }
+  input, select, textarea { font-size: 16px !important; }
+  .entity-index button { min-height: 44px; }
+}
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    scroll-behavior: auto !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
-
