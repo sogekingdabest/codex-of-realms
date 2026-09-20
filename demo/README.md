@@ -2,6 +2,8 @@
 
 `El Meridiano de Ceniza` is the original Spanish campaign used in demos and evaluations. Its seven sources give players a public account of the setting while keeping a different perspective for the Game Master and selected players.
 
+For a short presentation, use the [portfolio walkthrough](PORTFOLIO.md). It uses three of these sources, two atlas entries and one relationship.
+
 The sources include three public documents, two GM-only documents and two spoilers. They cover:
 
 - Public canon shared by all realm members

@@ -15,6 +15,14 @@ The interface is in Spanish. The application runs locally and is being prepared 
 
 The atlas is curated manually. Questions use uploaded documents; editing an atlas entry does not change those documents.
 
+## See it in action
+
+![Lumbrevela in the campaign atlas, with a relationship and its source alongside it](demo/assets/atlas.png)
+
+[Watch the short walkthrough](demo/assets/recorrido.webm) · [Five-minute presentation and screenshots](demo/PORTFOLIO.md)
+
+Captured from the running application with fictional campaign data and local models. The walkthrough is in Spanish; it shows a prepared session, with models loaded before recording.
+
 ## Run locally
 
 You need Docker with Compose. Copy `.env.example` to `.env`, set the local passwords, then run from the repository root:

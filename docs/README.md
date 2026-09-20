@@ -5,6 +5,7 @@ If this is your first visit, [run the application](../README.md#run-locally) or 
 | I want to… | Read |
 |---|---|
 | Set up a development environment | [Local development](operations/LOCAL_DEVELOPMENT.md) |
+| Present the project | [Five-minute portfolio demo](../demo/PORTFOLIO.md) |
 | Understand the design | [Architecture](architecture/ARCHITECTURE.md), [modules](architecture/MODULES.md) and [decisions](architecture/DECISIONS.md) |
 | Check permissions and security | [Authorization](security/AUTHORIZATION_MODEL.md) and [threat model](security/THREAT_MODEL.md) |
 | Upgrade or test the application | [Operations](../OPERATIONS.md) |
