@@ -97,6 +97,21 @@ describe('feature API clients', () => {
     expect(init.signal).toBe(controller.signal)
   })
 
+  it('pide el calentamiento de los modelos con un POST autenticado', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ state: 'STARTED' }), { status: 202, headers: { 'Content-Type': 'application/json' } }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const api = createApiClients('/api/v1', async () => 'token')
+
+    await expect(api.runtime.warmUp()).resolves.toEqual({ state: 'STARTED' })
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit]
+    expect(url).toBe('/api/v1/capabilities/warm-up')
+    expect(init.method).toBe('POST')
+    expect(new Headers(init.headers).get('Authorization')).toBe('Bearer token')
+  })
+
   it('acepta respuestas vacías en revocaciones y borrados', async () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }))
     vi.stubGlobal('fetch', fetchMock)

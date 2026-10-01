@@ -25,7 +25,7 @@ The downloads go into the stack's model volume, separate from a native Ollama in
 
 The campaign material is original to this project. Create the accounts through registration; the demo has no shared passwords.
 
-Shortly before the session, ask “¿Dónde se alza Lumbrevela?” and wait for a cited answer. The first request may spend over a minute loading models; a healthy container does not mean the models are already loaded. If preparation fails, resolve it before inviting participants. Keep the session close to this check: the default model keep-alive is five minutes.
+Shortly before the session, ask “¿Dónde se alza Lumbrevela?” and wait for a cited answer. The application starts loading both models when the backend starts and whenever someone opens **Consultas**. Ollama unloads them after five idle minutes (`AI_CHAT_KEEP_ALIVE` for the chat model). A cold load can take more than a minute, and a healthy container does not mean the models are loaded. If preparation fails, resolve it before inviting participants.
 
 ## Eight-minute presentation
 

@@ -134,6 +134,11 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(jsonPath("$.embedding.available").value(false))
             .andExpect(jsonPath("$.embedding.status").value("NOT_CONFIGURED"))
             .andExpect(jsonPath("$.embedding.installedModels").isEmpty());
+        mockMvc.perform(post("/api/v1/capabilities/warm-up").with(identity("runtime-observer")))
+            .andExpect(status().isAccepted())
+            .andExpect(jsonPath("$.state").value("NOT_CONFIGURED"));
+        mockMvc.perform(post("/api/v1/capabilities/warm-up"))
+            .andExpect(status().isUnauthorized());
     }
 
     @Test

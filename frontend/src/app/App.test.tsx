@@ -109,6 +109,7 @@ function testApi() {
       chat: { provider: 'ollama', model: 'qwen3.5:4b', available: true, status: 'READY', installedModels: [] },
       embedding: { provider: 'ollama', model: 'bge-m3', available: true, status: 'READY', installedModels: [] },
     }),
+    warmUp: vi.fn().mockResolvedValue({ state: 'STARTED' }),
   }
   return composeTestApiClients(api)
 }
@@ -205,6 +206,20 @@ describe('App', () => {
     expect(api.getSourceContent).toHaveBeenCalledWith('realm-1', 'source-1', 'version-1', expect.any(AbortSignal))
   })
 
+  it('carga los modelos al abrir Consultas, antes de la primera pregunta', async () => {
+    const api = testApi()
+    vi.mocked(api.warmUp).mockRejectedValue(new Error('runtime unreachable'))
+    render(<App api={api} session={session} />)
+    await screen.findByText('Crónica de Lumbrevela')
+    expect(api.warmUp).not.toHaveBeenCalled()
+
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
+
+    await waitFor(() => expect(api.warmUp).toHaveBeenCalledOnce())
+    // A failed warm-up is not an error for the person asking.
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('permite que un jugador cargue sus fuentes visibles y pregunte sin pedir políticas', async () => {
     const api = testApi()
     vi.mocked(api.getCurrentUser).mockResolvedValue({
@@ -292,6 +307,7 @@ describe('App', () => {
     await screen.findByText('Crónica de Lumbrevela')
     fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
     expect(await screen.findByText('El runtime local necesita preparación')).toBeInTheDocument()
+    expect(api.warmUp).not.toHaveBeenCalled()
     expect(screen.getByText('ollama pull bge-m3')).toBeInTheDocument()
     expect(screen.getByText('ollama pull qwen3.5:4b')).toBeInTheDocument()
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {

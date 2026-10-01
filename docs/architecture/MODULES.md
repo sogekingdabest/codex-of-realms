@@ -21,7 +21,7 @@ flowchart LR
 | `content` | source documents, immutable versions, storage, chunks, embeddings | `SourceEvidenceAccess` and stable evidence/embedding contracts |
 | `lore` | access-aware retrieval, entities, relations, canon and provenance | `LoreSearch`, retrieval and catalogue views |
 | `qa` | evidence gate, model adapter, answer validation and citations | question-answering contracts |
-| `runtime` | model-runtime discovery and readiness reporting | `/api/v1/capabilities` through an application-owned runtime probe |
+| `runtime` | model-runtime discovery, readiness reporting and model warm-up | `/api/v1/capabilities` and `POST /api/v1/capabilities/warm-up` through application-owned runtime ports |
 | `shared` | canonical construction of RFC Problem Details responses | `ApiProblemDetails` HTTP transport contract |
 
 Use-case services and database queries enforce access. Controllers translate HTTP requests, and model adapters handle inference. Generated diagrams stay with build output; this page explains the relationships.

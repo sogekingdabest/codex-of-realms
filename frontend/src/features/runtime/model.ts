@@ -12,3 +12,9 @@ export interface RuntimeCapabilities {
   chat: ModelCapability
   embedding: ModelCapability
 }
+
+export type ModelWarmupState = 'STARTED' | 'ALREADY_LOADING' | 'NOT_CONFIGURED'
+
+export interface ModelWarmup {
+  state: ModelWarmupState
+}
