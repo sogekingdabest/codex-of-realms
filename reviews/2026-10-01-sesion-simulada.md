@@ -102,12 +102,30 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 
 ## Prioridad propuesta
 
-1. El fallo en frío: tiempos de espera alineados, calentamiento visible, progreso y cancelación.
+1. El fallo en frío: tiempos de espera alineados, calentamiento visible, progreso y cancelación. Corregido el mismo día; ver la sección siguiente.
 2. Foco y desplazamiento al resultado de la consulta en móvil.
 3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia.
 4. Tema y textos propios en el registro.
 5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil.
 6. Los detalles de la dirección.
+
+## Corrección del fallo en frío
+
+Se corrigió en la misma rama, en cuatro cambios:
+
+- **Una llamada por petición.** `spring.ai.retry.max-attempts` pasa a `0`. Un test carga `application.yaml` en la configuración de reintentos de Spring AI y comprueba que una llamada que caduca se ejecuta una sola vez. Con el valor anterior, el test falla.
+- **El API responde antes que el proxy.** nginx espera 300 s, más que las dos llamadas posibles de 120 s (embedding y chat). Un 504 que aún llegue al navegador explica que el modelo pudo estar cargándose.
+- **Calentamiento.** `POST /api/v1/capabilities/warm-up` carga en segundo plano el modelo de embeddings y luego el de chat. El backend lo hace al arrancar y la web cuando alguien abre Consultas. La verificación con modelos reales encontró un fallo: el calentamiento cargaba el modelo de chat con el contexto por defecto (4096) y las respuestas piden 8192. Ollama lo recargaba en cada visita a Consultas, y las consultas pasaron a tardar entre 29 y 89 s. Ahora el calentamiento usa el mismo contexto que las respuestas.
+- **Espera visible.** Junto al botón aparece un contador. A los 8 s, un mensaje explica que el modelo puede estar cargándose, y «Cancelar» devuelve el control sin error ([móvil](assets/2026-10-01-sesion-simulada/correccion-espera-movil.png), [escritorio](assets/2026-10-01-sesion-simulada/correccion-espera-escritorio.png)). Un fallo del modelo se muestra como «Modelo no disponible», con la sugerencia de reintentar en un minuto.
+
+### Verificación
+
+- Backend: 200 pruebas con Docker, incluidas las de integración, sin fallos ni omisiones. Frontend: lint, 194 pruebas, cobertura y compilación. La suite de navegador con el modelo determinista pasa.
+- Con los modelos reales, recién arrancado el contenedor, el calentamiento de arranque cargó `bge-m3` en 35 s y `qwen3.5:4b` en 1 min 28 s sin que nadie preguntara. La sesión completa pasó sin ninguna recarga del modelo, y las consultas de los jugadores tardaron entre 3 y 8 s.
+- La consulta de control tardó aún 65 s con el modelo ya cargado. Medido directamente contra Ollama con la caché caliente, la primera consulta tras cargar tarda 1,8 s. La máquina virtual de Docker tiene 6,7 GiB, usaba 1,1 GiB de swap y Ollama avisó de que desactivaba `mmap` por presión de memoria. Queda como observación de este equipo, no como fallo reproducido.
+- Para probar el fallo, se recreó el backend con un timeout de 12 s y se descargó el modelo de chat. La consulta mostró «Modelo no disponible» a los 13,7 s, sin aviso de error ni 504 ([captura](assets/2026-10-01-sesion-simulada/correccion-modelo-no-disponible.png)). Ollama recibió una sola llamada de chat por la pregunta, más la del calentamiento, y ningún reintento. Siguió cargando el modelo, y la misma pregunta respondió en 2,5 s al repetirla 45 s después.
+
+Ollama descarga el modelo tras cinco minutos sin uso (`AI_CHAT_KEEP_ALIVE`). Una pregunta después de una pausa todavía paga la carga, aunque ahora con explicación, sin llamada duplicada y con la opción de cancelar. Para una partida larga conviene ampliar ese valor.
 
 ## Reproducción y registros
 
