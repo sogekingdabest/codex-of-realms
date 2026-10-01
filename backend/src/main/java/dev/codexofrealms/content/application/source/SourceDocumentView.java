@@ -1,6 +1,7 @@
 package dev.codexofrealms.content.application.source;
 
 import dev.codexofrealms.content.domain.ProcessingStatus;
+import dev.codexofrealms.realm.AccessVisibility;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,6 +17,7 @@ public record SourceDocumentView(
     String language,
     ProcessingStatus status,
     UUID accessPolicyId,
+    AccessVisibility visibility,
     String embeddingProvider,
     String embeddingModel,
     Integer embeddingDimension,

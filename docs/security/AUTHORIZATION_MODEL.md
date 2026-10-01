@@ -25,6 +25,8 @@ A realm ID in a request selects the target; it does not grant access. Roles, mem
 | Read SPOILER without a grant | Yes | Yes | No |
 | Read SPOILER with a matching grant | Yes | Yes | Yes |
 
+Sources, atlas entries and relations carry a `visibility` of `PUBLIC`, `GM_ONLY` or `SPOILER` so the client can mark them. It describes a record the caller can already read; grant lists and policy names stay limited to owners and editors.
+
 At least one active owner must remain. Membership changes lock the realm row and repeat the role check inside the transaction so concurrent owner changes cannot bypass this invariant.
 
 ## Non-disclosing behavior
