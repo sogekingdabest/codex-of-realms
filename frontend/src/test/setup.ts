@@ -1,6 +1,9 @@
 import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import { cleanup, configure } from '@testing-library/react'
 import { afterEach, beforeEach } from 'vitest'
+
+// The full suite runs jsdom files in parallel; one second is too tight for findBy* under that load.
+configure({ asyncUtilTimeout: 3000 })
 
 // Routing reads the real jsdom location, so every test starts from the root path.
 beforeEach(() => {

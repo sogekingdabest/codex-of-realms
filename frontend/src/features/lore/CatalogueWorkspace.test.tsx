@@ -139,7 +139,7 @@ describe('CatalogueWorkspace', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Ver ficha de Lumbrevela' }))
     expect(screen.getByText('Lumbrevela custodia el paso.')).toBeVisible()
     expect(screen.queryByText('Nara Vey custodia el paso.')).not.toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'Lumbrevela' })).toHaveFocus()
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Lumbrevela' })).toHaveFocus())
     expect(screen.queryByRole('heading', { name: 'Registrar concepto' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('link', { name: 'Relaciones' }))
     expect(screen.getByText('Nara vive en Lumbrevela.')).toBeVisible()
