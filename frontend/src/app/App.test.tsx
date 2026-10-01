@@ -434,7 +434,8 @@ describe('App', () => {
     fireEvent.change(search, { target: { value: 'lumbrevela.md' } })
     fireEvent.click(screen.getByRole('link', { name: 'Leer Crónica de Lumbrevela' }))
     expect(await screen.findByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).toHaveTextContent('La Aguja conserva una deuda antigua con el Meridiano.')
-    expect(screen.getByRole('heading', { name: 'Crónica de Lumbrevela' })).toHaveFocus()
+    // Focus moves in an effect after the reader appears.
+    await waitFor(() => expect(screen.getByRole('heading', { name: 'Crónica de Lumbrevela' })).toHaveFocus())
     expect(screen.getByRole('button', { name: 'Abrir índice' })).toHaveAttribute('aria-expanded', 'false')
     expect(api.ask).not.toHaveBeenCalled()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar fuente' }))
@@ -530,7 +531,8 @@ describe('App: direcciones', () => {
     window.history.replaceState(null, '', '/universos/realm-1/atlas/lumbrevela')
     render(<App api={api} session={session} />)
 
-    expect(await screen.findByRole('heading', { name: 'Lumbrevela', level: 2 })).toHaveFocus()
+    const heading = await screen.findByRole('heading', { name: 'Lumbrevela', level: 2 })
+    await waitFor(() => expect(heading).toHaveFocus())
     expect(screen.getByRole('link', { name: 'Abrir ficha de Lumbrevela' })).toHaveAttribute('aria-current', 'page')
 
     act(() => {
