@@ -1,5 +1,6 @@
 import type { SubmitEvent } from 'react'
 
+import { SourceText } from '../../shared/ui/SourceText'
 import type { Citation, LoreAnswer } from './model'
 
 const failureMessages: Record<NonNullable<LoreAnswer['failureReason']>, string> = {
@@ -39,7 +40,7 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
             {answer.excerpts.map((excerpt) => {
               const citation = answer.citations.find((item) => item.rank === excerpt.citationRank)
               return <div key={excerpt.citationRank} className="answer-copy">
-                <blockquote className="answer-excerpt">{excerpt.text}</blockquote>
+                <blockquote className="answer-excerpt"><SourceText content={excerpt.text} headingLevel={3} /></blockquote>
                 {citation && <button className="citation-link" disabled={loadingCitation} type="button" onClick={() => void onInspectCitation(citation)}>Abrir contexto [{citation.rank}]</button>}
               </div>
             })}

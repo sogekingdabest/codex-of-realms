@@ -1,0 +1,48 @@
+/* Rendered source text. Font size and family come from the reading surface that contains it. */
+.source-text { min-width: 0; overflow-wrap: anywhere; }
+.source-text > * { margin: 0; }
+.source-text > * + * { margin-top: 1em; }
+.source-text p { white-space: pre-line; }
+.source-text .source-plain { white-space: pre-wrap; }
+
+.source-heading { font-family: var(--reading-font); font-weight: 400; line-height: 1.25; letter-spacing: -.3px; }
+.source-text > * + .source-heading { margin-top: 1.6em; }
+.source-text > .source-heading + * { margin-top: .55em; }
+.source-heading-1 { font-size: 1.55em; }
+.source-heading-2 { font-size: 1.3em; }
+.source-heading-3 { font-size: 1.12em; }
+.source-heading-4, .source-heading-5, .source-heading-6 { font-size: 1em; font-style: italic; }
+
+.source-text ul, .source-text ol { padding-left: 1.4em; }
+.source-text li + li, .source-text li > ul, .source-text li > ol { margin-top: .35em; }
+.source-text li::marker { color: var(--muted); }
+.source-task { list-style: none; }
+.source-task input { width: auto; margin: 0 .5em 0 -1.4em; vertical-align: middle; accent-color: var(--accent); }
+
+.source-text blockquote { padding-left: 1em; border-left: 2px solid var(--line); color: var(--muted); }
+.source-text blockquote > p { margin: 0; }
+.source-text blockquote > p + p { margin-top: .6em; }
+.source-text code { padding: .08em .3em; border-radius: 3px; background: var(--panel-strong); font: .82em/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.source-text pre { padding: .9em 1em; background: var(--sidebar); border: 1px solid var(--line); white-space: pre-wrap; }
+.source-text pre code { padding: 0; background: transparent; }
+.source-text hr { border: 0; border-top: 1px solid var(--line); }
+.source-text a { color: var(--accent); text-underline-offset: .2em; }
+.source-image { color: var(--muted); font-style: italic; }
+.source-image::before { content: 'Imagen · '; }
+
+.source-table { overflow-x: auto; }
+.source-table table { border-collapse: collapse; font-size: .85em; line-height: 1.5; }
+.source-table th, .source-table td { padding: .45em .8em .45em 0; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+.source-table th { font-weight: 600; }
+
+.source-front-matter { padding: .55em .8em; border: 1px solid var(--line); color: var(--muted); font: 12px/1.6 ui-sans-serif, system-ui, sans-serif; }
+.source-front-matter summary { cursor: pointer; }
+.source-front-matter dl { display: grid; gap: .15em; margin: .6em 0 0; }
+.source-front-matter dl > div { display: grid; grid-template-columns: minmax(6em, max-content) minmax(0, 1fr); gap: 1em; }
+.source-front-matter dt { color: var(--ink); }
+.source-front-matter dd { margin: 0; }
+
+.source-text mark { color: inherit; background: var(--highlight); border-bottom: 1px solid var(--accent); padding-block: .05em; }
+.source-text .is-cited { position: relative; }
+.source-text .is-cited::before { content: ''; position: absolute; top: .15em; bottom: .15em; left: -.9em; border-left: 2px solid var(--accent); }
+.source-gap { color: var(--muted); letter-spacing: .3em; }

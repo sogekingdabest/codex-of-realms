@@ -1,5 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react'
+import { locatePassage, sourceFormat } from '../../shared/lib/sourceMarkdown'
 import { Modal } from '../../shared/ui/Modal'
+import { SourceText } from '../../shared/ui/SourceText'
 import type { SourceContentView } from './model'
 
 export interface EvidenceReference {
@@ -28,7 +30,9 @@ export function SourceReader({ evidence, onClose }: Readonly<{
       <button className="quiet-button" type="button" onClick={onClose}>Cerrar fuente</button>
     </header>
     {(source.excludedSentences ?? 0) > 0 && <p role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
-    <pre className="source-reader-content" aria-label="Contenido de la fuente">{source.content}</pre>
+    <div className="source-reader-content" role="region" aria-label="Contenido de la fuente">
+      <SourceText content={source.content} format={sourceFormat(source.originalFilename)} />
+    </div>
   </article>
 }
 
@@ -37,35 +41,34 @@ export function EvidenceDialog({ evidence, onClose }: Readonly<{
   onClose: () => void
 }>) {
   const titleId = useId()
-  const [showFullSource, setShowFullSource] = useState(evidence.reference === null)
   const { source, reference } = evidence
+  const passage = reference ? locatePassage(source.content, { start: reference.startOffset, end: reference.endOffset }) : null
+  const [showFullSource, setShowFullSource] = useState(passage === null)
   return (
     <Modal labelledBy={titleId} className="source-dialog-backdrop" onClose={onClose} restoreFocusTo={evidence.returnFocusTo}>
       <div className="source-dialog">
-        <header>
-          <div><p className="eyebrow">{reference?.eyebrow ?? 'Lectura de fuente'}</p>
-            <h2 id={titleId}>{source.title}</h2>
-            <span>{source.originalFilename} · {reference?.heading || 'Documento'}</span>
-          </div>
-          <button data-modal-initial-focus type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button>
-        </header>
-        {(source.excludedSentences ?? 0) > 0 && <p role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
-        {reference && <div className="reader-controls">
-          <button type="button" className="quiet-button" aria-pressed={showFullSource}
-            onClick={() => setShowFullSource((current) => !current)}>
-            {showFullSource ? 'Volver al fragmento citado' : 'Leer documento completo'}
-          </button>
-        </div>}
-        <pre tabIndex={0} aria-label="Contenido de la fuente">{showFullSource || !reference ? source.content : citationExcerpt(source.content, reference)}</pre>
+        <div className="source-dialog-top">
+          <header>
+            <div><p className="eyebrow">{reference?.eyebrow ?? 'Lectura de fuente'}</p>
+              <h2 id={titleId}>{source.title}</h2>
+              <span>{source.originalFilename} · {reference?.heading || 'Documento'}</span>
+            </div>
+            <button data-modal-initial-focus type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button>
+          </header>
+          {passage && <div className="reader-controls">
+            <button type="button" className="quiet-button" aria-pressed={showFullSource}
+              onClick={() => setShowFullSource((current) => !current)}>
+              {showFullSource ? 'Volver al fragmento citado' : 'Leer documento completo'}
+            </button>
+          </div>}
+        </div>
+        {(source.excludedSentences ?? 0) > 0 && <p className="reader-notice" role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
+        {reference && !passage && <p className="reader-notice" role="status">No se pudo localizar el fragmento citado en esta versión. Se muestra el documento completo.</p>}
+        <div className="source-dialog-content" tabIndex={0} role="region" aria-label="Contenido de la fuente">
+          <SourceText content={source.content} format={sourceFormat(source.originalFilename)} passage={passage}
+            display={showFullSource ? 'document' : 'context'} />
+        </div>
       </div>
     </Modal>
   )
-}
-
-function citationExcerpt(content: string, reference: Pick<EvidenceReference, 'startOffset' | 'endOffset'>) {
-  const start = Math.max(0, Math.min(reference.startOffset, content.length))
-  const end = Math.max(start, Math.min(reference.endOffset, content.length))
-  const contextStart = Math.max(0, start - 320)
-  const contextEnd = Math.min(content.length, end + 320)
-  return `${contextStart > 0 ? '…' : ''}${content.slice(contextStart, start)}⟦ ${content.slice(start, end)} ⟧${content.slice(end, contextEnd)}${contextEnd < content.length ? '…' : ''}`
 }

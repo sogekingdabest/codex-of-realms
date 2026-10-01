@@ -10,4 +10,5 @@
 @import '../ui/actions.css';
 @import '../../features/realm/styles.css';
 @import '../../features/content/evidence.css';
+@import '../ui/source-text.css';
 @import './responsive.css';

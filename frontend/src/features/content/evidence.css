@@ -18,7 +18,7 @@
 
 .source-dialog-backdrop:not([open]) { display: none; }
 .source-dialog-backdrop::backdrop { background: rgba(5, 8, 7, 0.6); }
-.reader-controls { padding: 1rem 1.5rem 0; }
+.reader-controls { padding: 0 1.5rem 1rem; }
 
 .source-dialog {
   width: min(880px, 100%);
@@ -30,16 +30,20 @@
   box-shadow: 0 28px 90px rgba(0, 0, 0, 0.55);
 }
 
-.source-dialog header {
+.source-dialog-top {
   position: sticky;
   top: 0;
+  z-index: 1;
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+}
+
+.source-dialog header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   padding: 1.3rem 1.5rem;
-  background: var(--page);
-  border-bottom: 1px solid var(--line);
 }
 
 .source-dialog h2 {
@@ -63,11 +67,13 @@
   font-size: 1.6rem;
 }
 
-.source-dialog pre {
-  margin: 0;
+.source-dialog-content {
   padding: 1.7rem;
   color: var(--ink);
-  font: 1rem/1.8 Georgia, serif;
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
+  font: 1.06rem/1.8 var(--reading-font);
+}
+
+.reader-notice {
+  margin: 1rem 1.5rem 0;
+  color: var(--muted);
 }

@@ -146,8 +146,13 @@ test('verified owner and two players: realms, library, invitation, recovery and 
     await expect(player.getByRole('dialog').getByLabel('Contenido de la fuente')).toBeFocused()
     await player.keyboard.press('Tab')
     await expect(player.getByRole('button', { name: 'Cerrar evidencia' })).toBeFocused()
+    await expect(player.getByRole('dialog').locator('mark').first()).toContainText('Nara no entregó')
     await player.getByRole('button', { name: 'Leer documento completo' }).click()
-    await expect(player.getByLabel('Contenido de la fuente')).toHaveText('# Nara\n\n' + literal + ' Sigue vigente.')
+    const fullSource = player.getByRole('dialog').getByLabel('Contenido de la fuente')
+    // Markdown is rendered: the heading loses its marker and the passage stays marked.
+    await expect(fullSource.getByRole('heading', { name: 'Nara' })).toBeVisible()
+    await expect(fullSource).not.toContainText('# Nara')
+    await expect(fullSource).toContainText(literal + ' Sigue vigente.')
     await player.keyboard.press('Escape')
   }
   const firstRealm = await owner.getByLabel('Universo activo').inputValue()
