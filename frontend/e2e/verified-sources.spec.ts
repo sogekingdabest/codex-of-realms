@@ -172,5 +172,13 @@ test('verified owner and two players: realms, library, invitation, recovery and 
   await expect(one.getByRole('article', { name: 'Fuente: Crónica verificable' })).toBeVisible()
   expect(await one.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   await one.screenshot({ path: testInfo.outputPath('reader-mobile.png') })
+  // On a phone the result arrives below the form; focus and scrolling must bring it into view.
+  await one.getByRole('link', { name: 'Consultas', exact: true }).click()
+  await one.getByLabel('¿Qué quieres saber?').fill('Nara monedas')
+  await one.getByRole('button', { name: 'Consultar', exact: true }).click()
+  const result = one.getByRole('heading', { name: 'Fragmentos de las fuentes' })
+  await expect(result).toBeFocused()
+  await expect(result).toBeInViewport({ ratio: 1 })
+  await one.screenshot({ path: testInfo.outputPath('answer-mobile.png') })
   await owner.context().close(); await one.context().close(); await two.context().close()
 })
