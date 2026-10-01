@@ -105,7 +105,7 @@ describe('feature API clients', () => {
     await expect(api.realm.revokeInvitation('realm-1', 'invite-1')).resolves.toBeUndefined()
   })
 
-  it('expone el código estable de los errores ProblemDetail', async () => {
+  it('traduce el código estable de ProblemDetail y conserva el detalle técnico', async () => {
     const fetchMock = vi.fn().mockResolvedValue(
       new Response(
         JSON.stringify({
@@ -126,7 +126,8 @@ describe('feature API clients', () => {
 
     expect(error).toBeInstanceOf(ApiError)
     expect(error).toMatchObject({
-      message: 'A pending invitation already exists for this email.',
+      message: 'Ya hay una invitación pendiente para ese correo.',
+      detail: 'A pending invitation already exists for this email.',
       status: 409,
       code: 'invitation.pending_exists',
     })
@@ -142,7 +143,59 @@ describe('feature API clients', () => {
     const error = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
 
     expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ message: 'Error HTTP 502', status: 502, code: null })
+    expect(error).toMatchObject({
+      message: 'El servidor no pudo completar la operación. Inténtalo de nuevo en unos minutos.',
+      status: 502,
+      code: null,
+      detail: null,
+    })
+  })
+
+  it.each([
+    [401, 'Tu sesión ha caducado. Vuelve a iniciar sesión.'],
+    [403, 'No tienes permiso para realizar esta acción.'],
+    [418, 'No se pudo completar la operación (HTTP 418).'],
+  ])('explica en español un error %i sin código', async (status, message) => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status })))
+    const api = createApiClients('/api/v1', async () => 'token')
+
+    const error = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
+
+    expect(error).toMatchObject({ message, status, code: null })
+  })
+
+  it('usa el estado HTTP cuando el código no está en el catálogo', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(
+      JSON.stringify({ status: 404, detail: 'Gone.', code: 'future.unknown' }), { status: 404 },
+    )))
+    const api = createApiClients('/api/v1', async () => 'token')
+
+    const error = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
+
+    expect(error).toMatchObject({
+      message: 'El elemento solicitado ya no está disponible o no tienes acceso a él.',
+      code: 'future.unknown',
+      detail: 'Gone.',
+    })
+  })
+
+  it('distingue un fallo de red de una cancelación', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('Failed to fetch')))
+    const api = createApiClients('/api/v1', async () => 'token')
+
+    const error = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
+
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({
+      message: 'No se pudo conectar con el servidor. Comprueba tu conexión e inténtalo de nuevo.',
+      status: 0,
+      code: 'network.unavailable',
+      detail: 'Failed to fetch',
+    })
+
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new DOMException('Aborted', 'AbortError')))
+    const aborted = await api.realm.getCurrentUser().catch((reason: unknown) => reason)
+    expect(aborted).toBeInstanceOf(DOMException)
   })
 
   it('conserva los códigos de conflicto del catálogo de lore', async () => {
