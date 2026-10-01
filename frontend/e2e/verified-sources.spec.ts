@@ -140,6 +140,8 @@ test('verified owner and two players: realms, library, invitation, recovery and 
     await expect(player.locator('blockquote')).toHaveText(literal + ' Sigue vigente.')
     await player.getByRole('button', { name: 'Abrir contexto [1]' }).click()
     await expect(player.getByRole('dialog')).toContainText(literal + ' Sigue vigente.')
+    // Players see the passage heading, not the uploaded file name.
+    await expect(player.getByRole('dialog')).not.toContainText('cronica.md')
     // Citation dialogs keep the native keyboard loop and exact context reader.
     await expect(player.getByRole('button', { name: 'Cerrar evidencia' })).toBeFocused()
     await player.keyboard.press('Shift+Tab')

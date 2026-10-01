@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { locatePassage, sourceFormat } from '../../shared/lib/sourceMarkdown'
-import { playerAudience, type VisibilityAudience } from '../../shared/lib/visibility'
+import { playerAudience, type VisibilityAudience, type VisibilityViewer } from '../../shared/lib/visibility'
 import { Link } from '../../shared/routing'
 import { EyeIcon } from '../../shared/ui/icons'
 import { Modal } from '../../shared/ui/Modal'
@@ -15,6 +15,8 @@ export interface EvidenceReference {
   startOffset: number
   endOffset: number
   eyebrow: string
+  /** Identifies the exact version for owners and editors; players do not see it. */
+  checksumSha256?: string
 }
 
 export function SourceReader({ evidence, published, audience = playerAudience, manageAccessHref, onClose }: Readonly<{
@@ -77,12 +79,16 @@ function SpoilerNotice({ published, audience, manageAccessHref }: Readonly<{
   </div>
 }
 
-export function EvidenceDialog({ evidence, onClose }: Readonly<{
+export function EvidenceDialog({ evidence, viewer = 'player', onClose }: Readonly<{
   evidence: { reference: EvidenceReference | null; source: SourceContentView; returnFocusTo?: HTMLElement | null }
+  /** As in the source reader, only owners and editors see the file name and checksum. */
+  viewer?: VisibilityViewer
   onClose: () => void
 }>) {
   const titleId = useId()
   const { source, reference } = evidence
+  const editor = viewer === 'editor'
+  const checksum = editor && reference?.checksumSha256 ? ` · ${reference.checksumSha256.slice(0, 10)}` : ''
   const passage = reference ? locatePassage(source.content, { start: reference.startOffset, end: reference.endOffset }) : null
   const [showFullSource, setShowFullSource] = useState(passage === null)
   return (
@@ -90,9 +96,9 @@ export function EvidenceDialog({ evidence, onClose }: Readonly<{
       <div className="source-dialog">
         <div className="source-dialog-top">
           <header>
-            <div><p className="eyebrow">{reference?.eyebrow ?? 'Lectura de fuente'}</p>
+            <div><p className="eyebrow">{reference?.eyebrow ?? 'Lectura de fuente'}{checksum}</p>
               <h2 id={titleId}>{source.title}</h2>
-              <span>{source.originalFilename} · {reference?.heading || 'Documento'}</span>
+              <span>{editor && `${source.originalFilename} · `}{reference?.heading || 'Documento'}</span>
             </div>
             <button data-modal-initial-focus type="button" aria-label="Cerrar evidencia" onClick={onClose}>×</button>
           </header>
