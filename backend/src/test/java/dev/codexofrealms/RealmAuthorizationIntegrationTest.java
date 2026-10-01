@@ -366,7 +366,8 @@ class RealmAuthorizationIntegrationTest {
                 .with(identity("invited-player", "player@example.local")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
-            .andExpect(jsonPath("$[0].id").value(documentId.toString()));
+            .andExpect(jsonPath("$[0].id").value(documentId.toString()))
+            .andExpect(jsonPath("$[0].visibility").value("PUBLIC"));
         mockMvc.perform(get(
                     "/api/v1/realms/{realmId}/sources/{documentId}/versions/{versionId}/content",
                     realmId, documentId, versionId
@@ -655,7 +656,8 @@ class RealmAuthorizationIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(1))
             .andExpect(jsonPath("$[0].id").value(visibleRelation.toString()))
-            .andExpect(jsonPath("$[0].relationType").value("VIVE_EN"));
+            .andExpect(jsonPath("$[0].relationType").value("VIVE_EN"))
+            .andExpect(jsonPath("$[0].visibility").value("PUBLIC"));
 
         mockMvc.perform(put(
                     "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
@@ -666,6 +668,10 @@ class RealmAuthorizationIntegrationTest {
                 .with(identity("catalogue-player")))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.length()").value(2));
+        mockMvc.perform(get("/api/v1/realms/{realmId}/catalogue/entities/{entityId}", realmId, secretId)
+                .with(identity("catalogue-player")))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.visibility").value("SPOILER"));
         mockMvc.perform(delete(
                     "/api/v1/realms/{realmId}/access-policies/{policyId}/grants/{userId}",
                     realmId, spoilerPolicy, playerId

@@ -3,6 +3,7 @@ package dev.codexofrealms.lore.application.relation;
 import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.CataloguePromotion;
+import dev.codexofrealms.realm.AccessVisibility;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +19,7 @@ public record LoreRelationView(
     String description,
     CanonStatus canonStatus,
     UUID accessPolicyId,
+    AccessVisibility visibility,
     List<SourceEvidence> sourceEvidence,
     UUID createdBy,
     Instant createdAt,

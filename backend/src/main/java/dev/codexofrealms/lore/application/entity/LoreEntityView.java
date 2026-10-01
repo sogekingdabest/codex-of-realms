@@ -3,6 +3,7 @@ package dev.codexofrealms.lore.application.entity;
 import dev.codexofrealms.content.SourceEvidence;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.CataloguePromotion;
+import dev.codexofrealms.realm.AccessVisibility;
 import dev.codexofrealms.lore.domain.EntityType;
 import java.time.Instant;
 import java.util.List;
@@ -17,6 +18,7 @@ public record LoreEntityView(
     String description,
     CanonStatus canonStatus,
     UUID accessPolicyId,
+    AccessVisibility visibility,
     List<SourceEvidence> sourceEvidence,
     UUID createdBy,
     Instant createdAt,

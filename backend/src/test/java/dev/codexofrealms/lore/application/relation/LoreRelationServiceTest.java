@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 import dev.codexofrealms.content.SourceEvidenceAccess;
 import dev.codexofrealms.lore.application.port.LoreRelationRepository;
 import dev.codexofrealms.lore.domain.CanonStatus;
+import dev.codexofrealms.realm.AccessVisibility;
 import dev.codexofrealms.realm.RealmAccess;
 import java.time.Instant;
 import java.util.List;
@@ -103,7 +104,7 @@ class LoreRelationServiceTest {
     private LoreRelationView view(UUID id, CanonStatus status) {
         return new LoreRelationView(
             id, realmId, sourceId, "Nara", targetId, "Lumbrevela", "PROTEGE_A", "",
-            status, policyId, List.of(), userId, Instant.EPOCH, userId, Instant.EPOCH,
+            status, policyId, AccessVisibility.PUBLIC, List.of(), userId, Instant.EPOCH, userId, Instant.EPOCH,
             null, null, List.of()
         );
     }

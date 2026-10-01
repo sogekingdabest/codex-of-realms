@@ -7,6 +7,7 @@ import dev.codexofrealms.content.application.port.SourceVersion;
 import dev.codexofrealms.content.application.source.SourceChunkView;
 import dev.codexofrealms.content.application.source.SourceDocumentView;
 import dev.codexofrealms.content.domain.ProcessingStatus;
+import dev.codexofrealms.realm.AccessVisibility;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -24,7 +25,9 @@ public class SourceJdbcRepository implements SourceRepository {
                v.checksum_sha256, v.original_filename, v.media_type, v.language,
                v.processing_status, v.access_policy_id, v.embedding_provider,
                v.embedding_model, v.embedding_dimension, d.created_at,
-               (SELECT count(*) FROM lore_chunk c WHERE c.document_version_id=v.id) chunk_count
+               (SELECT count(*) FROM lore_chunk c WHERE c.document_version_id=v.id) chunk_count,
+               (SELECT vp.classification FROM access_policy vp
+                 WHERE vp.realm_id=v.realm_id AND vp.id=v.access_policy_id) visibility
         FROM source_document d JOIN document_version v ON v.document_id=d.id AND v.realm_id=d.realm_id
         """;
     private static final String ACCESSIBLE_VIEW_SQL = VIEW_SQL + """
@@ -388,7 +391,8 @@ public class SourceJdbcRepository implements SourceRepository {
             rs.getString("title"), rs.getObject("version_id", UUID.class), rs.getInt("version_number"),
             rs.getString("checksum_sha256"), rs.getString("original_filename"), rs.getString("media_type"),
             rs.getString("language"), ProcessingStatus.valueOf(rs.getString("processing_status")),
-            rs.getObject("access_policy_id", UUID.class), rs.getString("embedding_provider"),
+            rs.getObject("access_policy_id", UUID.class),
+            AccessVisibility.valueOf(rs.getString("visibility")), rs.getString("embedding_provider"),
             rs.getString("embedding_model"), (Integer) rs.getObject("embedding_dimension"),
             rs.getInt("chunk_count"), rs.getTimestamp("created_at").toInstant());
     }

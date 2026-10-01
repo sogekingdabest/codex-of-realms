@@ -15,6 +15,7 @@ import dev.codexofrealms.lore.application.port.LoreEntityRepository;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.EntityType;
 import dev.codexofrealms.lore.domain.LoreEntity;
+import dev.codexofrealms.realm.AccessVisibility;
 import dev.codexofrealms.realm.RealmAccess;
 import java.time.Instant;
 import java.util.List;
@@ -105,7 +106,7 @@ class LoreEntityServiceTest {
     private LoreEntityView view(UUID id, CanonStatus status) {
         return new LoreEntityView(
             id, realmId, EntityType.CHARACTER, "Nara Vey", List.of(), "",
-            status, policyId, List.of(), userId, Instant.EPOCH, userId, Instant.EPOCH,
+            status, policyId, AccessVisibility.PUBLIC, List.of(), userId, Instant.EPOCH, userId, Instant.EPOCH,
             null, null, List.of()
         );
     }

@@ -6,6 +6,7 @@ import dev.codexofrealms.lore.application.relation.LoreRelationView;
 import dev.codexofrealms.lore.domain.CanonStatus;
 import dev.codexofrealms.lore.domain.CataloguePromotion;
 import dev.codexofrealms.lore.domain.LoreRelation;
+import dev.codexofrealms.realm.AccessVisibility;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
@@ -25,7 +26,9 @@ public class LoreRelationJdbcRepository implements LoreRelationRepository {
                rel.target_entity_id, target.display_name target_name, rel.relation_type,
                rel.description, rel.canon_status, rel.access_policy_id,
                rel.created_by, rel.created_at, rel.updated_by, rel.updated_at,
-               rel.promoted_by, rel.promoted_at
+               rel.promoted_by, rel.promoted_at,
+               (SELECT vp.classification FROM access_policy vp
+                 WHERE vp.realm_id=rel.realm_id AND vp.id=rel.access_policy_id) visibility
         """;
     private static final String RELATION_SELECT = RELATION_COLUMNS + """
         FROM lore_relation rel
@@ -274,7 +277,7 @@ public class LoreRelationJdbcRepository implements LoreRelationRepository {
         return new LoreRelationView(
             row.id(), row.realmId(), row.sourceEntityId(), row.sourceEntityName(),
             row.targetEntityId(), row.targetEntityName(), row.relationType(), row.description(),
-            row.canonStatus(), row.accessPolicyId(), evidence(row.id()),
+            row.canonStatus(), row.accessPolicyId(), row.visibility(), evidence(row.id()),
             row.createdBy(), row.createdAt(), row.updatedBy(), row.updatedAt(),
             row.promotedBy(), row.promotedAt(), promotions(row.id())
         );
@@ -301,6 +304,7 @@ public class LoreRelationJdbcRepository implements LoreRelationRepository {
             resultSet.getString("relation_type"), resultSet.getString("description"),
             CanonStatus.valueOf(resultSet.getString("canon_status")),
             resultSet.getObject("access_policy_id", UUID.class),
+            AccessVisibility.valueOf(resultSet.getString("visibility")),
             resultSet.getObject("created_by", UUID.class),
             LoreJdbcMappings.instant(resultSet, "created_at"),
             resultSet.getObject("updated_by", UUID.class),
@@ -328,7 +332,7 @@ public class LoreRelationJdbcRepository implements LoreRelationRepository {
     private record RelationRow(
         UUID id, UUID realmId, UUID sourceEntityId, String sourceEntityName,
         UUID targetEntityId, String targetEntityName, String relationType, String description,
-        CanonStatus canonStatus, UUID accessPolicyId, UUID createdBy, Instant createdAt,
+        CanonStatus canonStatus, UUID accessPolicyId, AccessVisibility visibility, UUID createdBy, Instant createdAt,
         UUID updatedBy, Instant updatedAt, UUID promotedBy, Instant promotedAt
     ) {
     }
