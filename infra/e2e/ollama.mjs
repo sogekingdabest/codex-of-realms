@@ -19,6 +19,8 @@ http.createServer(async (request, response) => {
       send(200, { model: body.model, embeddings: vectors, embedding: vectors[0], prompt_eval_count: input.length }); return
     }
     if (request.url === '/api/chat') {
+      // Like Ollama, a request without messages only loads the model (the backend's warm-up).
+      if (!body.messages?.length) { send(200, { model: body.model, created_at: new Date().toISOString(), message: { role: 'assistant', content: '' }, done: true, done_reason: 'load' }); return }
       const user = body.messages.findLast(message => message.role === 'user')
       const payload = JSON.parse(user.content)
       const passages = payload.untrustedEvidence ?? []
