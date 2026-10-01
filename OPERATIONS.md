@@ -6,7 +6,7 @@ Use this guide to upgrade an installation, run the checks and recover campaign d
 
 1. Make a coordinated backup with the current database and original files.
 2. Rebuild and deploy frontend and backend together: `docker compose up -d --build`.
-3. Run `./scripts/configure-email-verification.ps1`. It updates only email verification and SMTP settings in the existing Keycloak realm. It does not recreate users or the realm.
+3. Run `./scripts/configure-keycloak-realm.ps1`. It updates email verification, SMTP and the access theme in the existing Keycloak realm. It does not recreate users or the realm.
 4. Register a new account, open its verification email at http://localhost:8025 and follow the link. Keycloak requests the new password after email verification; complete this step before returning to the application. Demo accounts remain preverified.
 
 Flyway V7 adds `email_verified=false` to existing application identities until their next synchronization. Existing memberships remain intact. New invitations stay pending until the recipient makes an authenticated request with the matching email and a boolean true verification claim; a previously stored value is insufficient. Owners share the application URL themselves because the backend sends no invitation notices.

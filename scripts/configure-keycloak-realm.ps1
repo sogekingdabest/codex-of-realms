@@ -3,15 +3,15 @@ param([string]$ProjectName = "codex-of-realms")
 
 $ErrorActionPreference = "Stop"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$settings = Join-Path $repositoryRoot "infra/keycloak/email-verification.json"
+$settings = Join-Path $repositoryRoot "infra/keycloak/realm-settings.json"
 Push-Location $repositoryRoot
 try {
-    $remoteDirectory = (& docker compose -p $ProjectName exec -T keycloak mktemp -d /tmp/codex-email.XXXXXXXX | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0 -or $remoteDirectory -notmatch '^/tmp/codex-email\.[A-Za-z0-9]+$') {
+    $remoteDirectory = (& docker compose -p $ProjectName exec -T keycloak mktemp -d /tmp/codex-realm.XXXXXXXX | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $remoteDirectory -notmatch '^/tmp/codex-realm\.[A-Za-z0-9]+$') {
         throw "Could not create a private Keycloak work directory."
     }
     & docker compose -p $ProjectName cp $settings "keycloak:$remoteDirectory/settings.json"
-    if ($LASTEXITCODE -ne 0) { throw "Could not copy Keycloak verification settings." }
+    if ($LASTEXITCODE -ne 0) { throw "Could not copy the Keycloak realm settings." }
     # Bootstrap credentials stay inside the container and are never printed.
     $configure = @'
 set -eu
@@ -23,5 +23,5 @@ trap 'rm -f "$config" "$config_dir/settings.json"; rmdir "$config_dir"' EXIT
 '@
     & docker compose -p $ProjectName exec -T keycloak sh -ec $configure sh $remoteDirectory
     if ($LASTEXITCODE -ne 0) { throw "Could not update the existing Keycloak realm." }
-    Write-Host "Email verification enabled. Local verification mail: http://localhost:8025"
+    Write-Host "Realm updated: email verification, SMTP and the Codex access theme. Local verification mail: http://localhost:8025"
 } finally { Pop-Location }

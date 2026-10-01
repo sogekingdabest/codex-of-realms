@@ -5,7 +5,7 @@ async function register(browser: Browser, request: APIRequestContext, email: str
   const context = await browser.newContext()
   const page = await context.newPage()
   await page.goto('/')
-  await page.getByRole('link', { name: /Register/ }).click()
+  await page.getByRole('link', { name: 'Create account' }).click()
   await page.locator('#firstName').fill('Test')
   await page.locator('#lastName').fill(email.split('@')[0])
   await page.locator('#email').fill(email)
@@ -13,8 +13,8 @@ async function register(browser: Browser, request: APIRequestContext, email: str
     await page.locator('#password').fill(password)
     await page.locator('#password-confirm').fill(password)
   }
-  await page.getByRole('button', { name: /Register/ }).click()
-  await expect(page.getByText(/verify your email|verification email|verify email/i).first()).toBeVisible()
+  await page.getByRole('button', { name: 'Create account' }).click()
+  await expect(page.getByRole('heading', { name: 'Confirm your email' })).toBeVisible()
   let messageId = ''
   await expect.poll(async () => {
     const response = await request.get('http://localhost:28025/api/v1/messages')
@@ -26,23 +26,25 @@ async function register(browser: Browser, request: APIRequestContext, email: str
   // Open the captured verification email in Mailpit's actual web interface.
   const inbox = await context.newPage()
   await inbox.goto('http://localhost:28025/')
-  await expect(inbox.getByText(/verify|verification/i).first()).toBeVisible()
-  await inbox.getByText(/verify|verification/i).first().click()
+  await expect(inbox.getByText('Confirm your email · Codex of Realms').first()).toBeVisible()
+  await inbox.getByText('Confirm your email · Codex of Realms').first().click()
   const mail = await (await request.get('http://localhost:28025/api/v1/message/' + messageId)).json()
   const link = (mail.Text as string).match(/http:\/\/localhost:28180\/[^\s<>]+/)
   expect(link).not.toBeNull()
   await page.goto(link![0].replaceAll('&amp;', '&'))
-  const proceed = page.getByRole('link', { name: /proceed|back to application/i })
+  const proceed = page.getByRole('link', { name: /^(Continue|Back to the archive)$/ })
   if (await proceed.count()) await proceed.first().click()
+  // The Codex access theme asks for a first password, not a change.
+  await expect(page.getByRole('heading', { name: 'Choose your password' })).toBeVisible()
   await expect(page.locator('#password-new')).toBeVisible()
   await page.locator('#password-new').fill(password)
   await page.locator('#password-confirm').fill(password)
-  await page.getByRole('button', { name: /Submit/ }).click()
+  await page.getByRole('button', { name: 'Continue' }).click()
   await page.goto('/')
   if (await page.locator('#username').count()) {
     await page.locator('#username').fill(email)
     await page.locator('#password').fill(password)
-    await page.getByRole('button', { name: /Sign In/ }).click()
+    await page.getByRole('button', { name: 'Sign in' }).click()
   }
   await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
   return page

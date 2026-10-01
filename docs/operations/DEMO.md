@@ -17,7 +17,7 @@ docker compose exec ollama ollama pull qwen3.5:4b
 
 The downloads go into the stack's model volume, separate from a native Ollama installation. Use your `.env` tags if you changed the defaults, then reload the app.
 
-3. Open [the application](http://localhost:5173). Register a local owner, open its verification message in [Mailpit](http://localhost:8025), follow the link and set the password when Keycloak asks. For an existing realm, first run `./scripts/configure-email-verification.ps1`; a startup import does not update it.
+3. Open [the application](http://localhost:5173). Register a local owner, open its verification message in [Mailpit](http://localhost:8025), follow the link and set the password when Keycloak asks. For an existing realm, first run `./scripts/configure-keycloak-realm.ps1`; a startup import does not update it.
 4. Create **El Meridiano de Ceniza**. Under **Añadir conocimiento**, upload the three files from `demo/lore/public/` with **Público** visibility and readable titles. Wait for publication. Read a source from the library to confirm availability.
 5. Invite two local player addresses. Register each in a separate browser profile, verify its email and return to the app. Invitations activate on a matching verified login; creating an invitation does not send email.
 6. Create a spoiler group, upload `demo/lore/spoilers/01-el-recuerdo-de-nara.md` under that group, and grant it to only the first player. Upload `demo/lore/gm-only/01-la-deuda-de-la-aguja.md` as GM-only. Select visibility in the form explicitly: Markdown front matter does not replace authorization.

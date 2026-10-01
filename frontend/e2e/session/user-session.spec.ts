@@ -75,7 +75,7 @@ async function register(browser: Browser, request: APIRequestContext, persona: P
   await page.goto('/')
   const firstContact = persona.role !== 'Dirección'
   if (firstContact) await shot(persona, 'registro-1-acceso')
-  await page.getByRole('link', { name: /Register|Registrarse/ }).click()
+  await page.getByRole('link', { name: 'Crear cuenta' }).click()
   await page.locator('#firstName').fill(persona.name)
   await page.locator('#lastName').fill(persona.lastName)
   await page.locator('#email').fill(persona.email)
@@ -84,7 +84,7 @@ async function register(browser: Browser, request: APIRequestContext, persona: P
     await page.locator('#password-confirm').fill(password)
   }
   if (firstContact) await shot(persona, 'registro-2-formulario')
-  await page.getByRole('button', { name: /Register|Registrarse/ }).click()
+  await page.getByRole('button', { name: 'Crear cuenta' }).click()
   if (firstContact) await shot(persona, 'registro-3-verifica-correo')
   let messageId = ''
   await expect.poll(async () => {
@@ -95,17 +95,17 @@ async function register(browser: Browser, request: APIRequestContext, persona: P
   const mail = await (await request.get('http://localhost:28025/api/v1/message/' + messageId)).json()
   const link = (mail.Text as string).match(/http:\/\/localhost:28180\/[^\s<>]+/)
   await page.goto(link![0].replaceAll('&amp;', '&'))
-  const proceed = page.getByRole('link', { name: /proceed|back to application|clic aquí|volver a la aplicación/i })
+  const proceed = page.getByRole('link', { name: /^(Continuar|Volver al archivo)$/ })
   if (await proceed.count()) await proceed.first().click()
   await page.locator('#password-new').fill(password)
   await page.locator('#password-confirm').fill(password)
   if (firstContact) await shot(persona, 'registro-4-contrasena')
-  await page.getByRole('button', { name: /Submit|Enviar/ }).click()
+  await page.getByRole('button', { name: 'Continuar' }).click()
   await page.goto('/')
   if (await page.locator('#username').count()) {
     await page.locator('#username').fill(persona.email)
     await page.locator('#password').fill(password)
-    await page.getByRole('button', { name: /Sign In|Iniciar sesión/ }).click()
+    await page.getByRole('button', { name: 'Entrar' }).click()
   }
   await expect(page.getByRole('button', { name: 'Cerrar sesión' })).toBeVisible()
 }

@@ -20,7 +20,7 @@ The atlas follows a separate editorial workflow: owners and editors create entri
 
 ## Login and campaign permissions
 
-Keycloak handles registration and login. The React client uses Authorization Code with PKCE and keeps tokens in memory. The API validates each JWT and maps it to a local user.
+Keycloak handles registration and login. Its `codex` theme (`infra/keycloak/themes/codex`) gives the access pages and the verification and password emails the application's look and wording. The React client uses Authorization Code with PKCE and keeps tokens in memory. The API validates each JWT and maps it to a local user.
 
 Campaign membership, owner/editor/player roles and spoiler grants belong to the application database. For example, a valid login alone does not let a player read a Game Master's note. Invitations need a matching verified-email claim on the recipient's request. The [authorization guide](../security/AUTHORIZATION_MODEL.md) lists the rules and endpoints.
 

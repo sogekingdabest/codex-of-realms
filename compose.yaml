@@ -55,6 +55,7 @@ services:
         condition: service_completed_successfully
     volumes:
       - ./infra/keycloak/codex-of-realms-realm.json:/opt/keycloak/data/import/codex-of-realms-realm.json:ro
+      - ./infra/keycloak/themes/codex:/opt/keycloak/themes/codex:ro
 
   keycloak-db-init:
     image: postgres:18.1-trixie
