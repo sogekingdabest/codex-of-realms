@@ -155,6 +155,7 @@ describe('feature API clients', () => {
     [401, 'Tu sesión ha caducado. Vuelve a iniciar sesión.'],
     [403, 'No tienes permiso para realizar esta acción.'],
     [418, 'No se pudo completar la operación (HTTP 418).'],
+    [504, 'El servidor tardó demasiado en responder. Si el modelo se estaba cargando, inténtalo de nuevo en un minuto.'],
   ])('explica en español un error %i sin código', async (status, message) => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(null, { status })))
     const api = createApiClients('/api/v1', async () => 'token')

@@ -49,7 +49,7 @@ Responses retain `ANSWERED`/`INSUFFICIENT_EVIDENCE`, answer, citations and prove
 
 The browser renders passages as plain text. Before paragraph expansion, lexical overlap filters the retrieved context, including headings. Full candidate paragraphs are then screened for instruction patterns. See [answer limitations](docs/product/LIMITATIONS.md#sources-and-questions) when interpreting the result.
 
-Nginx accepts 2 MiB multipart requests, while the backend file limit is 1 MiB. The proxy waits 180 seconds for API responses; the model timeout is 120 seconds.
+Nginx accepts 2 MiB multipart requests, while the backend file limit is 1 MiB. Each model call times out after 120 seconds (`AI_HTTP_READ_TIMEOUT`) and is not repeated. A question can make two calls, the embedding and then the chat. The proxy therefore waits 300 seconds, so the API reports the failure itself instead of a gateway timeout: `MODEL_UNAVAILABLE` for the chat, or 503 `source.embedding_unavailable` for the embedding. If you raise the model timeout, raise `proxy_read_timeout` above twice its value.
 
 ## Reproducible acceptance
 
