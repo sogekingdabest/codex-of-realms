@@ -186,7 +186,7 @@ describe('App', () => {
     const api = testApi()
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
-    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
 
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
       target: { value: '¿Qué deuda conserva la Aguja?' },
@@ -223,8 +223,8 @@ describe('App', () => {
     expect(api.listSources).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
     expect(api.listPolicies).not.toHaveBeenCalled()
     expect(api.listMemberships).not.toHaveBeenCalled()
-    expect(screen.queryByRole('button', { name: 'Personas y permisos' })).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+    expect(screen.queryByRole('link', { name: 'Personas y permisos' })).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
     expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
   })
 
@@ -233,7 +233,7 @@ describe('App', () => {
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
 
-    fireEvent.click(screen.getByRole('button', { name: 'Atlas del canon' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Atlas del canon' }))
 
     expect(await screen.findByRole('heading', { name: 'Atlas del canon' })).toBeInTheDocument()
     expect(api.listLoreEntities).toHaveBeenCalledWith('realm-1', expect.any(AbortSignal))
@@ -289,7 +289,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
-    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
     expect(await screen.findByText('El runtime local necesita preparación')).toBeInTheDocument()
     expect(screen.getByText('ollama pull bge-m3')).toBeInTheDocument()
     expect(screen.getByText('ollama pull qwen3.5:4b')).toBeInTheDocument()
@@ -311,7 +311,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Consultas' }))
     expect(await screen.findByText('Ollama no responde. Inicia o revisa el runtime local.')).toBeInTheDocument()
     expect(screen.queryByText(/ollama pull/)).not.toBeInTheDocument()
   })
@@ -325,7 +325,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Consultas' }))
     expect(await screen.findByText(
       'Configura el proveedor y el modelo correspondientes antes de continuar.',
     )).toBeInTheDocument()
@@ -341,7 +341,7 @@ describe('App', () => {
 
     render(<App api={api} session={session} />)
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Consultas' }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Consultas' }))
     expect(await screen.findByText('Respuestas: shared-model (sin configurar).')).toBeInTheDocument()
     expect(screen.getAllByText('ollama pull shared-model')).toHaveLength(1)
     expect(screen.getByText(
@@ -374,7 +374,7 @@ describe('App', () => {
 
       render(<App api={api} session={session} />)
       await screen.findByText('Crónica de Lumbrevela')
-      fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+      fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
       fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), {
         target: { value: '¿Qué ocurrió?' },
       })
@@ -414,7 +414,7 @@ describe('App', () => {
     vi.mocked(api.ask).mockRejectedValue(new Error('Servicio temporalmente no disponible'))
     render(<App api={api} session={session} />)
     await screen.findByText('Crónica de Lumbrevela')
-    fireEvent.click(screen.getByRole('button', { name: 'Consultas' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
 
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: 'pregunta' } })
     fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
@@ -428,11 +428,11 @@ describe('App', () => {
     render(<App api={api} session={session} />)
     const search = await screen.findByLabelText('Buscar fuentes')
     fireEvent.change(search, { target: { value: 'cronica' } })
-    expect(screen.getByRole('button', { name: 'Leer Crónica de Lumbrevela' })).toBeVisible()
+    expect(screen.getByRole('link', { name: 'Leer Crónica de Lumbrevela' })).toBeVisible()
     fireEvent.change(search, { target: { value: 'inexistente' } })
-    expect(screen.queryByRole('button', { name: 'Leer Crónica de Lumbrevela' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Leer Crónica de Lumbrevela' })).not.toBeInTheDocument()
     fireEvent.change(search, { target: { value: 'lumbrevela.md' } })
-    fireEvent.click(screen.getByRole('button', { name: 'Leer Crónica de Lumbrevela' }))
+    fireEvent.click(screen.getByRole('link', { name: 'Leer Crónica de Lumbrevela' }))
     expect(await screen.findByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).toHaveTextContent('La Aguja conserva una deuda antigua con el Meridiano.')
     expect(screen.getByRole('heading', { name: 'Crónica de Lumbrevela' })).toHaveFocus()
     expect(screen.getByRole('button', { name: 'Abrir índice' })).toHaveAttribute('aria-expanded', 'false')
@@ -468,12 +468,104 @@ describe('App', () => {
     let finish!: (value: typeof content) => void
     vi.mocked(api.getSourceContent).mockClear().mockImplementation(() => new Promise((resolve) => { finish = resolve }))
     render(<App api={api} session={session} />)
-    fireEvent.click(await screen.findByRole('button', { name: 'Leer Crónica de Lumbrevela' }))
+    fireEvent.click(await screen.findByRole('link', { name: 'Leer Crónica de Lumbrevela' }))
     const signal = vi.mocked(api.getSourceContent).mock.calls[0][3]!
     fireEvent.change(screen.getByLabelText('Universo activo'), { target: { value: 'realm-2' } })
     expect(signal.aborted).toBe(true)
     await act(async () => { finish(content) })
     expect(screen.queryByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).not.toBeInTheDocument()
     expect(screen.getByLabelText('Universo activo')).toHaveValue('realm-2')
+  })
+})
+
+describe('App: direcciones', () => {
+  const entity = (id: string, displayName: string) => ({
+    id, realmId: 'realm-1', type: 'PLACE', displayName, aliases: [], description: `${displayName} se alza al este.`,
+    canonStatus: 'CANON', accessPolicyId: 'policy-1', sourceEvidence: [], createdBy: 'user-1', createdAt: '2026-09-01',
+    updatedBy: 'user-1', updatedAt: '2026-09-01', promotedBy: 'user-1', promotedAt: '2026-09-01', promotionHistory: [],
+  })
+
+  it('sustituye una dirección desconocida por las fuentes del primer universo', async () => {
+    window.history.replaceState(null, '', '/pagina-inexistente')
+    render(<App api={testApi()} session={session} />)
+
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/universos/realm-1/fuentes')
+    expect(screen.getByRole('link', { name: 'Fuentes' })).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('abre una fuente desde su dirección y vuelve con el historial del navegador', async () => {
+    window.history.replaceState(null, '', '/universos/realm-1/fuentes/source-1')
+    render(<App api={testApi()} session={session} />)
+
+    expect(await screen.findByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Leer Crónica de Lumbrevela' })).toHaveAttribute('aria-current', 'page')
+    expect(document.title).toBe('Fuentes · El Meridiano · Codex of Realms')
+
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
+    expect(window.location.pathname).toBe('/universos/realm-1/consultas')
+    expect(screen.queryByRole('article')).not.toBeInTheDocument()
+
+    act(() => {
+      window.history.replaceState(null, '', '/universos/realm-1/fuentes/source-1')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+    expect(await screen.findByRole('article', { name: 'Fuente: Crónica de Lumbrevela' })).toBeInTheDocument()
+  })
+
+  it('explica que una fuente enlazada ya no está disponible', async () => {
+    window.history.replaceState(null, '', '/universos/realm-1/fuentes/retirada')
+    const api = testApi()
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByRole('heading', { name: 'Esta fuente no está disponible' })).toBeInTheDocument()
+    expect(api.getSourceContent).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByRole('link', { name: 'Volver a las fuentes' }))
+    expect(window.location.pathname).toBe('/universos/realm-1/fuentes')
+  })
+
+  it('abre una ficha del atlas enlazada y avisa si no es visible', async () => {
+    const api = testApi()
+    vi.mocked(api.listLoreEntities).mockResolvedValue([entity('aguja', 'La Aguja'), entity('lumbrevela', 'Lumbrevela')])
+    window.history.replaceState(null, '', '/universos/realm-1/atlas/lumbrevela')
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByRole('heading', { name: 'Lumbrevela', level: 2 })).toHaveFocus()
+    expect(screen.getByRole('link', { name: 'Abrir ficha de Lumbrevela' })).toHaveAttribute('aria-current', 'page')
+
+    act(() => {
+      window.history.pushState(null, '', '/universos/realm-1/atlas/secreta')
+      window.dispatchEvent(new PopStateEvent('popstate'))
+    })
+    expect(await screen.findByText('Esta ficha no existe o no es visible para ti.')).toBeInTheDocument()
+  })
+
+  it('no deja a un jugador en personas y permisos', async () => {
+    const api = testApi()
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: { id: 'player-1', issuer: 'issuer', subject: 'player', emailVerified: true, displayName: 'Nara', email: null },
+      realms: [{ id: 'realm-1', name: 'El Meridiano', role: 'PLAYER' }],
+    })
+    window.history.replaceState(null, '', '/universos/realm-1/personas')
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/universos/realm-1/fuentes')
+    expect(api.listMemberships).not.toHaveBeenCalled()
+  })
+
+  it('pliega el índice en móvil al abrir una ficha y lo recupera al volver a la lista', async () => {
+    const api = testApi()
+    vi.mocked(api.listLoreEntities).mockResolvedValue([entity('aguja', 'La Aguja')])
+    window.history.replaceState(null, '', '/universos/realm-1/atlas')
+    render(<App api={api} session={session} />)
+
+    fireEvent.click(await screen.findByRole('link', { name: 'Abrir ficha de La Aguja' }))
+    expect(screen.getByRole('button', { name: 'Abrir índice' })).toHaveAttribute('aria-expanded', 'false')
+    fireEvent.click(screen.getByRole('button', { name: 'Abrir índice' }))
+    expect(screen.getByRole('button', { name: 'Cerrar índice' })).toHaveAttribute('aria-expanded', 'true')
+    fireEvent.click(screen.getByRole('link', { name: 'Fichas' }))
+    expect(window.location.pathname).toBe('/universos/realm-1/atlas')
+    expect(screen.getByRole('button', { name: 'Cerrar índice' })).toBeInTheDocument()
   })
 })

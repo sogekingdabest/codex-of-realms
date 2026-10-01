@@ -1,31 +1,50 @@
-import { useRef, type SubmitEvent } from 'react'
-import { createPortal } from 'react-dom'
+import { useEffect, useRef, type ReactNode, type SubmitEvent } from 'react'
 
 import { CatalogueWorkspace } from '../../features/lore'
 import { QuestionPanel } from '../../features/qa'
 import {
   EvidenceDialog,
+  SourceReader,
   SourcesPanel,
+  useSourceReader,
   type SourceDocumentView,
 } from '../../features/content'
 import { RealmAccessPanel, type RealmSummary } from '../../features/realm'
 import { formText } from '../../shared/lib/forms'
+import { Link, navigate } from '../../shared/routing'
 import { ErrorToast } from '../../shared/ui/ErrorToast'
+import { routePath, sectionLabels, sectionRoute, type WorkspaceRoute, type WorkspaceSection } from '../routes'
 import { useRealmWorkspace, type WorkspaceApis } from './useRealmWorkspace'
-import { SourceReader } from '../../features/content/EvidenceDialog'
+import { WorkspaceLayout, WorkspaceNavigation } from './WorkspaceLayout'
 
-export type WorkspaceSection = 'sources' | 'questions' | 'canon' | 'access'
+const locationLabels: Record<WorkspaceSection, string> = { ...sectionLabels, questions: 'Consultas al archivo' }
 
-export function RealmWorkspace({ api, realm, section, indexContainer, onSelectEntry, onRevealIndex }: Readonly<{
+export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
   api: WorkspaceApis
   realm: RealmSummary
-  section: WorkspaceSection
-  indexContainer?: HTMLElement | null
-  onSelectEntry?: () => void
-  onRevealIndex?: () => void
+  route: WorkspaceRoute
+  /** Realm identity and switching controls shown above the navigation. */
+  header: ReactNode
+  banner?: ReactNode
 }>) {
-  const workspace = useRealmWorkspace({ api, realm, processingVisible: section === 'sources' })
+  const workspace = useRealmWorkspace({ api, realm, processingVisible: route.section === 'sources' })
+  const sourceId = route.section === 'sources' ? route.sourceId : null
+  const reader = useSourceReader({
+    contentApi: api.content,
+    realmId: realm.id,
+    sourceId,
+    sources: workspace.sources,
+    sourcesLoaded: workspace.sourcesLoaded,
+    onError: workspace.reportError,
+  })
   const fileInput = useRef<HTMLInputElement>(null)
+  const sourcesPath = routePath(sectionRoute(realm.id, 'sources'))
+
+  useEffect(() => {
+    const previous = document.title
+    document.title = `${locationLabels[route.section]} · ${realm.name} · Codex of Realms`
+    return () => { document.title = previous }
+  }, [realm.name, route.section])
 
   async function uploadSource(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -38,7 +57,9 @@ export function RealmWorkspace({ api, realm, section, indexContainer, onSelectEn
 
   async function deleteSource(source: SourceDocumentView) {
     if (!window.confirm(`¿Eliminar «${source.title}» y retirarla de las respuestas?`)) return
-    if (await workspace.deleteSource(source) && workspace.openEvidence?.source.documentId === source.id) workspace.closeEvidence()
+    if (!await workspace.deleteSource(source)) return
+    if (workspace.openEvidence?.source.documentId === source.id) workspace.closeEvidence()
+    if (sourceId === source.id) navigate(sourcesPath, { replace: true })
   }
 
   async function askQuestion(event: SubmitEvent<HTMLFormElement>) {
@@ -48,63 +69,102 @@ export function RealmWorkspace({ api, realm, section, indexContainer, onSelectEn
     await workspace.askQuestion(question)
   }
 
-  const sourceIndex = <SourcesPanel
-            canEdit={workspace.canEdit}
-            fileInput={fileInput}
-            loading={!workspace.sourcesLoaded}
-            policies={workspace.administration.policies}
-            selectedPolicyId={workspace.administration.selectedPolicyId}
-            sources={workspace.sources}
-            jobs={workspace.jobs}
-            opening={workspace.loadingCitation}
-            onOpen={async (source) => { const opened = await workspace.openSource(source); if (opened) onSelectEntry?.(); return opened }}
-            onRecover={workspace.recoverSource}
-            onRetry={workspace.retrySourceJob}
-            uploading={workspace.uploading}
-            onDelete={deleteSource}
-            onPolicyChange={workspace.administration.setSelectedPolicyId}
-            onUpload={uploadSource}
-            selectedId={workspace.openEvidence?.reference === null ? workspace.openEvidence.source.documentId : undefined}
-          />
+  function layout(main: ReactNode, index?: ReactNode, selection: string | null = null) {
+    return (
+      <WorkspaceLayout
+        header={<>{header}<WorkspaceNavigation realm={realm} section={route.section} /></>}
+        banner={banner}
+        index={index}
+        selection={selection}
+        location={locationLabels[route.section]}
+      >
+        {workspace.sourceWarning && <p className="workspace-notice" role="status">{workspace.sourceWarning}</p>}
+        {main}
+      </WorkspaceLayout>
+    )
+  }
+
+  function sourcesPage() {
+    const index = <SourcesPanel
+      canEdit={workspace.canEdit}
+      fileInput={fileInput}
+      loading={!workspace.sourcesLoaded}
+      policies={workspace.administration.policies}
+      selectedPolicyId={workspace.administration.selectedPolicyId}
+      sources={workspace.sources}
+      jobs={workspace.jobs}
+      selectedId={sourceId ?? undefined}
+      sourceHref={(source) => routePath({ realmId: realm.id, section: 'sources', sourceId: source.id })}
+      onRecover={workspace.recoverSource}
+      onRetry={workspace.retrySourceJob}
+      uploading={workspace.uploading}
+      onDelete={deleteSource}
+      onPolicyChange={workspace.administration.setSelectedPolicyId}
+      onUpload={uploadSource}
+    />
+    let main: ReactNode
+    if (reader.status === 'ready' && reader.reading) {
+      main = <SourceReader evidence={reader.reading} onClose={() => navigate(sourcesPath)} />
+    } else if (reader.status === 'loading') {
+      main = <p className="reader-status" role="status">Abriendo la fuente…</p>
+    } else if (reader.status === 'missing' || reader.status === 'failed') {
+      main = <section className="archive-reading-empty">
+        <p className="eyebrow">Biblioteca del universo</p>
+        <h2>{reader.status === 'missing' ? 'Esta fuente no está disponible' : 'No se pudo abrir la fuente'}</h2>
+        <p>{reader.status === 'missing' ? 'Puede que se haya retirado o que no sea visible para ti.' : 'Vuelve a intentarlo desde el índice.'}</p>
+        <Link className="citation-link" href={sourcesPath}>Volver a las fuentes</Link>
+      </section>
+    } else {
+      main = <section className="archive-reading-empty">
+        <p className="eyebrow">Biblioteca del universo</p>
+        <h2>Las voces de {realm.name}</h2>
+        <p>Crónicas, notas y documentos que dan forma a tu mundo.</p>
+        <div className="reading-prompt"><h3>{workspace.sources.length > 0 ? 'Abre una fuente del índice' : 'El archivo empieza aquí'}</h3><p>{workspace.sources.length > 0 ? 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' : workspace.canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.'}</p></div>
+      </section>
+    }
+    return layout(<div className="source-workspace" aria-busy={!workspace.sourcesLoaded}>{main}</div>, index, sourceId)
+  }
+
+  let page: ReactNode
+  switch (route.section) {
+    case 'sources':
+      page = sourcesPage()
+      break
+    case 'questions':
+      page = layout(<div className="question-workspace">
+        <QuestionPanel
+          answer={workspace.answer}
+          asking={workspace.asking}
+          loadingCitation={workspace.loadingCitation}
+          loadingRealm={!workspace.sourcesLoaded}
+          onInspectCitation={workspace.inspectCitation}
+          onSubmit={askQuestion}
+        />
+      </div>)
+      break
+    case 'access':
+      page = layout(workspace.canEdit && <RealmAccessPanel administration={workspace.administration} />)
+      break
+    case 'canon':
+      page = <CatalogueWorkspace
+        contentApi={api.content}
+        loreApi={api.lore}
+        canEdit={workspace.canEdit}
+        policies={workspace.administration.policies}
+        realmId={realm.id}
+        sources={workspace.sources}
+        location={route}
+        hrefFor={(location) => routePath({ realmId: realm.id, section: 'canon', ...location })}
+        onOpenEvidence={(evidence) => void workspace.inspectCatalogueEvidence(evidence)}
+        layout={({ index, content, selection }) => layout(content, index, selection)}
+      />
+      break
+  }
 
   return (
     <>
-      <div className="workspace-location">{section === 'canon' ? 'Atlas del canon' : section === 'sources' ? 'Fuentes' : section === 'questions' ? 'Consultas al archivo' : 'Personas y permisos'}</div>
-      {workspace.sourceWarning && <p className="workspace-notice" role="status">{workspace.sourceWarning}</p>}
-      {section === 'sources' && <div className={indexContainer ? 'source-workspace' : 'source-workspace with-local-index'} aria-busy={!workspace.sourcesLoaded}>
-        {indexContainer ? createPortal(sourceIndex, indexContainer) : sourceIndex}
-        {workspace.openEvidence?.reference === null ? <SourceReader evidence={workspace.openEvidence} onClose={() => { onRevealIndex?.(); workspace.closeEvidence() }} /> : <section className="archive-reading-empty">
-          <p className="eyebrow">Biblioteca del universo</p>
-          <h2>Las voces de {realm.name}</h2>
-          <p>Crónicas, notas y documentos que dan forma a tu mundo.</p>
-          <div className="reading-prompt"><h3>{workspace.sources.length > 0 ? 'Abre una fuente del índice' : 'El archivo empieza aquí'}</h3><p>{workspace.sources.length > 0 ? 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' : workspace.canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.'}</p></div>
-        </section>}
-      </div>}
-      {section === 'questions' && <div className="question-workspace">
-          <QuestionPanel
-            answer={workspace.answer}
-            asking={workspace.asking}
-            loadingCitation={workspace.loadingCitation}
-            loadingRealm={!workspace.sourcesLoaded}
-            onInspectCitation={workspace.inspectCitation}
-            onSubmit={askQuestion}
-          />
-      </div>}
-      {section === 'access' && workspace.canEdit && <RealmAccessPanel administration={workspace.administration} />}
-      {section === 'canon' && (
-        <CatalogueWorkspace
-          contentApi={api.content}
-          loreApi={api.lore}
-          canEdit={workspace.canEdit}
-          policies={workspace.administration.policies}
-          realmId={realm.id}
-          sources={workspace.sources}
-          onOpenEvidence={(evidence) => void workspace.inspectCatalogueEvidence(evidence)}
-          indexContainer={indexContainer}
-          onSelectEntry={onSelectEntry}
-        />
-      )}
-      {workspace.openEvidence?.reference && (
+      {page}
+      {workspace.openEvidence && (
         <EvidenceDialog evidence={workspace.openEvidence} onClose={workspace.closeEvidence} />
       )}
       {workspace.error && <ErrorToast message={workspace.error} onClose={workspace.clearError} />}

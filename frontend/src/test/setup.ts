@@ -1,6 +1,11 @@
 import '@testing-library/jest-dom/vitest'
 import { cleanup } from '@testing-library/react'
-import { afterEach } from 'vitest'
+import { afterEach, beforeEach } from 'vitest'
+
+// Routing reads the real jsdom location, so every test starts from the root path.
+beforeEach(() => {
+  window.history.replaceState(null, '', '/')
+})
 
 afterEach(() => {
   cleanup()

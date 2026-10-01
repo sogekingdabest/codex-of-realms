@@ -9,6 +9,7 @@ export {
 } from './api'
 export { EmptyRealmPanel } from './EmptyRealmPanel'
 export { RealmAccessPanel } from './RealmAccessPanel'
+export { roleLabels } from './realmLabels'
 export {
   useRealmAdministration,
   type RealmAdministrationApi,

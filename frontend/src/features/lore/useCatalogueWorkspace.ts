@@ -6,6 +6,7 @@ import type { LoreApi } from './api'
 import { emptyEntity, emptyRelation, upsert } from './catalogueModel'
 import type {
   CanonStatus,
+  CatalogueLocation,
   EntityType,
   LoreEntityInput,
   LoreEntityView,
@@ -13,20 +14,18 @@ import type {
   LoreRelationView,
 } from './model'
 
-export type CatalogueSection = 'entities' | 'relations'
-
 interface UseCatalogueWorkspaceOptions {
   readonly loreApi: LoreApi
   readonly policies: AccessPolicyView[]
   readonly realmId: string
+  readonly location: CatalogueLocation
+  readonly onNavigate: (location: CatalogueLocation) => void
 }
 
-export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalogueWorkspaceOptions) {
+export function useCatalogueWorkspace({ loreApi, policies, realmId, location, onNavigate }: UseCatalogueWorkspaceOptions) {
   const [entities, setEntities] = useState<LoreEntityView[]>([])
   const [relations, setRelations] = useState<LoreRelationView[]>([])
-  const [section, setSection] = useState<CatalogueSection>('entities')
   const [search, setSearch] = useState('')
-  const [focusedEntityId, setFocusedEntityId] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<EntityType | 'ALL'>('ALL')
   const [canonFilter, setCanonFilter] = useState<CanonStatus | 'ALL'>('ALL')
   const [entityDraft, setEntityDraft] = useState<LoreEntityInput>(() => emptyEntity(policies[0]?.id))
@@ -95,6 +94,11 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     ].some((value) => value.toLocaleLowerCase('es').includes(normalizedSearch))
   }), [canonFilter, normalizedSearch, relations])
 
+  // A linked ficha opens even when the index filters hide it.
+  const requestedEntity = location.entityId ? entities.find((entity) => entity.id === location.entityId) : undefined
+  const selectedEntity = location.entityId ? requestedEntity : visibleEntities[0]
+  const entityMissing = !loading && location.entityId !== null && requestedEntity === undefined
+
   async function saveEntity(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault()
     if (!effectiveEntityDraft.accessPolicyId) return
@@ -161,7 +165,7 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
       await loreApi.deleteLoreEntity(realmId, entity.id)
       setEntities((current) => current.filter((item) => item.id !== entity.id))
       setRelations((current) => current.filter((item) => item.sourceEntityId !== entity.id && item.targetEntityId !== entity.id))
-      setFocusedEntityId((current) => current === entity.id ? null : current)
+      if (location.entityId === entity.id) onNavigate({ view: 'entities', entityId: null })
     })
   }
 
@@ -174,7 +178,6 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
   }
 
   function editEntity(entity: LoreEntityView) {
-    setSection('entities')
     setEditingEntityId(entity.id)
     setEntityDraft({
       type: entity.type,
@@ -187,7 +190,6 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
   }
 
   function editRelation(relation: LoreRelationView) {
-    setSection('relations')
     setEditingRelationId(relation.id)
     setRelationDraft({
       sourceEntityId: relation.sourceEntityId,
@@ -200,11 +202,7 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
   }
 
   function openEntity(id: string) {
-    setFocusedEntityId(id)
-    setSection('entities')
-    setSearch('')
-    setCanonFilter('ALL')
-    setTypeFilter('ALL')
+    onNavigate({ view: 'entities', entityId: id })
   }
 
   function cancelEntityEdit() {
@@ -240,10 +238,8 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     effectiveEntityDraft,
     effectiveRelationDraft,
     entities,
+    entityMissing,
     error,
-    focusedEntityId,
-    openEntity,
-    setFocusedEntityId,
     loading,
     promoteEntity,
     promoteRelation,
@@ -252,12 +248,11 @@ export function useCatalogueWorkspace({ loreApi, policies, realmId }: UseCatalog
     saveRelation,
     saving,
     search,
-    section,
+    selectedEntity,
     setCanonFilter,
     setEntityDraft,
     setRelationDraft,
     setSearch,
-    setSection,
     setTypeFilter,
     typeFilter,
     visibleEntities,

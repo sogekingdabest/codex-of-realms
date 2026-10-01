@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { Link } from '../../../shared/routing'
 import type { ContentApi, SourceEvidence } from '../../content'
 import type { AccessPolicyView } from '../../realm'
 import { CanonBadge, CatalogueEvidence } from '../CataloguePrimitives'
@@ -6,7 +7,7 @@ import { entityTypeLabels } from '../catalogueModel'
 import type { LoreEntityView, LoreRelationView } from '../model'
 import { EvidencePreview } from '../evidence/EvidencePreview'
 
-export function EntityDocument({ entity, contentApi, relations, policies, canEdit, saving, focusHeading, onOpenEntity, onOpenEvidence, onEdit, onPromote, onDelete }: Readonly<{
+export function EntityDocument({ entity, contentApi, relations, policies, canEdit, saving, focusHeading, entityHref, onOpenEvidence, onEdit, onPromote, onDelete }: Readonly<{
   entity: LoreEntityView
   contentApi: ContentApi
   relations: LoreRelationView[]
@@ -14,7 +15,7 @@ export function EntityDocument({ entity, contentApi, relations, policies, canEdi
   canEdit: boolean
   saving: boolean
   focusHeading: boolean
-  onOpenEntity: (id: string) => void
+  entityHref: (id: string) => string
   onOpenEvidence: (evidence: SourceEvidence) => void
   onEdit: (entity: LoreEntityView) => void
   onPromote: (entity: LoreEntityView) => Promise<void>
@@ -39,10 +40,10 @@ export function EntityDocument({ entity, contentApi, relations, policies, canEdi
           const outgoing = relation.sourceEntityId === entity.id
           const otherName = outgoing ? relation.targetEntityName : relation.sourceEntityName
           return <div className="entity-relation" key={relation.id}>
-            <button type="button" className="entity-relation-link" aria-label={`Ver ficha de ${otherName}`}
-              onClick={() => onOpenEntity(outgoing ? relation.targetEntityId : relation.sourceEntityId)}>
+            <Link className="entity-relation-link" aria-label={`Ver ficha de ${otherName}`}
+              href={entityHref(outgoing ? relation.targetEntityId : relation.sourceEntityId)}>
               <span>{otherName}</span><span aria-hidden="true">↗</span>
-            </button>
+            </Link>
             <p>{outgoing ? 'Hacia' : 'Desde'} {otherName} · {relation.relationType.replaceAll('_', ' ').toLocaleLowerCase('es')} · {relation.canonStatus === 'CANON' ? 'Canon' : 'Propuesto'}</p>
             <p className="relation-description">{relation.description}</p>
           </div>

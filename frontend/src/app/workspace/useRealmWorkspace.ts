@@ -39,7 +39,7 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
   const initialSourcesRequest = useRef<AbortController | null>(null)
   const [answer, setAnswer] = useState<LoreAnswer | null>(null)
   const [openEvidence, setOpenEvidence] = useState<{
-    reference: EvidenceReference | null
+    reference: EvidenceReference
     returnFocusTo: HTMLElement | null
     source: SourceContentView
   } | null>(null)
@@ -189,7 +189,7 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
   const evidenceRequest = useRef<AbortController | null>(null)
   useEffect(() => () => evidenceRequest.current?.abort(), [])
 
-  async function readSource(documentId: string, versionId: string, reference: EvidenceReference | null) {
+  async function inspectEvidence(reference: EvidenceReference) {
     const returnFocusTo = document.activeElement instanceof HTMLElement ? document.activeElement : null
     evidenceRequest.current?.abort()
     const controller = new AbortController()
@@ -197,13 +197,9 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
     setLoadingCitation(true)
     setError(null)
     try {
-      const source = await api.content.getSourceContent(realm.id, documentId, versionId, controller.signal)
+      const source = await api.content.getSourceContent(realm.id, reference.documentId, reference.versionId, controller.signal)
       if (controller.signal.aborted) return false
-      setOpenEvidence({
-        reference,
-        source,
-        returnFocusTo,
-      })
+      setOpenEvidence({ reference, source, returnFocusTo })
       return true
     } catch (reason) {
       if (!controller.signal.aborted && !isAbortError(reason)) reportError(reason)
@@ -212,9 +208,6 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
       if (!controller.signal.aborted) setLoadingCitation(false)
     }
   }
-
-  const inspectEvidence = (reference: EvidenceReference) => readSource(reference.documentId, reference.versionId, reference)
-  const openSource = (source: SourceDocumentView) => readSource(source.id, source.versionId, null)
 
   const inspectCitation = async (citation: Citation) => {
     await inspectEvidence({
@@ -250,7 +243,7 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
     inspectCitation,
     loadingCitation,
     openEvidence,
-    openSource,
+    reportError,
     sources,
     sourcesLoaded,
     jobs,

@@ -8,8 +8,8 @@
 .source-list { padding: 0 12px; }
 .source-item { padding: 12px 10px; border-left: 2px solid transparent; margin-bottom: 5px; min-width: 0; }
 .source-item.selected { background: var(--panel-strong); border-left-color: var(--accent); }
-.source-index-link { display: grid; gap: 6px; padding: 0; width: 100%; text-align: left; color: var(--ink); background: transparent; border: 0; }
-.source-index-link:hover:not(:disabled) { background: transparent; color: var(--accent); }
+.source-index-link { display: grid; gap: 6px; width: 100%; text-align: left; color: var(--ink); font-weight: 500; text-decoration: none; }
+.source-index-link:hover { color: var(--accent); }
 .source-index-link small { color: var(--muted); font-size: 11px; font-weight: 400; }
 .source-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 11px; margin-top: 8px; }
 .status { font-size: 11px; }

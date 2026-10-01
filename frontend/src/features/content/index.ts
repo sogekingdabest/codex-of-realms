@@ -1,4 +1,5 @@
 export { HttpContentApi, type ContentApi } from './api'
-export { EvidenceDialog, type EvidenceReference } from './EvidenceDialog'
+export { EvidenceDialog, SourceReader, type EvidenceReference } from './EvidenceDialog'
 export { SourcesPanel } from './SourcesPanel'
+export { useSourceReader, type SourceReaderStatus } from './useSourceReader'
 export type * from './model'

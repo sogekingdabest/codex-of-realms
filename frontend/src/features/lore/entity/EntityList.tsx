@@ -1,11 +1,12 @@
+import { Link } from '../../../shared/routing'
 import { entityTypeLabels } from '../catalogueModel'
 import type { LoreEntityView } from '../model'
 
-export function EntityList({ entities, loading, selectedId, onSelect }: Readonly<{
+export function EntityList({ entities, loading, selectedId, entityHref }: Readonly<{
   entities: LoreEntityView[]
   loading: boolean
   selectedId?: string
-  onSelect: (id: string) => void
+  entityHref: (id: string) => string
 }>) {
   if (loading) return <p className="index-message" role="status">Abriendo el atlas…</p>
   if (entities.length === 0) return <p className="index-message" role="status">No hay fichas visibles con estos filtros.</p>
@@ -15,13 +16,12 @@ export function EntityList({ entities, loading, selectedId, onSelect }: Readonly
       if (group.length === 0) return null
       return <div className="entity-index-group" key={type}>
         <h3>{label}<span>{group.length}</span></h3>
-        {group.map((entity) => <button key={entity.id} type="button"
+        {group.map((entity) => <Link key={entity.id} href={entityHref(entity.id)}
           aria-current={selectedId === entity.id ? 'page' : undefined}
-          aria-label={`Abrir ficha de ${entity.displayName}`}
-          onClick={() => onSelect(entity.id)}>
+          aria-label={`Abrir ficha de ${entity.displayName}`}>
           <span>{entity.displayName}</span>
           {entity.canonStatus === 'PROPOSED' && <small>Propuesto</small>}
-        </button>)}
+        </Link>)}
       </div>
     })}
   </nav>
