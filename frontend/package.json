@@ -14,7 +14,8 @@
     "test:coverage": "vitest run --coverage",
     "verify": "npm run lint && npm run test:coverage && node -e \"const report = require('node:fs').statSync('coverage/lcov.info'); if (!report.isFile() || report.size === 0) throw new Error('Coverage report is empty');\" && npm run build",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:session": "playwright test -c playwright.session.config.ts"
   },
   "dependencies": {
     "keycloak-js": "26.2.4",
