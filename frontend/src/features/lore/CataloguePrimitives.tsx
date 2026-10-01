@@ -1,6 +1,6 @@
+import type { ReactNode } from 'react'
 import type { SourceEvidence } from '../content'
 import type { AccessPolicyView } from '../realm'
-import type { CanonStatus } from './model'
 
 export function PolicySelect({ policies, value, onChange }: Readonly<{
   policies: AccessPolicyView[]
@@ -17,25 +17,26 @@ export function PolicySelect({ policies, value, onChange }: Readonly<{
   )
 }
 
-export function CatalogueEvidence({ evidence, onOpen }: Readonly<{
+export function CatalogueEvidence({ evidence, onOpen, mark }: Readonly<{
   evidence: SourceEvidence[]
   onOpen: (evidence: SourceEvidence) => void
+  /** Evidence shares the visibility of the claim it supports. */
+  mark?: ReactNode
 }>) {
   if (evidence.length === 0) return <p className="no-evidence">Afirmación manual sin fuente vinculada.</p>
   return (
     <div className="catalogue-evidence">
       {evidence.map((item) => (
-        <button key={item.chunkId} type="button" onClick={() => onOpen(item)}>
-          <span>{item.sourceTitle}</span>
-          <small>{item.heading || 'Documento'} · {item.startOffset}–{item.endOffset}</small>
-        </button>
+        <div className="catalogue-evidence-item" key={item.chunkId}>
+          <button type="button" onClick={() => onOpen(item)}>
+            <span>{item.sourceTitle}</span>
+            <small>{item.heading || 'Documento'}</small>
+          </button>
+          {mark}
+        </div>
       ))}
     </div>
   )
-}
-
-export function CanonBadge({ status }: Readonly<{ status: CanonStatus }>) {
-  return <span className={`canon-badge canon-${status.toLocaleLowerCase('es')}`}>{status === 'CANON' ? 'Canon' : 'Propuesto'}</span>
 }
 
 export function CatalogueEmpty({ text }: Readonly<{ text: string }>) {

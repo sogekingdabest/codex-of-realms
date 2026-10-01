@@ -1,3 +1,5 @@
+import type { Visibility } from '../../shared/lib/visibility'
+
 export type ProcessingStatus = 'PROCESSING' | 'READY' | 'FAILED'
 
 export interface SourceDocumentView {
@@ -12,6 +14,7 @@ export interface SourceDocumentView {
   language: string
   status: ProcessingStatus
   accessPolicyId: string
+  visibility: Visibility
   embeddingProvider: string | null
   embeddingModel: string | null
   embeddingDimension: number | null

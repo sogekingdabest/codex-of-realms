@@ -1,6 +1,9 @@
 import { useState, type RefObject, type SubmitEvent } from 'react'
 
+import type { VisibilityAudience } from '../../shared/lib/visibility'
 import { Link } from '../../shared/routing'
+import { DangerButton } from '../../shared/ui/DangerButton'
+import { VisibilityMark } from '../../shared/ui/VisibilityMark'
 
 import type { AccessPolicyView } from '../realm'
 import type { SourceDocumentView, SourceJobView } from './model'
@@ -10,8 +13,9 @@ const classificationLabels = {
   PUBLIC: 'Pública', GM_ONLY: 'Solo dirección', SPOILER: 'Spoiler con permiso',
 } as const
 
-export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPolicyId, sources, uploading, jobs, selectedId, sourceHref, onRecover, onRetry, onDelete, onPolicyChange, onUpload }: Readonly<{
+export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, selectedPolicyId, sources, uploading, jobs, selectedId, sourceHref, onRecover, onRetry, onDelete, onPolicyChange, onUpload }: Readonly<{
   canEdit: boolean
+  audience: VisibilityAudience
   fileInput: RefObject<HTMLInputElement | null>
   loading: boolean
   policies: AccessPolicyView[]
@@ -43,7 +47,7 @@ export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPo
       </label>}
       {sources.length > 0 && visibleSources.length === 0
         ? <p className="empty-state" role="status">No hay fuentes que coincidan con la búsqueda.</p>
-        : <SourceList canEdit={canEdit} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
+        : <SourceList canEdit={canEdit} audience={audience} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
       {canEdit && (
         <details className="upload-card" open={sources.length === 0}>
           <summary>Añadir conocimiento</summary>
@@ -67,8 +71,9 @@ export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPo
   )
 }
 
-function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, selectedId, sourceHref }: Readonly<{
+function SourceList({ canEdit, audience, loading, sources, onDelete, busy, onRecover, selectedId, sourceHref }: Readonly<{
   canEdit: boolean
+  audience: VisibilityAudience
   loading: boolean
   sources: SourceDocumentView[]
   onDelete: (source: SourceDocumentView) => Promise<void>
@@ -83,14 +88,14 @@ function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, sele
     <div className="source-list" aria-live="polite">
       {sources.map((source) => (
         <article className={`source-item${source.id === selectedId ? ' selected' : ''}`} key={source.id}>
-          <Link className="source-index-link" href={sourceHref(source)} aria-label={`Leer ${source.title}`} aria-current={source.id === selectedId ? 'page' : undefined}><span>{source.title}</span><small>{source.originalFilename} · v{source.versionNumber}</small></Link>
+          <Link className="source-index-link" href={sourceHref(source)} aria-label={`Leer ${source.title}`} aria-current={source.id === selectedId ? 'page' : undefined}><span>{source.title}</span>{canEdit && <small>{source.originalFilename} · v{source.versionNumber}</small>}</Link>
           <div className="source-meta">
-            <span className={`status status-${source.status.toLowerCase()}`}>{sourceStatusLabel(source.status)}</span>
-            <small>{source.chunkCount} fragmentos</small>
+            <VisibilityMark visibility={source.visibility} viewer={audience.viewer} revealedTo={audience.revealedTo(source.accessPolicyId)} />
+            {source.status !== 'READY' && <span className={`status status-${source.status.toLowerCase()}`}>{sourceStatusLabel(source.status)}</span>}
           </div>
           {canEdit && <details className="source-actions"><summary>Gestionar</summary>
               <RecoveryActions documentId={source.id} policyId={source.accessPolicyId} title={source.title} busy={busy} onRecover={onRecover} />
-              <button className="text-danger" type="button" onClick={() => void onDelete(source)}>Eliminar</button>
+              <DangerButton onClick={() => void onDelete(source)}>Eliminar</DangerButton>
           </details>}
         </article>
       ))}
@@ -99,7 +104,5 @@ function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, sele
 }
 
 function sourceStatusLabel(status: SourceDocumentView['status']) {
-  if (status === 'READY') return 'Lista'
-  if (status === 'FAILED') return 'Fallida'
-  return 'Procesando'
+  return status === 'FAILED' ? 'Fallida' : 'Procesando'
 }

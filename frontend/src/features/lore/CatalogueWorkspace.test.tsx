@@ -1,12 +1,15 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import type { ComponentProps } from 'react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { playerAudience, type VisibilityAudience } from '../../shared/lib/visibility'
 import { usePathname } from '../../shared/routing'
 import { CatalogueWorkspace } from './CatalogueWorkspace'
 import type { CatalogueLocation, LoreEntityView, LoreRelationView } from './model'
 
-type CatalogueProps = Omit<ComponentProps<typeof CatalogueWorkspace>, 'location' | 'hrefFor' | 'layout'>
+type CatalogueProps = Omit<ComponentProps<typeof CatalogueWorkspace>, 'location' | 'hrefFor' | 'layout' | 'audience'>
+
+const editorAudience: VisibilityAudience = { viewer: 'editor', revealedTo: () => ['Tala'], policyName: () => 'Público' }
 
 function catalogueHref({ view, entityId }: CatalogueLocation) {
   if (view === 'relations') return '/atlas/relaciones'
@@ -18,7 +21,7 @@ function RoutedCatalogue(props: CatalogueProps) {
   const [, root, item] = usePathname().split('/')
   const location: CatalogueLocation = root !== 'atlas' || !item ? { view: 'entities', entityId: null }
     : item === 'relaciones' ? { view: 'relations', entityId: null } : { view: 'entities', entityId: item }
-  return <CatalogueWorkspace {...props} location={location} hrefFor={catalogueHref}
+  return <CatalogueWorkspace {...props} audience={props.canEdit ? editorAudience : playerAudience} location={location} hrefFor={catalogueHref}
     layout={({ index, content }) => <>{index}{content}</>} />
 }
 
@@ -42,6 +45,7 @@ const source = {
   language: 'es',
   status: 'READY' as const,
   accessPolicyId: 'policy-public',
+  visibility: 'PUBLIC' as const,
   embeddingProvider: 'test',
   embeddingModel: 'test',
   embeddingDimension: 8,
@@ -59,6 +63,7 @@ function entity(id: string, name: string, status: 'PROPOSED' | 'CANON' = 'PROPOS
     description: `${name} custodia el paso.`,
     canonStatus: status,
     accessPolicyId: 'policy-public',
+    visibility: 'PUBLIC',
     sourceEvidence: [],
     createdBy: 'owner-1',
     createdAt: '2026-08-29T10:00:00Z',
@@ -82,6 +87,7 @@ function relation(): LoreRelationView {
     description: 'Nara vive en Lumbrevela.',
     canonStatus: 'CANON',
     accessPolicyId: 'policy-public',
+    visibility: 'PUBLIC',
     sourceEvidence: [],
     createdBy: 'owner-1',
     createdAt: '2026-08-29T10:00:00Z',
@@ -131,6 +137,32 @@ function catalogueApi(entities: LoreEntityView[] = [], relations: LoreRelationVi
 }
 
 describe('CatalogueWorkspace', () => {
+  it('presenta sellos, tipos, visibilidad y relaciones como frases', async () => {
+    const secretRelation = {
+      ...relation(), id: 'relation-2', targetEntityId: 'entity-3', targetEntityName: 'El Meridiano',
+      relationType: 'SE_DESPLAZA_RESPECTO_A', description: 'Es la ciudad la que se mueve.', visibility: 'GM_ONLY' as const,
+    }
+    const api = catalogueApi(
+      [entity('entity-1', 'Nara Vey', 'CANON'), entity('entity-2', 'Lumbrevela'), entity('entity-3', 'El Meridiano')],
+      [{ ...relation(), canonStatus: 'PROPOSED' }, secretRelation],
+    )
+    render(<RoutedCatalogue contentApi={api} loreApi={api} canEdit policies={[publicPolicy]} realmId="realm-1" sources={[]} onOpenEvidence={vi.fn()} />)
+
+    expect(await screen.findByRole('img', { name: 'Sello de canon' })).toBeInTheDocument()
+    expect(screen.getByText('Personaje', { selector: '.entity-type' })).toBeInTheDocument()
+    expect(screen.getByText('se desplaza respecto a')).toHaveClass('relation-verb')
+    expect(screen.getByText('Solo dirección')).toHaveClass('visibility-gm')
+    expect(screen.getByRole('link', { name: 'Ver ficha de El Meridiano' })).toHaveAttribute('href', '/atlas/entity-3')
+    expect(screen.getByRole('button', { name: 'Retirar' })).toHaveClass('danger-button')
+
+    const lumbrevela = screen.getByRole('link', { name: 'Abrir ficha de Lumbrevela' })
+    expect(within(lumbrevela).getByRole('img', { name: 'Propuesto' })).toBeInTheDocument()
+    expect(within(lumbrevela).getByRole('img', { name: 'Público' })).toBeInTheDocument()
+
+    fireEvent.click(lumbrevela)
+    expect(await screen.findByRole('img', { name: 'Sello de propuesta' })).toBeInTheDocument()
+  })
+
   it('navega de una relación a su ficha exacta y permite volver a las relaciones', async () => {
     const api = catalogueApi([entity('entity-1', 'Nara Vey'), entity('entity-2', 'Lumbrevela')], [relation()])
     render(<RoutedCatalogue contentApi={api} loreApi={api} canEdit policies={[publicPolicy]} realmId="realm-1" sources={[]} onOpenEvidence={vi.fn()} />)

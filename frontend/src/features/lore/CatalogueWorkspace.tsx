@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react'
+import type { VisibilityAudience } from '../../shared/lib/visibility'
 import { Link, navigate } from '../../shared/routing'
 import type { ContentApi, SourceDocumentView, SourceEvidence } from '../content'
 import type { AccessPolicyView } from '../realm'
@@ -27,6 +28,7 @@ interface CatalogueWorkspaceProps {
   readonly realmId: string
   readonly canEdit: boolean
   readonly policies: AccessPolicyView[]
+  readonly audience: VisibilityAudience
   readonly sources: SourceDocumentView[]
   readonly location: CatalogueLocation
   readonly hrefFor: (location: CatalogueLocation) => string
@@ -40,6 +42,7 @@ export function CatalogueWorkspace({
   realmId,
   canEdit,
   policies,
+  audience,
   sources,
   location,
   hrefFor,
@@ -80,7 +83,7 @@ export function CatalogueWorkspace({
         onTypeFilterChange={(filter) => { closeEditors(); catalogue.setTypeFilter(filter) }}
       />
     {location.view === 'entities' && <EntityList entities={catalogue.visibleEntities} loading={catalogue.loading}
-      selectedId={catalogue.selectedEntity?.id} entityHref={entityHref} />}
+      selectedId={catalogue.selectedEntity?.id} audience={audience} entityHref={entityHref} />}
     {canEdit && <div className="index-actions"><button className="quiet-button" type="button" disabled={catalogue.loading || catalogue.saving || (location.view === 'relations' && catalogue.entities.length < 2)}
       onClick={() => { closeEditors(); setCreating(location.view === 'entities' ? 'entity' : 'relation') }}>{location.view === 'entities' ? 'Nueva ficha' : 'Nueva relación'}</button></div>}
   </div>
@@ -106,7 +109,7 @@ export function CatalogueWorkspace({
         canEdit={canEdit}
         entity={catalogue.selectedEntity}
         relations={catalogue.relations}
-        policies={policies}
+        audience={audience}
         saving={catalogue.saving}
         focusHeading={location.entityId !== null}
         entityHref={entityHref}
@@ -137,7 +140,7 @@ export function CatalogueWorkspace({
           canEdit={canEdit}
           entityCount={catalogue.entities.length}
           loading={catalogue.loading}
-          policies={policies}
+          audience={audience}
           relations={catalogue.visibleRelations}
           saving={catalogue.saving}
           entityHref={entityHref}

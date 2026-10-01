@@ -11,6 +11,7 @@ import {
 } from '../../features/content'
 import { RealmAccessPanel, type RealmSummary } from '../../features/realm'
 import { formText } from '../../shared/lib/forms'
+import { playerAudience, type VisibilityAudience } from '../../shared/lib/visibility'
 import { Link, navigate } from '../../shared/routing'
 import { ErrorToast } from '../../shared/ui/ErrorToast'
 import { routePath, sectionLabels, sectionRoute, type WorkspaceRoute, type WorkspaceSection } from '../routes'
@@ -39,6 +40,15 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
   })
   const fileInput = useRef<HTMLInputElement>(null)
   const sourcesPath = routePath(sectionRoute(realm.id, 'sources'))
+  const { administration } = workspace
+  const audience: VisibilityAudience = workspace.canEdit ? {
+    viewer: 'editor',
+    revealedTo: (policyId) => (administration.grantsByPolicy[policyId] ?? []).flatMap((userId) => {
+      const member = administration.members.find((item) => item.userId === userId)
+      return member ? [member.displayName || member.email || 'Jugador sin nombre'] : []
+    }),
+    policyName: (policyId) => administration.policies.find((policy) => policy.id === policyId)?.name,
+  } : playerAudience
 
   useEffect(() => {
     const previous = document.title
@@ -87,6 +97,7 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
   function sourcesPage() {
     const index = <SourcesPanel
       canEdit={workspace.canEdit}
+      audience={audience}
       fileInput={fileInput}
       loading={!workspace.sourcesLoaded}
       policies={workspace.administration.policies}
@@ -104,7 +115,9 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
     />
     let main: ReactNode
     if (reader.status === 'ready' && reader.reading) {
-      main = <SourceReader evidence={reader.reading} onClose={() => navigate(sourcesPath)} />
+      main = <SourceReader evidence={reader.reading} published={workspace.sources.find((source) => source.id === sourceId)}
+        audience={audience} manageAccessHref={workspace.canEdit ? routePath(sectionRoute(realm.id, 'access')) : undefined}
+        onClose={() => navigate(sourcesPath)} />
     } else if (reader.status === 'loading') {
       main = <p className="reader-status" role="status">Abriendo la fuente…</p>
     } else if (reader.status === 'missing' || reader.status === 'failed') {
@@ -151,6 +164,7 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
         loreApi={api.lore}
         canEdit={workspace.canEdit}
         policies={workspace.administration.policies}
+        audience={audience}
         realmId={realm.id}
         sources={workspace.sources}
         location={route}
