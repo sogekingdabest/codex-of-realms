@@ -151,6 +151,7 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
           loadingCitation={workspace.loadingCitation}
           loadingRealm={!workspace.sourcesLoaded}
           onInspectCitation={workspace.inspectCitation}
+          onCancel={workspace.cancelQuestion}
           onSubmit={askQuestion}
         />
       </div>)

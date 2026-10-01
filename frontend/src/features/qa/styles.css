@@ -20,30 +20,44 @@
   color: var(--muted);
 }
 
+/* The wait is shown beside the button, which stays on screen after a tap. */
+.question-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.875rem;
+}
+
+.question-elapsed {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.progress-mark {
+  flex: none;
+  width: 0.75rem;
+  height: 0.75rem;
+  border: 1px solid var(--moss);
+  animation: orbit 1.4s linear infinite;
+}
+
+.question-actions {
+  display: flex;
+  flex: none;
+  gap: 0.6rem;
+}
+
 .answer-region:empty { display: none; }
 
 .answer-region {
   min-height: 290px;
 }
 
-.thinking,
 .insufficient,
 .answer-card {
   padding: 1.8rem;
-}
-
-.thinking {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  color: var(--muted);
-}
-
-.thinking span:first-child {
-  width: 0.75rem;
-  height: 0.75rem;
-  border: 1px solid var(--moss);
-  animation: orbit 1.4s linear infinite;
 }
 
 @keyframes orbit {
