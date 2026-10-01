@@ -40,7 +40,7 @@ describe('EvidenceDialog', () => {
     expect(reader).not.toHaveTextContent('**')
     expect(within(reader).getAllByText('Texto omitido')).toHaveLength(2)
     expect(screen.getByRole('status')).toHaveTextContent('1 frase(s) de más de 2.000 caracteres')
-    expect(screen.getByText('cronica.md · Documento')).toBeInTheDocument()
+    expect(screen.getByText('Documento')).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: 'Leer documento completo' }))
     expect(within(reader).getByRole('heading', { name: 'Crónica' })).toBeInTheDocument()
@@ -51,6 +51,20 @@ describe('EvidenceDialog', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Volver al fragmento citado' }))
     expect(reader).not.toHaveTextContent('Primer párrafo lejano.')
+  })
+
+  it('enseña el archivo y el checksum solo a la dirección', () => {
+    const start = content.indexOf(cited)
+    const canon = { ...reference(start, start + cited.length), heading: 'La Aguja', eyebrow: 'Procedencia del canon', checksumSha256: '3fb51c5251'.padEnd(64, 'a') }
+    const { rerender } = render(<EvidenceDialog evidence={{ reference: canon, source }} onClose={vi.fn()} />)
+
+    expect(screen.getByText('Procedencia del canon')).toBeInTheDocument()
+    expect(screen.getByText('La Aguja')).toBeInTheDocument()
+    expect(screen.getByRole('dialog')).not.toHaveTextContent(/cronica\.md|3fb51c5251/)
+
+    rerender(<EvidenceDialog evidence={{ reference: canon, source }} viewer="editor" onClose={vi.fn()} />)
+    expect(screen.getByText('Procedencia del canon · 3fb51c5251')).toBeInTheDocument()
+    expect(screen.getByText('cronica.md · La Aguja')).toBeInTheDocument()
   })
 
   it('muestra el documento completo si la cita no se puede localizar', () => {

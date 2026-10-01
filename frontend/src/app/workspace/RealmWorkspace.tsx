@@ -180,7 +180,7 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
     <>
       {page}
       {workspace.openEvidence && (
-        <EvidenceDialog evidence={workspace.openEvidence} onClose={workspace.closeEvidence} />
+        <EvidenceDialog evidence={workspace.openEvidence} viewer={audience.viewer} onClose={workspace.closeEvidence} />
       )}
       {workspace.error && <ErrorToast message={workspace.error} onClose={workspace.clearError} />}
     </>

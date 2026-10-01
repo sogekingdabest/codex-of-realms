@@ -240,7 +240,8 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
     heading: evidence.heading,
     startOffset: evidence.startOffset,
     endOffset: evidence.endOffset,
-    eyebrow: `Procedencia del canon · ${evidence.checksumSha256.slice(0, 10)}`,
+    eyebrow: 'Procedencia del canon',
+    checksumSha256: evidence.checksumSha256,
   })
 
   return {

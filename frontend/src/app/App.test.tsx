@@ -202,7 +202,8 @@ describe('App', () => {
     expect(api.ask).toHaveBeenCalledWith('realm-1', '¿Qué deuda conserva la Aguja?', expect.any(AbortSignal))
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir evidencia exacta' }))
-    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('lumbrevela.md · La Aguja')).toBeInTheDocument()
     expect(api.getSourceContent).toHaveBeenCalledWith('realm-1', 'source-1', 'version-1', expect.any(AbortSignal))
   })
 
@@ -241,7 +242,14 @@ describe('App', () => {
     expect(api.listMemberships).not.toHaveBeenCalled()
     expect(screen.queryByRole('link', { name: 'Personas y permisos' })).not.toBeInTheDocument()
     fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
-    expect(screen.getByRole('button', { name: 'Consultar' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: '¿Qué deuda conserva la Aguja?' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'Abrir evidencia exacta' }))
+
+    // The evidence names the passage, not the uploaded file.
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByText('La Aguja', { selector: 'header span' })).toBeInTheDocument()
+    expect(dialog).not.toHaveTextContent('lumbrevela.md')
   })
 
   it('abre el atlas del canon desde la navegación principal', async () => {
