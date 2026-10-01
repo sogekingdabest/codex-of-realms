@@ -1,6 +1,6 @@
 @media (max-width: 1150px) {
   .workspace.has-realm { grid-template-columns: 235px minmax(0, 1fr); }
-  .entity-reading-layout { grid-template-columns: minmax(0, 1fr) 200px; }
+  .entity-reading-layout { grid-template-columns: minmax(0, 1fr) 260px; }
   .entity-document { padding-inline: 28px; }
   .entity-context { padding-inline: 18px; }
   .access-columns { grid-template-columns: 1fr; }
@@ -39,7 +39,6 @@
   .entity-index-group { display: flex; flex-wrap: wrap; gap: 3px; }
   .entity-index-group h3 { width: 100%; }
   .entity-index a { width: auto; gap: 8px; max-width: 100%; }
-  .entity-index small { display: none; }
   .index-actions { margin-top: 16px; }
   .sources-panel .source-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .source-item { margin-bottom: 0; }

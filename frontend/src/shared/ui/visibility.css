@@ -1,0 +1,18 @@
+.stroke-icon { flex-shrink: 0; }
+
+.visibility-mark { display: inline-flex; align-items: center; gap: 5px; align-self: flex-start; font-size: 12px; line-height: 1.5; white-space: nowrap; }
+.visibility-public { color: var(--muted); }
+.visibility-gm { padding: 1px 7px; border-radius: 3px; background: var(--visibility-gm); color: var(--visibility-gm-ink); font-weight: 600; }
+.visibility-spoiler { padding: 0 7px; border: 1px solid var(--visibility-spoiler-line); border-radius: 3px; background: var(--visibility-spoiler-fill); color: var(--visibility-spoiler-ink); font-weight: 500; }
+.visibility-mark.is-compact { justify-content: center; width: 20px; height: 18px; padding: 0; box-sizing: border-box; }
+.visibility-public.is-compact { width: auto; }
+
+.visibility-notice { display: flex; gap: 14px; align-items: flex-start; padding: 16px 18px; border: 1px solid var(--visibility-spoiler-line); border-radius: 4px; background: var(--visibility-spoiler-fill); color: #dfe4ff; }
+.visibility-notice > .stroke-icon { margin-top: 1px; color: var(--visibility-spoiler-ink); }
+.visibility-notice div { display: grid; gap: 4px; flex-grow: 1; }
+.visibility-notice strong { color: var(--ink); font-size: 15px; font-weight: 600; }
+.visibility-notice span { font-size: 14px; line-height: 1.55; }
+.visibility-notice a { flex-shrink: 0; align-self: center; font-size: 13px; color: var(--accent); }
+
+.danger-button { display: inline-flex; align-items: center; gap: 6px; min-height: 34px; padding: 0 12px; border: 1px solid var(--danger-line); border-radius: 3px; background: transparent; color: var(--danger); font-size: 13px; }
+.danger-button:hover:not(:disabled) { background: var(--danger-fill); color: var(--danger); }

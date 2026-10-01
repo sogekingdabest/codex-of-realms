@@ -6,7 +6,7 @@ import type { SourceDocumentView, SourceJobView, SourceSubmission } from '../fea
 export const sourceDocument: SourceDocumentView = {
   id: 'source-1', realmId: 'realm-1', title: 'Crónica', versionId: 'version-1', versionNumber: 1,
   checksumSha256: 'checksum', originalFilename: 'cronica.md', mediaType: 'text/markdown',
-  language: 'es', status: 'READY', accessPolicyId: 'public', embeddingProvider: 'ollama',
+  language: 'es', status: 'READY', accessPolicyId: 'public', visibility: 'PUBLIC', embeddingProvider: 'ollama',
   embeddingModel: 'bge-m3', embeddingDimension: 1024, chunkCount: 2, createdAt: '2026-09-06T10:00:00Z',
 }
 

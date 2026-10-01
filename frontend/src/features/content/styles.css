@@ -11,14 +11,15 @@
 .source-index-link { display: grid; gap: 6px; width: 100%; text-align: left; color: var(--ink); font-weight: 500; text-decoration: none; }
 .source-index-link:hover { color: var(--accent); }
 .source-index-link small { color: var(--muted); font-size: 11px; font-weight: 400; }
-.source-meta { display: flex; flex-wrap: wrap; gap: 8px; color: var(--muted); font-size: 11px; margin-top: 8px; }
+.source-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; margin-top: 8px; }
 .status { font-size: 11px; }
-.status-ready { color: var(--muted); }
 .status-failed { color: var(--danger); }
 .status-processing { color: var(--accent); }
 .source-actions { font-size: 11px; margin-top: 10px; }
 .source-actions summary { cursor: pointer; color: var(--muted); }
 .source-actions .source-recovery { margin-block: 12px; }
+.source-reader > .visibility-notice { margin-bottom: 28px; }
+.source-reader-heading .visibility-mark { margin-top: 10px; }
 .upload-card summary { cursor: pointer; font-weight: 500; }
 .upload-card[open] summary { margin-bottom: 16px; }
 .sources-panel .upload-card { border-top: 1px solid var(--line); margin-top: 18px; padding: 18px 22px; }

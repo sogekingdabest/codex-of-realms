@@ -4,7 +4,11 @@
   font-synthesis: none; text-rendering: optimizeLegibility;
   --page: #242522; --sidebar: #1d1e1b; --ink: #ecebe4; --muted: #b3b4a9;
   --line: #45463e; --panel: #242522; --panel-strong: #363830;
-  --accent: #e8a2a6; --accent-ink: #291b1e; --danger: #f1a59b;
+  --accent: #e8a2a6; --accent-ink: #291b1e;
+  --danger: #f0716a; --danger-line: #8c4440; --danger-fill: rgba(240, 113, 106, 0.1);
+  --visibility-gm: #e6ad4f; --visibility-gm-ink: #2a1d05;
+  --visibility-spoiler-line: #6d7cc4; --visibility-spoiler-fill: #262b44; --visibility-spoiler-ink: #c3cdff;
+  --seal: var(--ink); --seal-pending: #9a9b91;
   --moss: var(--accent); --moss-deep: #ba8488; --gold: var(--accent);
   --highlight: rgba(232, 162, 166, 0.2);
   --reading-font: Georgia, 'Times New Roman', serif;

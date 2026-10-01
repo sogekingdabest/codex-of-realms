@@ -1,14 +1,18 @@
+import type { VisibilityAudience } from '../../../shared/lib/visibility'
 import { Link } from '../../../shared/routing'
+import { DangerButton } from '../../../shared/ui/DangerButton'
+import { VisibilityMark } from '../../../shared/ui/VisibilityMark'
 import type { SourceEvidence } from '../../content'
-import type { AccessPolicyView } from '../../realm'
-import { CanonBadge, CatalogueEmpty, CatalogueEvidence } from '../CataloguePrimitives'
+import { CatalogueEmpty, CatalogueEvidence } from '../CataloguePrimitives'
+import { CanonMark } from '../CanonSeal'
+import { promotionLabel, relationVerb } from '../catalogueModel'
 import type { LoreRelationView } from '../model'
 
 interface RelationListProps {
   readonly canEdit: boolean
   readonly entityCount: number
   readonly loading: boolean
-  readonly policies: AccessPolicyView[]
+  readonly audience: VisibilityAudience
   readonly relations: LoreRelationView[]
   readonly saving: boolean
   readonly onDelete: (relation: LoreRelationView) => Promise<void>
@@ -18,7 +22,7 @@ interface RelationListProps {
   readonly onPromote: (relation: LoreRelationView) => Promise<void>
 }
 
-export function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, entityHref, onPromote }: RelationListProps) {
+export function RelationList({ canEdit, entityCount, loading, audience, relations, saving, onDelete, onEdit, onOpenEvidence, entityHref, onPromote }: RelationListProps) {
   if (loading) return <div className="catalogue-list"><p className="muted">Trazando relaciones…</p></div>
   return (
     <div className="catalogue-list">
@@ -31,7 +35,7 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
         <RelationCard
           canEdit={canEdit}
           key={relation.id}
-          policy={policies.find((policy) => policy.id === relation.accessPolicyId)}
+          audience={audience}
           relation={relation}
           saving={saving}
           onDelete={() => void onDelete(relation)}
@@ -45,9 +49,9 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
   )
 }
 
-function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence, entityHref }: Readonly<{
+function RelationCard({ relation, audience, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence, entityHref }: Readonly<{
   relation: LoreRelationView
-  policy?: AccessPolicyView
+  audience: VisibilityAudience
   canEdit: boolean
   saving: boolean
   onEdit: () => void
@@ -56,25 +60,26 @@ function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, on
   onOpenEvidence: (evidence: SourceEvidence) => void
   entityHref: (id: string) => string
 }>) {
+  const visibility = <VisibilityMark visibility={relation.visibility} viewer={audience.viewer} revealedTo={audience.revealedTo(relation.accessPolicyId)} />
   return (
     <article className="catalogue-card relation-card">
       <header>
-        <div className="relation-title">
-          <Link className="citation-link" aria-label={`Ver ficha de ${relation.sourceEntityName}`} href={entityHref(relation.sourceEntityId)}>{relation.sourceEntityName}</Link>
-          <span>{relation.relationType.replaceAll('_', ' ').toLocaleLowerCase('es')}</span>
-          <Link className="citation-link" aria-label={`Ver ficha de ${relation.targetEntityName}`} href={entityHref(relation.targetEntityId)}>{relation.targetEntityName}</Link>
-        </div>
-        <CanonBadge status={relation.canonStatus} />
+        <p className="relation-sentence">
+          <Link className="relation-entity" aria-label={`Ver ficha de ${relation.sourceEntityName}`} href={entityHref(relation.sourceEntityId)}>{relation.sourceEntityName}</Link>
+          {' '}<span className="relation-verb">{relationVerb(relation.relationType)}</span>{' '}
+          <Link className="relation-entity" aria-label={`Ver ficha de ${relation.targetEntityName}`} href={entityHref(relation.targetEntityId)}>{relation.targetEntityName}</Link>
+        </p>
+        <span className="relation-marks"><CanonMark status={relation.canonStatus} />{visibility}</span>
       </header>
-      <p>{relation.description}</p>
+      {relation.description && <p>{relation.description}</p>}
       <CatalogueEvidence evidence={relation.sourceEvidence} onOpen={onOpenEvidence} />
       <footer>
-        <span>{policy?.name ?? 'Visibilidad autorizada'} · {relation.promotionHistory.length} promociones</span>
+        <span>{promotionLabel(relation.promotionHistory.length)}</span>
         {canEdit && (
           <div>
             <button className="citation-link" disabled={saving} type="button" onClick={onEdit}>Editar</button>
             {relation.canonStatus === 'PROPOSED' && <button className="citation-link" disabled={saving} type="button" onClick={onPromote}>Promover a canon</button>}
-            <button className="text-danger" disabled={saving} type="button" onClick={onDelete}>Retirar</button>
+            <DangerButton disabled={saving} onClick={onDelete}>Retirar</DangerButton>
           </div>
         )}
       </footer>

@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
 import { App } from './App'
@@ -46,6 +46,7 @@ function testApi() {
         language: 'es',
         status: 'READY',
         accessPolicyId: 'policy-1',
+        visibility: 'PUBLIC',
         embeddingProvider: 'ollama',
         embeddingModel: 'bge-m3',
         embeddingDimension: 1024,
@@ -135,7 +136,7 @@ describe('App', () => {
     expect(await screen.findByRole('heading', { name: 'El Meridiano' })).toBeInTheDocument()
     expect(await screen.findByText('Crónica de Lumbrevela')).toBeInTheDocument()
     expect(screen.getByText('lumbrevela.md · v2')).toBeInTheDocument()
-    expect(screen.getByText('4 fragmentos')).toBeInTheDocument()
+    expect(screen.getByText('Público', { selector: '.visibility-mark' })).toBeInTheDocument()
   })
 
   it('remonta el workspace al cambiar de realm y aborta la carga anterior', async () => {
@@ -482,7 +483,7 @@ describe('App', () => {
 describe('App: direcciones', () => {
   const entity = (id: string, displayName: string) => ({
     id, realmId: 'realm-1', type: 'PLACE', displayName, aliases: [], description: `${displayName} se alza al este.`,
-    canonStatus: 'CANON', accessPolicyId: 'policy-1', sourceEvidence: [], createdBy: 'user-1', createdAt: '2026-09-01',
+    canonStatus: 'CANON', accessPolicyId: 'policy-1', visibility: 'PUBLIC', sourceEvidence: [], createdBy: 'user-1', createdAt: '2026-09-01',
     updatedBy: 'user-1', updatedAt: '2026-09-01', promotedBy: 'user-1', promotedAt: '2026-09-01', promotionHistory: [],
   })
 
@@ -569,5 +570,61 @@ describe('App: direcciones', () => {
     fireEvent.click(screen.getByRole('link', { name: 'Fichas' }))
     expect(window.location.pathname).toBe('/universos/realm-1/atlas')
     expect(screen.getByRole('button', { name: 'Cerrar índice' })).toBeInTheDocument()
+  })
+})
+
+describe('App: visibilidad', () => {
+  async function withSources(api: ReturnType<typeof testApi>) {
+    const [base] = await api.listSources('realm-1')
+    if (!base) throw new Error('Falta la fuente de prueba')
+    vi.mocked(api.listSources).mockResolvedValue([
+      base,
+      { ...base, id: 'source-2', title: 'El recuerdo de Nara', accessPolicyId: 'spoiler-1', visibility: 'SPOILER' },
+      { ...base, id: 'source-3', title: 'La deuda de la Aguja', accessPolicyId: 'gm-1', visibility: 'GM_ONLY' },
+    ])
+  }
+
+  it('avisa a una jugadora de lo que se le ha revelado y le ahorra los detalles técnicos', async () => {
+    const api = testApi()
+    vi.mocked(api.getCurrentUser).mockResolvedValue({
+      user: { id: 'player-1', issuer: 'issuer', subject: 'tala', emailVerified: true, displayName: 'Tala', email: null },
+      realms: [{ id: 'realm-1', name: 'El Meridiano', role: 'PLAYER' }],
+    })
+    await withSources(api)
+    window.history.replaceState(null, '', '/universos/realm-1/fuentes/source-2')
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByRole('note')).toHaveTextContent('Revelado para tiLa dirección te ha mostrado este documento.')
+    const entry = screen.getByRole('link', { name: 'Leer El recuerdo de Nara' }).closest('article')!
+    expect(within(entry).getByText('Revelado para ti')).toHaveClass('visibility-spoiler')
+    expect(screen.queryByText('lumbrevela.md · v2')).not.toBeInTheDocument()
+    expect(screen.queryByText(/fragmentos/)).not.toBeInTheDocument()
+  })
+
+  it('muestra a la dirección a quién se ha revelado cada spoiler y cómo gestionarlo', async () => {
+    const api = testApi()
+    vi.mocked(api.listPolicies).mockResolvedValue([
+      { id: 'policy-1', realmId: 'realm-1', classification: 'PUBLIC', name: 'Público', description: null },
+      { id: 'spoiler-1', realmId: 'realm-1', classification: 'SPOILER', name: 'Recuerdos de Nara', description: null },
+      { id: 'gm-1', realmId: 'realm-1', classification: 'GM_ONLY', name: 'Dirección', description: null },
+    ])
+    const tala = { userId: 'player-1', displayName: 'Tala', email: null, role: 'PLAYER' as const }
+    vi.mocked(api.listMemberships).mockResolvedValue([
+      { userId: 'user-1', displayName: 'Maestra del Meridiano', email: null, role: 'OWNER' }, tala,
+    ])
+    vi.mocked(api.listPolicyGrants).mockImplementation(async (_realmId, policyId) => policyId === 'spoiler-1' ? [tala] : [])
+    await withSources(api)
+    window.history.replaceState(null, '', '/universos/realm-1/fuentes/source-2')
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByText('Spoiler · Tala')).toHaveClass('visibility-spoiler')
+    expect(screen.getByText('Solo dirección')).toHaveClass('visibility-gm')
+    const notice = await screen.findByRole('note')
+    expect(notice).toHaveTextContent('Spoiler · Recuerdos de Nara')
+    expect(notice).toHaveTextContent('Revelado a Tala.')
+    expect(screen.getByText('lumbrevela.md · v2 · 4 fragmentos')).toBeInTheDocument()
+
+    fireEvent.click(within(notice).getByRole('link', { name: 'Gestionar quién lo ve' }))
+    expect(window.location.pathname).toBe('/universos/realm-1/personas')
   })
 })

@@ -1,3 +1,4 @@
+import type { Visibility } from '../../shared/lib/visibility'
 import type { SourceEvidence } from '../content'
 
 export type EntityType = 'CHARACTER' | 'PLACE' | 'FACTION' | 'OBJECT' | 'EVENT'
@@ -18,6 +19,7 @@ export interface LoreEntityView {
   description: string
   canonStatus: CanonStatus
   accessPolicyId: string
+  visibility: Visibility
   sourceEvidence: SourceEvidence[]
   createdBy: string
   createdAt: string
@@ -39,6 +41,7 @@ export interface LoreRelationView {
   description: string
   canonStatus: CanonStatus
   accessPolicyId: string
+  visibility: Visibility
   sourceEvidence: SourceEvidence[]
   createdBy: string
   createdAt: string
