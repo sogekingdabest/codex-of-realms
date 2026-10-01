@@ -2,6 +2,8 @@
   "realm": "codex-of-realms",
   "enabled": true,
   "displayName": "Codex of Realms",
+  "loginTheme": "codex",
+  "emailTheme": "codex",
   "sslRequired": "external",
   "internationalizationEnabled": true,
   "supportedLocales": [

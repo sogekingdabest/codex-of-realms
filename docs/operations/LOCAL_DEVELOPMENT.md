@@ -31,7 +31,7 @@ For an NVIDIA-enabled Docker installation, use the GPU override when starting th
 docker compose -f compose.yaml -f compose.gpu.yaml up -d --build --wait
 ```
 
-For an existing Keycloak realm, run `./scripts/configure-email-verification.ps1` after startup. Import at startup does not update existing realms.
+For an existing Keycloak realm, run `./scripts/configure-keycloak-realm.ps1` after startup. It applies email verification, SMTP and the access theme; import at startup does not update existing realms.
 
 ## Local endpoints
 

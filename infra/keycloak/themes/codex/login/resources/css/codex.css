@@ -1,0 +1,175 @@
+/* The access pages use the application's palette and type (frontend/src/shared/styles/foundation.css). */
+:root {
+  --codex-page: #1d1e1b;
+  --codex-panel: #242522;
+  --codex-panel-strong: #363830;
+  --codex-ink: #ecebe4;
+  --codex-muted: #b3b4a9;
+  --codex-line: #45463e;
+  --codex-accent: #e8a2a6;
+  --codex-accent-hover: #f3b7ba;
+  --codex-accent-ink: #291b1e;
+  --codex-danger: #f0716a;
+  --codex-danger-fill: rgba(240, 113, 106, 0.1);
+  --codex-reading-font: Georgia, 'Times New Roman', serif;
+  --codex-text-font: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+
+  color-scheme: dark;
+  --keycloak-card-top-color: transparent;
+  --pf-v5-global--FontFamily--text: var(--codex-text-font);
+  --pf-v5-global--FontFamily--heading: var(--codex-reading-font);
+  --pf-v5-global--Color--100: var(--codex-ink);
+  --pf-v5-global--Color--200: var(--codex-muted);
+  --pf-v5-global--BorderColor--100: var(--codex-line);
+  --pf-v5-global--link--Color: var(--codex-accent);
+  --pf-v5-global--link--Color--hover: var(--codex-accent-hover);
+  --pf-v5-global--primary-color--100: var(--codex-accent);
+  --pf-v5-global--active-color--100: var(--codex-accent);
+}
+
+.login-pf body {
+  background: var(--codex-page);
+  color: var(--codex-ink);
+}
+
+#kc-header-wrapper {
+  font: 30px/1.1 var(--codex-reading-font);
+  letter-spacing: -0.7px;
+  text-transform: none;
+  color: var(--codex-ink) !important;
+}
+
+.pf-v5-c-login {
+  --pf-v5-c-login__main--BackgroundColor: var(--codex-panel);
+  --pf-v5-c-login__main--BoxShadow: none;
+}
+
+.pf-v5-c-login__main {
+  border: 1px solid var(--codex-line);
+  border-radius: 4px;
+}
+
+/* On a phone the card fills the width; side borders would sit on the screen edge. */
+@media (max-width: 575px) {
+  .pf-v5-c-login__main {
+    border-inline: 0;
+    border-radius: 0;
+  }
+}
+
+#kc-page-title {
+  font: 400 30px/1.2 var(--codex-reading-font);
+  letter-spacing: -0.5px;
+}
+
+.pf-v5-c-form__label-text,
+.pf-v5-c-check__label {
+  color: var(--codex-ink);
+}
+
+.pf-v5-c-form-control {
+  --pf-v5-c-form-control--BackgroundColor: var(--codex-page);
+  --pf-v5-c-form-control--Color: var(--codex-ink);
+  --pf-v5-c-form-control--before--BorderTopColor: var(--codex-line);
+  --pf-v5-c-form-control--before--BorderRightColor: var(--codex-line);
+  --pf-v5-c-form-control--before--BorderBottomColor: var(--codex-line);
+  --pf-v5-c-form-control--before--BorderLeftColor: var(--codex-line);
+  --pf-v5-c-form-control--after--BorderBottomColor: var(--codex-line);
+  --pf-v5-c-form-control--hover--after--BorderBottomColor: var(--codex-muted);
+  --pf-v5-c-form-control--focus--after--BorderBottomColor: var(--codex-accent);
+  --pf-v5-c-form-control--m-error--after--BorderBottomColor: var(--codex-danger);
+  --pf-v5-c-form-control--m-error__icon--m-status--Color: var(--codex-danger);
+}
+
+.pf-v5-c-button {
+  --pf-v5-c-button--BorderRadius: 3px;
+  --pf-v5-c-button--m-primary--BackgroundColor: var(--codex-accent);
+  --pf-v5-c-button--m-primary--Color: var(--codex-accent-ink);
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: var(--codex-accent-hover);
+  --pf-v5-c-button--m-primary--hover--Color: var(--codex-accent-ink);
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: var(--codex-accent-hover);
+  --pf-v5-c-button--m-primary--focus--Color: var(--codex-accent-ink);
+  --pf-v5-c-button--m-primary--active--BackgroundColor: var(--codex-accent-hover);
+  --pf-v5-c-button--m-primary--active--Color: var(--codex-accent-ink);
+  --pf-v5-c-button--m-secondary--Color: var(--codex-accent);
+  --pf-v5-c-button--m-secondary--after--BorderColor: var(--codex-accent);
+  --pf-v5-c-button--m-secondary--hover--Color: var(--codex-accent-hover);
+  --pf-v5-c-button--m-secondary--hover--after--BorderColor: var(--codex-accent-hover);
+  --pf-v5-c-button--m-secondary--focus--Color: var(--codex-accent-hover);
+  --pf-v5-c-button--m-secondary--focus--after--BorderColor: var(--codex-accent-hover);
+  --pf-v5-c-button--m-link--Color: var(--codex-accent);
+  --pf-v5-c-button--m-link--hover--Color: var(--codex-accent-hover);
+  --pf-v5-c-button--m-link--focus--Color: var(--codex-accent-hover);
+}
+
+.pf-v5-c-button.pf-m-primary {
+  font-weight: 500;
+}
+
+/* The control buttons beside password fields share the field border. */
+.pf-v5-c-button.pf-m-control {
+  --pf-v5-c-button--m-control--BackgroundColor: var(--codex-page);
+  --pf-v5-c-button--m-control--Color: var(--codex-muted);
+  --pf-v5-c-button--m-control--hover--Color: var(--codex-ink);
+  --pf-v5-c-button--m-control--after--BorderTopColor: var(--codex-line);
+  --pf-v5-c-button--m-control--after--BorderRightColor: var(--codex-line);
+  --pf-v5-c-button--m-control--after--BorderBottomColor: var(--codex-line);
+  --pf-v5-c-button--m-control--after--BorderLeftColor: var(--codex-line);
+}
+
+a:focus-visible,
+.pf-v5-c-button:focus-visible,
+.pf-v5-c-form-control:focus-within {
+  outline: 2px solid var(--codex-accent);
+  outline-offset: 3px;
+}
+
+/* The field wrapper shows the focus ring; the browser's own ring inside it would double it. */
+.pf-v5-c-form-control > :is(input, select, textarea):focus-visible {
+  outline: none;
+}
+
+.subtitle {
+  color: var(--codex-muted);
+  font-size: 0.82rem;
+}
+
+/* Keycloak shows its steps (confirm the email, choose a password) as warnings. Here they are
+   instructions, so they read as a calm note; errors keep their colour. */
+.pf-v5-c-alert {
+  --pf-v5-c-alert--m-inline--BoxShadow: none;
+  --pf-v5-c-alert--m-inline--m-warning--BackgroundColor: var(--codex-panel-strong);
+  --pf-v5-c-alert--m-inline--m-info--BackgroundColor: var(--codex-panel-strong);
+  --pf-v5-c-alert--m-inline--m-success--BackgroundColor: var(--codex-panel-strong);
+  --pf-v5-c-alert--m-inline--m-danger--BackgroundColor: var(--codex-danger-fill);
+  --pf-v5-c-alert--m-warning--BorderTopColor: var(--codex-accent);
+  --pf-v5-c-alert--m-warning__icon--Color: var(--codex-accent);
+  --pf-v5-c-alert--m-warning__title--Color: var(--codex-ink);
+  --pf-v5-c-alert--m-info--BorderTopColor: var(--codex-accent);
+  --pf-v5-c-alert--m-info__icon--Color: var(--codex-accent);
+  --pf-v5-c-alert--m-info__title--Color: var(--codex-ink);
+  --pf-v5-c-alert--m-success--BorderTopColor: var(--codex-accent);
+  --pf-v5-c-alert--m-success__icon--Color: var(--codex-accent);
+  --pf-v5-c-alert--m-success__title--Color: var(--codex-ink);
+  --pf-v5-c-alert--m-danger--BorderTopColor: var(--codex-danger);
+  --pf-v5-c-alert--m-danger__icon--Color: var(--codex-danger);
+  --pf-v5-c-alert--m-danger__title--Color: var(--codex-danger);
+}
+
+.pf-v5-c-alert__title {
+  font-weight: 400;
+}
+
+.pf-v5-c-helper-text__item.pf-m-error,
+.kc-feedback-text.pf-m-error {
+  color: var(--codex-danger);
+}
+
+#kc-info-wrapper,
+.pf-v5-c-login__main-footer-band {
+  color: var(--codex-muted);
+}
+
+.pf-v5-c-login__main-footer-band {
+  --pf-v5-c-login__main-footer-band--BorderTopColor: var(--codex-line);
+}

@@ -1,4 +1,6 @@
 {
+  "loginTheme": "codex",
+  "emailTheme": "codex",
   "verifyEmail": true,
   "smtpServer": {
     "host": "mailpit",
