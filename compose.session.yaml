@@ -1,0 +1,26 @@
+# Simulated user session: the isolated browser stack with the real models.
+# docker compose -f compose.e2e.yaml -f compose.session.yaml [-f compose.gpu.yaml] up -d --build --wait
+# Model weights are read-only from an existing volume (by default the main stack's).
+name: codex-session
+services:
+  ollama:
+    image: ollama/ollama:0.33.2
+    command: [serve]
+    environment:
+      OLLAMA_NOPRUNE: '1'
+      OLLAMA_MAX_LOADED_MODELS: '2'
+    volumes: !override
+      - type: volume
+        source: session-models
+        target: /root/.ollama/models
+        read_only: true
+        volume: {subpath: models}
+  app:
+    environment:
+      AI_CHAT_MODEL: ${AI_CHAT_MODEL:-qwen3.5:4b}
+      AI_EMBEDDING_MODEL: ${AI_EMBEDDING_MODEL:-bge-m3}
+      SOURCE_WORKER_POLL_MS: 1000
+volumes:
+  session-models:
+    external: true
+    name: ${SESSION_MODELS_VOLUME:-codex-of-realms_ollama-data}

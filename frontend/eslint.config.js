@@ -17,7 +17,7 @@ export default tseslint.config(
       globals: globals.browser,
     },
   },
-  { files: ['e2e/**/*.ts', 'playwright.config.ts'], languageOptions: { globals: globals.node } },
+  { files: ['e2e/**/*.ts', 'playwright.config.ts', 'playwright.session.config.ts'], languageOptions: { globals: globals.node } },
   {
     files: ['src/shared/**/*.{ts,tsx}'],
     rules: {
