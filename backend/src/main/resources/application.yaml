@@ -35,7 +35,9 @@ spring:
             - ${OIDC_AUDIENCE:codex-api}
   ai:
     retry:
-      max-attempts: 1
+      # Spring AI 2 counts retries after the first call. A question must not repeat
+      # a model call, and source jobs schedule their own retries.
+      max-attempts: 0
     model:
       chat: ${AI_CHAT_PROVIDER:none}
       embedding: ${AI_EMBEDDING_PROVIDER:none}
