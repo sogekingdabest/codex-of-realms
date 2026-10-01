@@ -171,19 +171,33 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
     }
   }
 
+  const questionRequest = useRef<AbortController | null>(null)
+  useEffect(() => () => questionRequest.current?.abort(), [])
+
   async function askQuestion(question: string) {
+    questionRequest.current?.abort()
+    const controller = new AbortController()
+    questionRequest.current = controller
     setAsking(true)
     setError(null)
     setAnswer(null)
     try {
-      setAnswer(await api.qa.ask(realm.id, question))
+      setAnswer(await api.qa.ask(realm.id, question, controller.signal))
       return true
     } catch (reason) {
-      reportError(reason)
+      if (!isAbortError(reason)) reportError(reason)
       return false
     } finally {
-      setAsking(false)
+      if (questionRequest.current === controller) {
+        questionRequest.current = null
+        setAsking(false)
+      }
     }
+  }
+
+  // Stops waiting in the browser; the server still finishes its current model call.
+  function cancelQuestion() {
+    questionRequest.current?.abort()
   }
 
   const evidenceRequest = useRef<AbortController | null>(null)
@@ -233,6 +247,7 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
     administration,
     answer,
     askQuestion,
+    cancelQuestion,
     asking,
     canEdit,
     clearError,

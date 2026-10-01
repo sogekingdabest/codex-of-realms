@@ -199,7 +199,7 @@ describe('App', () => {
       await screen.findByText('La Aguja conserva una deuda antigua con el Meridiano.'),
     ).toBeInTheDocument()
     expect(screen.getByText(/La Aguja · v2 · caracteres 40–126/)).toBeInTheDocument()
-    expect(api.ask).toHaveBeenCalledWith('realm-1', '¿Qué deuda conserva la Aguja?')
+    expect(api.ask).toHaveBeenCalledWith('realm-1', '¿Qué deuda conserva la Aguja?', expect.any(AbortSignal))
 
     fireEvent.click(screen.getByRole('button', { name: 'Abrir evidencia exacta' }))
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
@@ -316,7 +316,7 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
 
     expect(await screen.findByText('No se pudo consultar el modelo')).toBeInTheDocument()
-    expect(screen.getByText('Runtime no disponible')).toBeInTheDocument()
+    expect(screen.getByText('Modelo no disponible')).toBeInTheDocument()
   })
 
   it('explica que Ollama no responde sin recomendar descargar modelos', async () => {
@@ -370,7 +370,7 @@ describe('App', () => {
     ['NO_EVIDENCE', 'El archivo no contiene información visible que permita responder con garantías.'],
     ['LOW_RELEVANCE', 'Hay contenido relacionado, pero no es suficientemente preciso para sostener una respuesta.'],
     ['UNSAFE_INPUT', 'La consulta o la evidencia contiene instrucciones inseguras y se ha rechazado.'],
-    ['MODEL_UNAVAILABLE', 'El modelo de respuesta no está disponible. Revisa el estado del runtime local.'],
+    ['MODEL_UNAVAILABLE', 'El modelo no respondió a tiempo o no está disponible. Si acaba de arrancar, puede seguir cargándose: vuelve a intentarlo en un minuto.'],
     ['VALIDATION_FAILED', 'El modelo respondió, pero la respuesta no superó la validación de evidencia y citas.'],
   ] satisfies Array<[NonNullable<LoreAnswer['failureReason']>, string]>) (
     'presenta el motivo seguro %s devuelto por qa',
@@ -438,6 +438,27 @@ describe('App', () => {
     expect(await screen.findByText('Servicio temporalmente no disponible')).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: 'Cerrar aviso' }))
     expect(screen.queryByText('Servicio temporalmente no disponible')).not.toBeInTheDocument()
+  })
+
+  it('cancela una consulta que tarda sin mostrar un error y conserva la pregunta', async () => {
+    const api = testApi()
+    vi.mocked(api.ask).mockImplementation((_realmId, _question, signal) => new Promise((_resolve, reject) => {
+      signal?.addEventListener('abort', () => reject(new DOMException('Aborted', 'AbortError')))
+    }))
+    render(<App api={api} session={session} />)
+    await screen.findByText('Crónica de Lumbrevela')
+    fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
+    fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: '¿Dónde se alza Lumbrevela?' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Contrastando fuentes y permisos…')
+    fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(await screen.findByRole('button', { name: 'Consultar' })).toBeEnabled()
+    expect(screen.queryByRole('button', { name: 'Cancelar' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(screen.getByLabelText('¿Qué quieres saber?')).toHaveValue('¿Dónde se alza Lumbrevela?')
+    expect(screen.getByLabelText('¿Qué quieres saber?')).toHaveFocus()
   })
 
   it('busca por título sin tildes y por archivo y abre la fuente sin preguntar a la IA', async () => {

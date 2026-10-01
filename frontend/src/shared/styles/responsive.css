@@ -50,6 +50,7 @@
   .entity-context { padding-inline: 22px; }
   .question-workspace { padding: 8px 22px 32px; }
   .question-workspace h2 { font-size: 31px; }
+  .question-actions { width: 100%; }
   .question-footer button { width: 100%; }
   .citations li { padding-inline: 0; grid-template-columns: 20px minmax(0, 1fr); }
   .editor-pane, .catalogue-card, .relations-heading { padding: 24px 22px; }
