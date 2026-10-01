@@ -49,6 +49,7 @@ const messagesByStatus: Record<number, string> = {
   413: 'El archivo supera el tamaño máximo permitido.',
   429: 'Demasiadas peticiones seguidas. Espera un momento e inténtalo de nuevo.',
   503: 'Un servicio necesario no está disponible. Inténtalo de nuevo en unos minutos.',
+  504: 'El servidor tardó demasiado en responder. Si el modelo se estaba cargando, inténtalo de nuevo en un minuto.',
 }
 
 export function problemMessage(code: string | null, status: number): string {
