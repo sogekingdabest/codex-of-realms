@@ -44,6 +44,12 @@ export function App({ api, session }: AppProps) {
     return () => controller.abort()
   }, [api.runtime])
 
+  // Opening Consultas loads the models in the background, before the first question needs them.
+  const questionsOpen = route?.section === 'questions'
+  useEffect(() => {
+    if (questionsOpen && runtimeReady) api.runtime.warmUp().catch(() => undefined)
+  }, [questionsOpen, runtimeReady, api.runtime])
+
   // Unknown, stale or forbidden addresses are replaced by the place actually shown.
   useEffect(() => {
     if (me && pathname !== canonicalPath) navigate(canonicalPath, { replace: true })
