@@ -103,7 +103,7 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 ## Prioridad propuesta
 
 1. El fallo en frío: tiempos de espera alineados, calentamiento visible, progreso y cancelación. Corregido el mismo día; ver la sección siguiente.
-2. Foco y desplazamiento al resultado de la consulta en móvil.
+2. Foco y desplazamiento al resultado de la consulta en móvil. Corregido; ver «Corrección del resultado fuera de pantalla».
 3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia.
 4. Tema y textos propios en el registro.
 5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil.
@@ -126,6 +126,14 @@ Se corrigió en la misma rama, en cuatro cambios:
 - Para probar el fallo, se recreó el backend con un timeout de 12 s y se descargó el modelo de chat. La consulta mostró «Modelo no disponible» a los 13,7 s, sin aviso de error ni 504 ([captura](assets/2026-10-01-sesion-simulada/correccion-modelo-no-disponible.png)). Ollama recibió una sola llamada de chat por la pregunta, más la del calentamiento, y ningún reintento. Siguió cargando el modelo, y la misma pregunta respondió en 2,5 s al repetirla 45 s después.
 
 Ollama descarga el modelo tras cinco minutos sin uso (`AI_CHAT_KEEP_ALIVE`). Una pregunta después de una pausa todavía paga la carga, aunque ahora con explicación, sin llamada duplicada y con la opción de cancelar. Para una partida larga conviene ampliar ese valor.
+
+## Corrección del resultado fuera de pantalla
+
+Cuando llega un resultado nuevo, el foco pasa a su encabezado. Si ese encabezado no se ve, la página se desplaza hasta el resultado. En escritorio, donde ya se veía, la página no se mueve. La tarjeta con pasajes no tenía encabezado: «Fragmentos de las fuentes» pasa a serlo, con el mismo aspecto.
+
+El foco no se mueve si la persona ya está escribiendo otra pregunta; la región `aria-live` sigue anunciando el resultado. Que el foco siga en la pregunta enviada no cuenta como escribir, porque iOS no lo pasa al botón al tocar «Consultar». Al volver a Consultas con un resultado anterior, el foco tampoco se mueve.
+
+Verificación: cuatro pruebas nuevas del panel, de las que tres fallan sin el cambio (la cuarta cubre la vuelta a Consultas), y la suite de navegador, que ahora pregunta también a 390 × 844 y comprueba que el encabezado recibe el foco y queda entero en pantalla ([captura](assets/2026-10-01-sesion-simulada/correccion-resultado-movil.png)). No se repitió la sesión con modelos reales.
 
 ## Reproducción y registros
 
