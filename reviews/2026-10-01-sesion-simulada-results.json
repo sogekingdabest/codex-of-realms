@@ -1,0 +1,463 @@
+{
+  "date": "2026-10-01",
+  "commit": "64aed42",
+  "kind": "simulación con personas guionizadas; no hay participantes reales",
+  "stack": {
+    "compose": "compose.e2e.yaml con modelos reales",
+    "chatModel": "qwen3.5:4b",
+    "embeddingModel": "bge-m3",
+    "gpu": "NVIDIA GeForce RTX 3060 Laptop, 6 GiB",
+    "viewports": {
+      "Inés (dirección)": "1366x860",
+      "Tala (jugadora)": "1366x860",
+      "Ivo (jugador)": "390x844 táctil"
+    }
+  },
+  "measures": {
+    "seconds": "tiempo de máquina, no humano",
+    "interactions": "clics, campos, teclas y navegaciones del camino mínimo"
+  },
+  "runs": [
+    {
+      "name": "final, modelos cargados",
+      "records": [
+        {
+          "id": "P1",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Preparar la campaña: universo, tres fuentes públicas y dos invitaciones",
+          "completed": true,
+          "seconds": 9.4,
+          "interactions": 20,
+          "notes": [
+            "Mientras procesa: Fuentes ·  · Biblioteca del universo ·  · Las voces de El Meridiano de Ceniza ·  · Crónicas, notas y documentos que dan forma a tu mundo. ·  · El archivo empieza aquí ·  · Añade un documento Markdown o TXT desde el índice para comenzar.",
+            "Tres fuentes públicas publicadas 5 s después de empezar a subirlas (primer uso del modelo de embeddings).",
+            "Invitaciones creadas; la aplicación no envía correo, el enlace se comparte aparte."
+          ]
+        },
+        {
+          "id": "P2",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Registrarse con la invitación y entrar en la campaña",
+          "completed": true,
+          "seconds": 4.3,
+          "interactions": 0,
+          "notes": []
+        },
+        {
+          "id": "P3",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Registrarse desde el móvil con la invitación",
+          "completed": true,
+          "seconds": 4.1,
+          "interactions": 0,
+          "notes": []
+        },
+        {
+          "id": "P4",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Preparar spoiler revelado solo a Tala, nota privada y Atlas",
+          "completed": true,
+          "seconds": 8.7,
+          "interactions": 50,
+          "notes": [
+            "Nota privada en /universos/ac4ac130-9fc1-4637-a197-1dfc04f714c3/fuentes/05a3e365-0d77-41e0-ae58-3c91e80500d4"
+          ]
+        },
+        {
+          "id": "P5",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Calentar el modelo con la consulta de control",
+          "completed": true,
+          "seconds": 7,
+          "interactions": 3,
+          "notes": [
+            "«¿Dónde se alza Lumbrevela?» → respuesta en 6.6 s (visible sin desplazarse) citando El Meridiano y la ciudad de Lumbrevela. Pasaje: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro sin costa cuya luz permanece encendida también durante el día. Los habitantes creen que la Aguja mantiene estable el borde de la tormenta y p»"
+          ]
+        },
+        {
+          "id": "T1",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Encontrar dónde se alza Lumbrevela y mostrar el texto original (empieza por Consultas)",
+          "completed": true,
+          "seconds": 7.6,
+          "interactions": 6,
+          "notes": [
+            "«¿Dónde se alza Lumbrevela?» → respuesta en 6.1 s (visible sin desplazarse) citando El Meridiano y la ciudad de Lumbrevela. Pasaje: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro sin costa cuya luz permanece encendida también durante el día. Los habitantes creen que la Aguja mantiene estable el borde de la tormenta y p»",
+            "Pasaje marcado: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro s»"
+          ]
+        },
+        {
+          "id": "T1",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Encontrar dónde se alza Lumbrevela y mostrar el texto original (empieza por el Atlas, en móvil)",
+          "completed": true,
+          "seconds": 1.9,
+          "interactions": 4,
+          "notes": [
+            "Fragmento visible en la ficha: «Lumbrevela\n\nLumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodí»",
+            "Cabecera del diálogo de evidencia: «Procedencia del canon · 3fb51c5251 ·  · El Meridiano y la ciudad de Lumbrevela · 01-el-meridiano-y-lumbrevela.md · Lumbrevela ·»"
+          ]
+        },
+        {
+          "id": "T2",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Buscar un documento por su nombre y leerlo sin consultar a la IA",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 4,
+          "notes": [
+            "Resultados al buscar «rutas»: 1 de 3 fuentes"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Añadir una nota privada y revelar un spoiler a Ivo",
+          "completed": true,
+          "seconds": 4,
+          "interactions": 14,
+          "notes": [
+            "Marcas en la biblioteca de dirección: Público | Solo dirección | Spoiler · Tala Mir | Spoiler · Ivo Sanz | Solo dirección | Público | Público"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Comprobar qué información puede ver (tiene Recuerdos de Nara)",
+          "completed": true,
+          "seconds": 2.4,
+          "interactions": 6,
+          "notes": [
+            "Fuentes visibles: El Meridiano y la ciudad de Lumbrevela, El recuerdo de Nara, Personas, facciones y objetos de Lumbrevela, Rutas y vida cívica de Lumbrevela",
+            "Marcas: Público | Revelado para ti | Público | Público",
+            "Sin rastro de «La deuda de la Aguja», «El pacto del Velo», «La campana de vidrio» en Fuentes, Fichas y Relaciones.",
+            "URL directa de la nota privada: «Fuentes ·  · Biblioteca del universo ·  · Esta fuente no está disponible ·  · Puede que se haya retirado o que no sea visible para ti. ·  · Volver a las fuentes»"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Comprobar qué información puede ver (tiene La campana de vidrio)",
+          "completed": true,
+          "seconds": 16.4,
+          "interactions": 11,
+          "notes": [
+            "Fuentes visibles: El Meridiano y la ciudad de Lumbrevela, La campana de vidrio, Personas, facciones y objetos de Lumbrevela, Rutas y vida cívica de Lumbrevela",
+            "Sin rastro de «La deuda de la Aguja», «El pacto del Velo», «El recuerdo de Nara», «Nara Ors» en Fuentes, Fichas y Relaciones.",
+            "«¿Quién es Nara Ors y dónde está?» → sin respuesta verificable en 4 s (fuera de la pantalla: empieza en 859 px con una ventana de 844 px): Resultado seguro ·  · No hay una respuesta verificable ·  · El archivo no contiene información visible que permita responder con garantías.",
+            "«¿Avanza realmente el Meridiano hacia el oeste?» → respuesta en 10.7 s (fuera de la pantalla: empieza en 859 px con una ventana de 844 px) citando El Meridiano y la ciudad de Lumbrevela, Personas, facciones y objetos de Lumbrevela, El Meridiano y la ciudad de Lumbrevela. Pasaje: «El calendario actual señala el año 83 Después de la Partición, abreviado como 83 DP. Los mapas oficiales afirman que el Meridiano avanza lentamente hacia el oeste. La medición popular más repetida habla de una legua cada nueve años, aunque las marcas antiguas no siempre concuerdan entre sí. / La Cus»"
+          ]
+        },
+        {
+          "id": "T4",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Sustituir una nota por una versión nueva y explicar cuál está disponible",
+          "completed": true,
+          "seconds": 3.3,
+          "interactions": 3,
+          "notes": [
+            "Mientras procesa: Procesamiento de fuentes · Rutas y vida cívica de Lumbrevela · versión 2 ·  · En cola · 0/0 fragmentos · 0 intentos ·  · La versión 1 sigue publicada y disponible para consultas. ·  · Historial de la operación · Operaciones finalizadas (7)",
+            "Entrada de la biblioteca: Rutas y vida cívica de Lumbrevela · 03-rutas-y-vida-civica.md · v1 · Público · Gestionar · Reprocesar · Reemplazar archivo de Rutas y vida cívica de Lumbrevela · Eliminar"
+          ]
+        },
+        {
+          "id": "T5",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Abrir una ficha del Atlas y seguir una relación hasta otra ficha",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 3,
+          "notes": [
+            "Relación mostrada: Relaciones ·  · La Aguja del Mediodía se encuentra en Lumbrevela ·  · Propuesto · Público ·  · La Aguja ocupa el centro de la terraza superior. ·  · El Meridiano y la ciudad de Lumbrevela · Lumbrevela",
+            "URL de llegada: /universos/ac4ac130-9fc1-4637-a197-1dfc04f714c3/atlas/ef86049d-d327-4ce8-8e7b-6b07aac32716"
+          ]
+        },
+        {
+          "id": "T6",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Crear otra campaña y volver a la primera",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 5,
+          "notes": [
+            "Al crearla abre: Fuentes ·  · Biblioteca del universo ·  · Las voces de Las Islas de Sal ·  · Crónicas, notas y documentos que dan forma a tu mundo. ·  · El archivo empieza aquí ·  · Añade un documento Markdown o TXT ",
+            "El selector de universo está plegado bajo «Propietario · Cambiar universo».",
+            "Vuelve a /universos/ac4ac130-9fc1-4637-a197-1dfc04f714c3/fuentes"
+          ]
+        },
+        {
+          "id": "T7",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Preguntar quién fundó la universidad de Aramonte (dato ausente) y explicar el resultado",
+          "completed": true,
+          "seconds": 0.6,
+          "interactions": 3,
+          "notes": [
+            "«¿Quién fundó la universidad de Aramonte?» → sin respuesta verificable en 0.3 s (fuera de la pantalla: empieza en 859 px con una ventana de 844 px): Resultado seguro ·  · No hay una respuesta verificable ·  · Hay contenido relacionado, pero no es suficientemente preciso para sostener una respuesta."
+          ]
+        }
+      ]
+    },
+    {
+      "name": "modelos descargados con la caché de disco caliente",
+      "records": [
+        {
+          "id": "P1",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Preparar la campaña: universo, tres fuentes públicas y dos invitaciones",
+          "completed": true,
+          "seconds": 27.2,
+          "interactions": 20,
+          "notes": [
+            "Mientras procesa: Fuentes ·  · Biblioteca del universo ·  · Las voces de El Meridiano de Ceniza ·  · Crónicas, notas y documentos que dan forma a tu mundo. ·  · El archivo empieza aquí ·  · Añade un documento Markdown o TXT desde el índice para comenzar.",
+            "Tres fuentes públicas publicadas 23 s después de empezar a subirlas (primer uso del modelo de embeddings).",
+            "Invitaciones creadas; la aplicación no envía correo, el enlace se comparte aparte."
+          ]
+        },
+        {
+          "id": "P2",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Registrarse con la invitación y entrar en la campaña",
+          "completed": true,
+          "seconds": 4.2,
+          "interactions": 0,
+          "notes": []
+        },
+        {
+          "id": "P3",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Registrarse desde el móvil con la invitación",
+          "completed": true,
+          "seconds": 4.1,
+          "interactions": 0,
+          "notes": []
+        },
+        {
+          "id": "P4",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Preparar spoiler revelado solo a Tala, nota privada y Atlas",
+          "completed": true,
+          "seconds": 10.8,
+          "interactions": 50,
+          "notes": [
+            "Nota privada en /universos/6a4c35c4-624b-4c1f-95d7-45dadbce120a/fuentes/fec9aa22-9ddf-4d82-8a60-5910365db59f"
+          ]
+        },
+        {
+          "id": "P5",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Calentar el modelo con la consulta de control",
+          "completed": true,
+          "seconds": 27.5,
+          "interactions": 3,
+          "notes": [
+            "«¿Dónde se alza Lumbrevela?» → respuesta en 27.1 s citando El Meridiano y la ciudad de Lumbrevela. Pasaje: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro sin costa cuya luz permanece encendida también durante el día. Los habitantes creen que la Aguja mantiene estable el borde de la tormenta y p»"
+          ]
+        },
+        {
+          "id": "T1",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Encontrar dónde se alza Lumbrevela y mostrar el texto original (empieza por Consultas)",
+          "completed": true,
+          "seconds": 7.1,
+          "interactions": 6,
+          "notes": [
+            "«¿Dónde se alza Lumbrevela?» → respuesta en 5.6 s citando El Meridiano y la ciudad de Lumbrevela. Pasaje: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro sin costa cuya luz permanece encendida también durante el día. Los habitantes creen que la Aguja mantiene estable el borde de la tormenta y p»",
+            "Pasaje marcado: «Lumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodía, un faro s»"
+          ]
+        },
+        {
+          "id": "T1",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Encontrar dónde se alza Lumbrevela y mostrar el texto original (empieza por el Atlas, en móvil)",
+          "completed": true,
+          "seconds": 1.7,
+          "interactions": 4,
+          "notes": [
+            "Fragmento visible en la ficha: «Lumbrevela\n\nLumbrevela se alza al este del Meridiano, sobre siete terrazas de roca rojiza. En el centro de la terraza superior se encuentra la Aguja del Mediodí»",
+            "Cabecera del diálogo de evidencia: «Procedencia del canon · 3fb51c5251 ·  · El Meridiano y la ciudad de Lumbrevela · 01-el-meridiano-y-lumbrevela.md · Lumbrevela ·»"
+          ]
+        },
+        {
+          "id": "T2",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Buscar un documento por su nombre y leerlo sin consultar a la IA",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 4,
+          "notes": [
+            "Resultados al buscar «rutas»: 1 de 3 fuentes"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Añadir una nota privada y revelar un spoiler a Ivo",
+          "completed": true,
+          "seconds": 4.1,
+          "interactions": 14,
+          "notes": [
+            "Marcas en la biblioteca de dirección: Público | Solo dirección | Spoiler · Tala Mir | Spoiler · Ivo Sanz | Solo dirección | Público | Público"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Comprobar qué información puede ver (tiene Recuerdos de Nara)",
+          "completed": true,
+          "seconds": 2.5,
+          "interactions": 6,
+          "notes": [
+            "Fuentes visibles: El Meridiano y la ciudad de Lumbrevela, El recuerdo de Nara, Personas, facciones y objetos de Lumbrevela, Rutas y vida cívica de Lumbrevela",
+            "Marcas: Público | Revelado para ti | Público | Público",
+            "Sin rastro de «La deuda de la Aguja», «El pacto del Velo», «La campana de vidrio» en Fuentes, Fichas y Relaciones.",
+            "URL directa de la nota privada: «Fuentes ·  · Biblioteca del universo ·  · Esta fuente no está disponible ·  · Puede que se haya retirado o que no sea visible para ti. ·  · Volver a las fuentes»"
+          ]
+        },
+        {
+          "id": "T3",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Comprobar qué información puede ver (tiene La campana de vidrio)",
+          "completed": true,
+          "seconds": 16.4,
+          "interactions": 11,
+          "notes": [
+            "Fuentes visibles: El Meridiano y la ciudad de Lumbrevela, La campana de vidrio, Personas, facciones y objetos de Lumbrevela, Rutas y vida cívica de Lumbrevela",
+            "Sin rastro de «La deuda de la Aguja», «El pacto del Velo», «El recuerdo de Nara», «Nara Ors» en Fuentes, Fichas y Relaciones.",
+            "«¿Quién es Nara Ors y dónde está?» → sin respuesta verificable en 4 s: Resultado seguro ·  · No hay una respuesta verificable ·  · El archivo no contiene información visible que permita responder con garantías.",
+            "«¿Avanza realmente el Meridiano hacia el oeste?» → respuesta en 10.7 s citando El Meridiano y la ciudad de Lumbrevela, Personas, facciones y objetos de Lumbrevela, Rutas y vida cívica de Lumbrevela. Pasaje: «El calendario actual señala el año 83 Después de la Partición, abreviado como 83 DP. Los mapas oficiales afirman que el Meridiano avanza lentamente hacia el oeste. La medición popular más repetida habla de una legua cada nueve años, aunque las marcas antiguas no siempre concuerdan entre sí. / La Cus»"
+          ]
+        },
+        {
+          "id": "T4",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Sustituir una nota por una versión nueva y explicar cuál está disponible",
+          "completed": true,
+          "seconds": 3.3,
+          "interactions": 3,
+          "notes": [
+            "Mientras procesa: Procesamiento de fuentes · Rutas y vida cívica de Lumbrevela · versión 2 ·  · En cola · 0/0 fragmentos · 0 intentos ·  · La versión 1 sigue publicada y disponible para consultas. ·  · Historial de la operación · Operaciones finalizadas (7)",
+            "Entrada de la biblioteca: Rutas y vida cívica de Lumbrevela · 03-rutas-y-vida-civica.md · v1 · Público · Gestionar · Reprocesar · Reemplazar archivo de Rutas y vida cívica de Lumbrevela · Eliminar"
+          ]
+        },
+        {
+          "id": "T5",
+          "persona": "Tala",
+          "role": "Jugadora",
+          "device": "escritorio",
+          "goal": "Abrir una ficha del Atlas y seguir una relación hasta otra ficha",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 3,
+          "notes": [
+            "Relación mostrada: Relaciones ·  · La Aguja del Mediodía se encuentra en Lumbrevela ·  · Propuesto · Público ·  · La Aguja ocupa el centro de la terraza superior. ·  · El Meridiano y la ciudad de Lumbrevela · Lumbrevela",
+            "URL de llegada: /universos/6a4c35c4-624b-4c1f-95d7-45dadbce120a/atlas/49125b33-1071-4bc2-97ae-f3f7d903b106"
+          ]
+        },
+        {
+          "id": "T6",
+          "persona": "Inés",
+          "role": "Dirección",
+          "device": "escritorio",
+          "goal": "Crear otra campaña y volver a la primera",
+          "completed": true,
+          "seconds": 0.7,
+          "interactions": 5,
+          "notes": [
+            "Al crearla abre: Fuentes ·  · Biblioteca del universo ·  · Las voces de Las Islas de Sal ·  · Crónicas, notas y documentos que dan forma a tu mundo. ·  · El archivo empieza aquí ·  · Añade un documento Markdown o TXT ",
+            "El selector de universo está plegado bajo «Propietario · Cambiar universo».",
+            "Vuelve a /universos/6a4c35c4-624b-4c1f-95d7-45dadbce120a/fuentes"
+          ]
+        },
+        {
+          "id": "T7",
+          "persona": "Ivo",
+          "role": "Jugador",
+          "device": "móvil",
+          "goal": "Preguntar quién fundó la universidad de Aramonte (dato ausente) y explicar el resultado",
+          "completed": true,
+          "seconds": 0.6,
+          "interactions": 3,
+          "notes": [
+            "«¿Quién fundó la universidad de Aramonte?» → sin respuesta verificable en 0.3 s: Resultado seguro ·  · No hay una respuesta verificable ·  · Hay contenido relacionado, pero no es suficientemente preciso para sostener una respuesta."
+          ]
+        }
+      ],
+      "note": "Su comprobación de visibilidad del resultado era demasiado permisiva y se retiró de estas notas; la ejecución final usa la medición corregida."
+    }
+  ],
+  "coldStartIncident": {
+    "run": "ejecución preliminar, primera carga del modelo de chat tras arrancar el contenedor",
+    "question": "¿Dónde se alza Lumbrevela?",
+    "visibleToUser": "Aviso de error genérico tras 180 s: «El servidor no pudo completar la operación. Inténtalo de nuevo en unos minutos.»",
+    "httpStatus": 504,
+    "proxyTimeoutSeconds": 180,
+    "backendReadTimeoutSeconds": 120,
+    "ollamaChatRequests": [
+      {
+        "started": "12:58:25Z",
+        "durationSeconds": 215
+      },
+      {
+        "started": "13:00:27Z",
+        "durationSeconds": 89
+      }
+    ],
+    "modelLoadedAt": "13:00:31Z",
+    "nextQueryWaitSeconds": 41
+  }
+}

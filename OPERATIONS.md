@@ -72,6 +72,20 @@ try {
 
 The tests register local users and verify mail through Keycloak/Mailpit. A focused reader scenario uploads an original demo document and checks the modal keyboard loop, Escape, focus restoration and mobile layout. The owner-and-two-player scenario accepts consecutive invitations, uploads a source, observes transient failure/retry, keeps a published version during a failed replacement, retries manually, searches and reads sources, queries and opens literal evidence, then creates a second isolated universe and returns to the first. Successful screenshots are stored in `frontend/test-results/`; failed runs retain traces. The browser job in CI runs the same isolated stack and suite. Never use its fixed test credentials outside this isolated stack. The test server supplies deterministic model responses.
 
+A separate scripted session follows the [user session guide](docs/product/USER_SESSION_ES.md) with a Game Master and two players, one of them on a phone-sized screen. It uses the same isolated stack, but `compose.session.yaml` replaces the test server with Ollama and the real models. The weights are mounted read-only from an existing volume: `SESSION_MODELS_VOLUME`, by default the main stack's. Add `compose.gpu.yaml` on NVIDIA hosts. Set `SESSION_COLD=1` to unload the models first. Results and screenshots go to `frontend/test-results/user-session/`:
+
+~~~powershell
+try {
+    docker compose -f compose.e2e.yaml -f compose.session.yaml -f compose.gpu.yaml up -d --build --wait
+    if ($LASTEXITCODE -ne 0) { throw 'Could not start the session environment.' }
+    npm --prefix frontend run test:session
+} finally {
+    docker compose -f compose.e2e.yaml -f compose.session.yaml down --volumes --remove-orphans
+}
+~~~
+
+The weights volume is external, so `down --volumes` keeps it. The [1 October report](reviews/2026-10-01-sesion-simulada.md) records a run.
+
 Use the [model-evaluation guide](demo/evaluation/README.md) for live inference. Report version 3 records literal copying, selection relevance, rejection and latency against oracle-visible evidence. Vector retrieval and authorization are checked separately by integration and browser tests.
 
 The measured comparison of eight installed models is preserved in [the acceptance report](reviews/2026-09-06-entrega-y-validacion.md) and [its machine-readable results](reviews/2026-09-06-selector-results.json). The historical quality thresholds were not met by any model; no model is promoted automatically.
