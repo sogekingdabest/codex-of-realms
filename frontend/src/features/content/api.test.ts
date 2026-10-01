@@ -73,7 +73,7 @@ describe('contrato HTTP de contenido', () => {
     const { api, fetchMock } = client()
     fetchMock.mockRejectedValueOnce(new TypeError('Network error'))
     const file = new File(['texto'], 'c.md')
-    await expect(api.uploadSource('realm', 'Crónica', 'policy', file)).rejects.toThrow('Network error')
+    await expect(api.uploadSource('realm', 'Crónica', 'policy', file)).rejects.toMatchObject({ code: 'network.unavailable', detail: 'Network error' })
     await expect(api.uploadSource('realm', 'Crónica', 'policy', file)).resolves.toEqual(sourceSubmission)
     const keys = fetchMock.mock.calls.map(([, init]) => new Headers(init?.headers).get('Idempotency-Key'))
     expect(keys[0]).toBe(keys[1])
@@ -132,11 +132,13 @@ describe('contrato HTTP de contenido', () => {
   })
 
   it.each([
-    [409, 'source.idempotency_conflict'], [425, 'source.upload_in_progress'], [503, 'source.file_unavailable'],
-  ])('conserva el error HTTP %i y su código para el consumidor', async (status, code) => {
-    const { api } = client(status as number, { detail: 'Operación no completada', code })
+    [409, 'source.idempotency_conflict', /coincide con otro anterior/],
+    [425, 'source.upload_in_progress', /sigue en curso/],
+    [503, 'source.file_unavailable', /Falta el archivo original/],
+  ])('conserva el error HTTP %i y su código para el consumidor', async (status, code, message) => {
+    const { api } = client(status as number, { detail: 'Operation not completed', code })
     const error: unknown = await api.reprocessSource('realm', 'doc', 'key').catch((reason: unknown) => reason)
     expect(error).toBeInstanceOf(ApiError)
-    expect(error).toMatchObject({ status, code, message: 'Operación no completada' })
+    expect(error).toMatchObject({ status, code, detail: 'Operation not completed', message: expect.stringMatching(message) })
   })
 })

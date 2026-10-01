@@ -1,8 +1,12 @@
+import { problemMessage } from './problemMessages'
+
+/** `message` is user-facing Spanish copy; `detail` keeps the server's diagnostic text. */
 export class ApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
     readonly code: string | null = null,
+    readonly detail: string | null = null,
   ) {
     super(message)
     this.name = 'ApiError'
@@ -28,10 +32,10 @@ export class AuthenticatedHttpClient {
       headers.set('Content-Type', 'application/json')
     }
 
-    const response = await fetch(this.requestUrl(path), { ...init, headers })
+    const response = await send(this.requestUrl(path), { ...init, headers })
     if (!response.ok) {
       const problem = await readError(response)
-      throw new ApiError(problem.message, response.status, problem.code)
+      throw new ApiError(problemMessage(problem.code, response.status), response.status, problem.code, problem.detail)
     }
     if (response.status === 204) return undefined as T
     return (await response.json()) as T
@@ -59,9 +63,19 @@ export class AuthenticatedHttpClient {
   }
 }
 
+async function send(url: string, init: RequestInit) {
+  try {
+    return await fetch(url, init)
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') throw error
+    const code = 'network.unavailable'
+    throw new ApiError(problemMessage(code, 0), 0, code, error instanceof Error ? error.message : null)
+  }
+}
+
 async function readError(
   response: Response,
-): Promise<{ message: string; code: string | null }> {
+): Promise<{ detail: string | null; code: string | null }> {
   try {
     const body = (await response.json()) as {
       code?: string
@@ -70,10 +84,10 @@ async function readError(
       message?: string
     }
     return {
-      message: body.detail ?? body.message ?? body.title ?? `Error HTTP ${response.status}`,
+      detail: body.detail ?? body.message ?? body.title ?? null,
       code: typeof body.code === 'string' ? body.code : null,
     }
   } catch {
-    return { message: `Error HTTP ${response.status}`, code: null }
+    return { detail: null, code: null }
   }
 }
