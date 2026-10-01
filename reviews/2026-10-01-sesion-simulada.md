@@ -105,7 +105,7 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 1. El fallo en frío: tiempos de espera alineados, calentamiento visible, progreso y cancelación. Corregido el mismo día; ver la sección siguiente.
 2. Foco y desplazamiento al resultado de la consulta en móvil. Corregido; ver «Corrección del resultado fuera de pantalla».
 3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia. Corregido; ver «Corrección del diálogo de evidencia».
-4. Tema y textos propios en el registro.
+4. Tema y textos propios en el registro. Corregido; ver «Corrección del registro».
 5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil.
 6. Los detalles de la dirección.
 
@@ -140,6 +140,16 @@ Verificación: cuatro pruebas nuevas del panel, de las que tres fallan sin el ca
 El diálogo sigue ahora la regla del lector de fuentes: solo la dirección ve el nombre del archivo y el checksum. Un jugador ve «Procedencia del canon» o «Evidencia autorizada · versión N», el título de la fuente y el apartado del pasaje («La Aguja» o, sin apartado, «Documento»). La dirección sigue viendo «Procedencia del canon · 3fb51c5251» y «01-el-meridiano-y-lumbrevela.md · Documento». El cambio es de presentación: la API sigue enviando esos datos al jugador, que ya tiene acceso a la fuente.
 
 Verificación: una prueba nueva del diálogo con los dos roles y otra de la aplicación en la que un jugador abre la cita de una respuesta; ambas fallan sin el cambio. La prueba de la propietaria comprueba que la dirección sigue viendo el archivo. La suite de navegador comprueba además que el diálogo de un jugador no contiene el nombre del archivo.
+
+## Corrección del registro
+
+Keycloak usa ahora un tema propio, `codex`, para las páginas de acceso y los correos. Tiene los colores, la tipografía y el icono de la aplicación, y un tema oscuro fijo, como ella ([móvil](assets/2026-10-01-sesion-simulada/correccion-registro-movil.png)). Los textos tratan de tú en las pantallas de entrar, crear la cuenta, confirmar el correo, elegir la contraseña y recuperarla, y en los dos correos.
+
+El paso de la contraseña se llama «Elige tu contraseña» y explica que es la que se usará para entrar ([captura](assets/2026-10-01-sesion-simulada/correccion-registro-contrasena.png)). La pantalla anterior avisa de que la contraseña se elige después de confirmar el correo, y el correo lo repite. Keycloak presenta esos pasos como advertencias; el tema los muestra como notas, con un icono de información. Los errores conservan su color.
+
+El tema hereda de `keycloak.v2` y solo cambia estilos y textos, sin plantillas propias. Se aplica a los realms nuevos al importarlos. Para un realm existente, `./scripts/configure-keycloak-realm.ps1` (antes `configure-email-verification.ps1`) lo activa junto con la verificación y el SMTP. El correo de verificación en español decía «expirará en 5 minutos minutos»; el texto nuevo dice «caduca en 5 minutos».
+
+Verificación: un recorrido completo en español, en escritorio y en móvil, y otro en inglés contra el entorno de pruebas. Cubrió entrar con error, crear la cuenta con campos vacíos, confirmar el correo, elegir la contraseña con y sin coincidencia y recuperarla. El script devolvió el tema a un realm que tenía los temas por defecto. La suite de navegador recorre el registro en inglés y comprueba el título «Choose your password». No se revisaron otras pantallas de Keycloak (OTP, cuenta, administración), que conservan sus textos.
 
 ## Reproducción y registros
 
