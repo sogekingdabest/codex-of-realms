@@ -16,11 +16,11 @@ class ModelWarmupServiceTest {
     private final RecordingPreloader preloader = new RecordingPreloader();
 
     @Test
-    void loadsTheEmbeddingModelBeforeTheChatModelWithTheAnswerKeepAlive() {
+    void loadsTheEmbeddingModelBeforeTheChatModelWithTheAnswerOptions() {
         ModelWarmupService service = service("ollama", "qwen3.5:4b", "ollama", "bge-m3", Runnable::run);
 
         assertThat(service.warmUp().state()).isEqualTo(STARTED);
-        assertThat(preloader.calls).containsExactly("embedding bge-m3", "chat qwen3.5:4b 30m");
+        assertThat(preloader.calls).containsExactly("embedding bge-m3", "chat qwen3.5:4b 30m 12288");
     }
 
     @Test
@@ -61,7 +61,7 @@ class ModelWarmupServiceTest {
         ModelWarmupService service = service("ollama", "qwen3.5:4b", "ollama", "bge-m3", Runnable::run);
 
         assertThat(service.warmUp().state()).isEqualTo(STARTED);
-        assertThat(preloader.calls).containsExactly("embedding bge-m3", "chat qwen3.5:4b 30m");
+        assertThat(preloader.calls).containsExactly("embedding bge-m3", "chat qwen3.5:4b 30m 12288");
         assertThat(service.warmUp().state()).isEqualTo(STARTED);
     }
 
@@ -76,6 +76,7 @@ class ModelWarmupServiceTest {
             preloader,
             RuntimeModelConfiguration.of(chatProvider, chatModel, embeddingProvider, embeddingModel),
             "30m",
+            12288,
             executor
         );
     }
@@ -94,8 +95,8 @@ class ModelWarmupServiceTest {
         }
 
         @Override
-        public void loadChat(String model, String keepAlive) {
-            calls.add("chat " + model + " " + keepAlive);
+        public void loadChat(String model, String keepAlive, int contextSize) {
+            calls.add("chat " + model + " " + keepAlive + " " + contextSize);
         }
     }
 }

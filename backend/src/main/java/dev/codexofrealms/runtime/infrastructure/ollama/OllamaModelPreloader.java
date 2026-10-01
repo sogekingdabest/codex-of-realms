@@ -2,6 +2,7 @@ package dev.codexofrealms.runtime.infrastructure.ollama;
 
 import dev.codexofrealms.runtime.application.port.ModelPreloader;
 import java.util.List;
+import java.util.Map;
 import org.springframework.ai.ollama.api.OllamaApi;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
@@ -23,9 +24,13 @@ public class OllamaModelPreloader implements ModelPreloader {
     }
 
     @Override
-    public void loadChat(String model, String keepAlive) {
+    public void loadChat(String model, String keepAlive, int contextSize) {
         // Ollama loads a chat model without generating any text when the message list is empty.
-        api().chat(OllamaApi.ChatRequest.builder(model).messages(List.of()).keepAlive(keepAlive).build());
+        api().chat(OllamaApi.ChatRequest.builder(model)
+            .messages(List.of())
+            .keepAlive(keepAlive)
+            .options(Map.of("num_ctx", contextSize))
+            .build());
     }
 
     private OllamaApi api() {

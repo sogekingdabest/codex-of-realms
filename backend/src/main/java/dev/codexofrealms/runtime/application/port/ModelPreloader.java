@@ -7,5 +7,9 @@ public interface ModelPreloader {
 
     void loadEmbedding(String model);
 
-    void loadChat(String model, String keepAlive);
+    /**
+     * The context size must match the one used for answers: Ollama reloads a model whose
+     * runner options differ from the loaded copy.
+     */
+    void loadChat(String model, String keepAlive, int contextSize);
 }
