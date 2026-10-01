@@ -22,10 +22,10 @@
   .brand { font-size: 21px; }
   .identity > span { display: none; }
   .identity button { padding: 6px 8px; font-size: 11px; }
-  .workspace.has-realm, .catalogue-workspace.with-local-index, .source-workspace.with-local-index { grid-template-columns: minmax(0, 1fr); }
+  .workspace.has-realm { grid-template-columns: minmax(0, 1fr); }
   .archive-sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 0; }
   .mobile-index-toggle { display: block; margin: 12px 20px; width: calc(100% - 40px); text-align: left; }
-  .archive-index-slot:not(.is-open) { display: none; }
+  .archive-index:not(.is-open) { display: none; }
   .catalogue-filters { grid-column: 1 / -1; }
   .realm-controls { padding: 20px 20px 14px; }
   .realm-controls h1 { font-size: 27px; margin-bottom: 15px; }
@@ -38,7 +38,7 @@
   .catalogue-toolbar .segmented-control, .catalogue-toolbar label:has(input) { grid-column: 1 / -1; }
   .entity-index-group { display: flex; flex-wrap: wrap; gap: 3px; }
   .entity-index-group h3 { width: 100%; }
-  .entity-index button { width: auto; gap: 8px; max-width: 100%; }
+  .entity-index a { width: auto; gap: 8px; max-width: 100%; }
   .entity-index small { display: none; }
   .index-actions { margin-top: 16px; }
   .sources-panel .source-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
@@ -72,7 +72,7 @@
 @media (pointer: coarse) {
   button, summary, select, input:not([type=checkbox]) { min-height: 44px; }
   input, select, textarea { font-size: 16px !important; }
-  .entity-index button { min-height: 44px; }
+  .entity-index a, .workspace-navigation a { min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }

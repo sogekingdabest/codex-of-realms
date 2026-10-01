@@ -1,5 +1,4 @@
-.catalogue-workspace, .catalogue-content { min-width: 0; }
-.catalogue-workspace.with-local-index { display: grid; grid-template-columns: 260px minmax(0, 1fr); }
+.catalogue-content { min-width: 0; }
 .catalogue-index { padding: 20px 14px; min-width: 0; background: var(--sidebar); }
 .catalogue-index > h2 { font-size: 13px; font-weight: 500; margin: 0 8px 15px; }
 .catalogue-toolbar { display: flex; flex-direction: column; gap: 10px; padding: 0 8px 15px; border-bottom: 1px solid var(--line); }
@@ -9,14 +8,14 @@
 .catalogue-filters summary { cursor: pointer; padding-block: 5px; }
 .catalogue-filters label { margin-top: 10px; }
 .segmented-control { display: flex; gap: 18px; }
-.segmented-control button { color: var(--muted); padding: 5px 0 7px; border: 0; border-bottom: 2px solid transparent; border-radius: 0; background: transparent; font-size: 12px; }
-.segmented-control button.active { color: var(--ink); border-color: var(--accent); }
-.segmented-control button:hover:not(:disabled) { background: transparent; color: var(--accent); }
+.segmented-control a { color: var(--muted); padding: 5px 0 7px; border-bottom: 2px solid transparent; font-size: 12px; font-weight: 500; text-decoration: none; }
+.segmented-control a.active { color: var(--ink); border-color: var(--accent); }
+.segmented-control a:hover { color: var(--accent); }
 .entity-index-group h3 { display: flex; justify-content: space-between; margin: 21px 8px 7px; color: var(--muted); font-size: 12px; font-weight: 400; }
-.entity-index button { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 8px; border: 0; border-left: 2px solid transparent; border-radius: 0; text-align: left; color: var(--ink); background: transparent; font-weight: 400; }
-.entity-index button[aria-current="page"] { background: var(--panel-strong); border-left-color: var(--accent); }
-.entity-index button:hover:not(:disabled) { background: var(--panel-strong); }
-.entity-index small { font-size: 11px; color: var(--muted); align-self: center; }
+.entity-index a { display: flex; justify-content: space-between; gap: 8px; width: 100%; padding: 10px 8px; border-left: 2px solid transparent; text-align: left; color: var(--ink); text-decoration: none; }
+.entity-index a[aria-current="page"] { background: var(--panel-strong); border-left-color: var(--accent); }
+.entity-index a:hover { background: var(--panel-strong); }
+.entity-index small { flex-shrink: 0; font-size: 11px; color: var(--muted); align-self: center; white-space: nowrap; }
 .index-actions { margin: 22px 8px 0; }
 .index-actions button { width: 100%; font-size: 12px; }
 .index-message { padding: 10px 8px; color: var(--muted); font-size: 12px; }
@@ -29,8 +28,8 @@
 .entity-document h3 { font: 22px/1.3 var(--reading-font); margin: 0 0 16px; }
 .entity-relation { padding: 14px 0; border-block-start: 1px solid var(--line); }
 .entity-relation:last-child { border-block-end: 1px solid var(--line); }
-.entity-relation-link { width: 100%; display: flex; justify-content: space-between; gap: 1rem; color: var(--ink); background: transparent; border: 0; padding: 0; text-align: left; font-size: 15px; }
-.entity-relation-link:hover:not(:disabled) { background: transparent; color: var(--accent); }
+.entity-relation-link { width: 100%; display: flex; justify-content: space-between; gap: 1rem; color: var(--ink); text-align: left; text-decoration: none; font-size: 15px; font-weight: 500; }
+.entity-relation-link:hover { color: var(--accent); }
 .entity-relation p { color: var(--muted); font-size: 12px; margin: 6px 0 0; }
 .entity-relation .relation-description { color: var(--ink); margin-top: 10px; }
 .entity-document-footer { display: grid; gap: 18px; margin-top: 34px; color: var(--muted); font-size: 12px; }
@@ -81,5 +80,5 @@
 .relation-title { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .relation-title strong { font: 20px/1.3 var(--reading-font); }
 .relation-title span { color: var(--muted); font-size: 12px; }
-.relation-title button { font: inherit; }
+.relation-title :is(a, button) { font: inherit; }
 .catalogue-list { min-width: 0; }

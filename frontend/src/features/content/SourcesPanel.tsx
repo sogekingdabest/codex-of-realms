@@ -1,5 +1,7 @@
 import { useState, type RefObject, type SubmitEvent } from 'react'
 
+import { Link } from '../../shared/routing'
+
 import type { AccessPolicyView } from '../realm'
 import type { SourceDocumentView, SourceJobView } from './model'
 import { SourceJobsPanel, RecoveryActions } from './SourceJobsPanel'
@@ -8,7 +10,7 @@ const classificationLabels = {
   PUBLIC: 'Pública', GM_ONLY: 'Solo dirección', SPOILER: 'Spoiler con permiso',
 } as const
 
-export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPolicyId, sources, uploading, jobs, opening, selectedId, onOpen, onRecover, onRetry, onDelete, onPolicyChange, onUpload }: Readonly<{
+export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPolicyId, sources, uploading, jobs, selectedId, sourceHref, onRecover, onRetry, onDelete, onPolicyChange, onUpload }: Readonly<{
   canEdit: boolean
   fileInput: RefObject<HTMLInputElement | null>
   loading: boolean
@@ -16,9 +18,8 @@ export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPo
   selectedPolicyId: string
   sources: SourceDocumentView[]
   jobs: SourceJobView[]
-  opening: boolean
   selectedId?: string
-  onOpen: (source: SourceDocumentView) => Promise<boolean>
+  sourceHref: (source: SourceDocumentView) => string
   onRetry: (id: string) => Promise<void>
   onRecover: (documentId: string, policyId: string, file?: File) => Promise<boolean>
   uploading: boolean
@@ -42,7 +43,7 @@ export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPo
       </label>}
       {sources.length > 0 && visibleSources.length === 0
         ? <p className="empty-state" role="status">No hay fuentes que coincidan con la búsqueda.</p>
-        : <SourceList canEdit={canEdit} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} opening={opening} selectedId={selectedId} onOpen={onOpen} />}
+        : <SourceList canEdit={canEdit} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
       {canEdit && (
         <details className="upload-card" open={sources.length === 0}>
           <summary>Añadir conocimiento</summary>
@@ -66,16 +67,15 @@ export function SourcesPanel({ canEdit, fileInput, loading, policies, selectedPo
   )
 }
 
-function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, opening, selectedId, onOpen }: Readonly<{
+function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, selectedId, sourceHref }: Readonly<{
   canEdit: boolean
   loading: boolean
   sources: SourceDocumentView[]
   onDelete: (source: SourceDocumentView) => Promise<void>
   busy: boolean
   onRecover: (documentId: string, policyId: string, file?: File) => Promise<boolean>
-  opening: boolean
   selectedId?: string
-  onOpen: (source: SourceDocumentView) => Promise<boolean>
+  sourceHref: (source: SourceDocumentView) => string
 }>) {
   if (loading) return <div className="source-list" aria-live="polite"><p className="muted">Leyendo el catálogo…</p></div>
   if (sources.length === 0) return <div className="source-list" aria-live="polite"><div className="empty-state"><span aria-hidden="true">◇</span><p>Todavía no hay fuentes visibles en este universo.</p></div></div>
@@ -83,7 +83,7 @@ function SourceList({ canEdit, loading, sources, onDelete, busy, onRecover, open
     <div className="source-list" aria-live="polite">
       {sources.map((source) => (
         <article className={`source-item${source.id === selectedId ? ' selected' : ''}`} key={source.id}>
-          <button type="button" className="source-index-link" aria-label={`Leer ${source.title}`} aria-current={source.id === selectedId ? 'page' : undefined} disabled={opening} onClick={() => void onOpen(source)}><span>{source.title}</span><small>{source.originalFilename} · v{source.versionNumber}</small></button>
+          <Link className="source-index-link" href={sourceHref(source)} aria-label={`Leer ${source.title}`} aria-current={source.id === selectedId ? 'page' : undefined}><span>{source.title}</span><small>{source.originalFilename} · v{source.versionNumber}</small></Link>
           <div className="source-meta">
             <span className={`status status-${source.status.toLowerCase()}`}>{sourceStatusLabel(source.status)}</span>
             <small>{source.chunkCount} fragmentos</small>

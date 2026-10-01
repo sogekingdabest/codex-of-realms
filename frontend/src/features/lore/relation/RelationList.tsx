@@ -1,3 +1,4 @@
+import { Link } from '../../../shared/routing'
 import type { SourceEvidence } from '../../content'
 import type { AccessPolicyView } from '../../realm'
 import { CanonBadge, CatalogueEmpty, CatalogueEvidence } from '../CataloguePrimitives'
@@ -13,11 +14,11 @@ interface RelationListProps {
   readonly onDelete: (relation: LoreRelationView) => Promise<void>
   readonly onEdit: (relation: LoreRelationView) => void
   readonly onOpenEvidence: (evidence: SourceEvidence) => void
-  readonly onOpenEntity: (id: string) => void
+  readonly entityHref: (id: string) => string
   readonly onPromote: (relation: LoreRelationView) => Promise<void>
 }
 
-export function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, onOpenEntity, onPromote }: RelationListProps) {
+export function RelationList({ canEdit, entityCount, loading, policies, relations, saving, onDelete, onEdit, onOpenEvidence, entityHref, onPromote }: RelationListProps) {
   if (loading) return <div className="catalogue-list"><p className="muted">Trazando relaciones…</p></div>
   return (
     <div className="catalogue-list">
@@ -36,7 +37,7 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
           onDelete={() => void onDelete(relation)}
           onEdit={() => onEdit(relation)}
           onOpenEvidence={onOpenEvidence}
-          onOpenEntity={onOpenEntity}
+          entityHref={entityHref}
           onPromote={() => void onPromote(relation)}
         />
       ))}
@@ -44,7 +45,7 @@ export function RelationList({ canEdit, entityCount, loading, policies, relation
   )
 }
 
-function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence, onOpenEntity }: Readonly<{
+function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, onDelete, onOpenEvidence, entityHref }: Readonly<{
   relation: LoreRelationView
   policy?: AccessPolicyView
   canEdit: boolean
@@ -53,15 +54,15 @@ function RelationCard({ relation, policy, canEdit, saving, onEdit, onPromote, on
   onPromote: () => void
   onDelete: () => void
   onOpenEvidence: (evidence: SourceEvidence) => void
-  onOpenEntity: (id: string) => void
+  entityHref: (id: string) => string
 }>) {
   return (
     <article className="catalogue-card relation-card">
       <header>
         <div className="relation-title">
-          <button className="citation-link" type="button" aria-label={`Ver ficha de ${relation.sourceEntityName}`} onClick={() => onOpenEntity(relation.sourceEntityId)}>{relation.sourceEntityName}</button>
+          <Link className="citation-link" aria-label={`Ver ficha de ${relation.sourceEntityName}`} href={entityHref(relation.sourceEntityId)}>{relation.sourceEntityName}</Link>
           <span>{relation.relationType.replaceAll('_', ' ').toLocaleLowerCase('es')}</span>
-          <button className="citation-link" type="button" aria-label={`Ver ficha de ${relation.targetEntityName}`} onClick={() => onOpenEntity(relation.targetEntityId)}>{relation.targetEntityName}</button>
+          <Link className="citation-link" aria-label={`Ver ficha de ${relation.targetEntityName}`} href={entityHref(relation.targetEntityId)}>{relation.targetEntityName}</Link>
         </div>
         <CanonBadge status={relation.canonStatus} />
       </header>

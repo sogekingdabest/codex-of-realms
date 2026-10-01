@@ -68,3 +68,9 @@ export interface LoreRelationInput {
 }
 
 export type LoreRelationUpdateInput = Omit<LoreRelationInput, 'sourceEntityId' | 'targetEntityId'>
+
+/** Which part of the catalogue is open; the app decides how it maps to a URL. */
+export interface CatalogueLocation {
+  readonly view: 'entities' | 'relations'
+  readonly entityId: string | null
+}
