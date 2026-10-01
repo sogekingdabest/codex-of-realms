@@ -65,7 +65,8 @@
   .empty-realm form { grid-template-columns: 1fr; }
   .empty-realm .panel-number { display: none; }
   .source-dialog-backdrop { padding: 10px; }
-  .source-dialog header, .source-dialog pre { padding: 18px; }
+  .source-dialog header, .source-dialog-content { padding: 18px; }
+  .reader-controls { padding: 0 18px 14px; }
   .runtime-notice code { white-space: normal; }
 }
 @media (pointer: coarse) {
