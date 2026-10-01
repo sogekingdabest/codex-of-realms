@@ -104,7 +104,7 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 
 1. El fallo en frío: tiempos de espera alineados, calentamiento visible, progreso y cancelación. Corregido el mismo día; ver la sección siguiente.
 2. Foco y desplazamiento al resultado de la consulta en móvil. Corregido; ver «Corrección del resultado fuera de pantalla».
-3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia.
+3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia. Corregido; ver «Corrección del diálogo de evidencia».
 4. Tema y textos propios en el registro.
 5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil.
 6. Los detalles de la dirección.
@@ -134,6 +134,12 @@ Cuando llega un resultado nuevo, el foco pasa a su encabezado. Si ese encabezado
 El foco no se mueve si la persona ya está escribiendo otra pregunta; la región `aria-live` sigue anunciando el resultado. Que el foco siga en la pregunta enviada no cuenta como escribir, porque iOS no lo pasa al botón al tocar «Consultar». Al volver a Consultas con un resultado anterior, el foco tampoco se mueve.
 
 Verificación: cuatro pruebas nuevas del panel, de las que tres fallan sin el cambio (la cuarta cubre la vuelta a Consultas), y la suite de navegador, que ahora pregunta también a 390 × 844 y comprueba que el encabezado recibe el foco y queda entero en pantalla ([captura](assets/2026-10-01-sesion-simulada/correccion-resultado-movil.png)). No se repitió la sesión con modelos reales.
+
+## Corrección del diálogo de evidencia
+
+El diálogo sigue ahora la regla del lector de fuentes: solo la dirección ve el nombre del archivo y el checksum. Un jugador ve «Procedencia del canon» o «Evidencia autorizada · versión N», el título de la fuente y el apartado del pasaje («La Aguja» o, sin apartado, «Documento»). La dirección sigue viendo «Procedencia del canon · 3fb51c5251» y «01-el-meridiano-y-lumbrevela.md · Documento». El cambio es de presentación: la API sigue enviando esos datos al jugador, que ya tiene acceso a la fuente.
+
+Verificación: una prueba nueva del diálogo con los dos roles y otra de la aplicación en la que un jugador abre la cita de una respuesta; ambas fallan sin el cambio. La prueba de la propietaria comprueba que la dirección sigue viendo el archivo. La suite de navegador comprueba además que el diálogo de un jugador no contiene el nombre del archivo.
 
 ## Reproducción y registros
 
