@@ -25,6 +25,7 @@ public class ModelWarmupService {
     private final ModelPreloader preloader;
     private final RuntimeModelConfiguration configuration;
     private final String chatKeepAlive;
+    private final int chatContextSize;
     private final Executor executor;
     private final AtomicBoolean loading = new AtomicBoolean();
 
@@ -32,20 +33,23 @@ public class ModelWarmupService {
     public ModelWarmupService(
         ModelPreloader preloader,
         RuntimeModelConfiguration configuration,
-        @Value("${codex.qa.chat-keep-alive:5m}") String chatKeepAlive
+        @Value("${codex.qa.chat-keep-alive:5m}") String chatKeepAlive,
+        @Value("${codex.qa.chat-context-size:8192}") int chatContextSize
     ) {
-        this(preloader, configuration, chatKeepAlive, task -> Thread.ofVirtual().name("model-warm-up").start(task));
+        this(preloader, configuration, chatKeepAlive, chatContextSize, task -> Thread.ofVirtual().name("model-warm-up").start(task));
     }
 
     ModelWarmupService(
         ModelPreloader preloader,
         RuntimeModelConfiguration configuration,
         String chatKeepAlive,
+        int chatContextSize,
         Executor executor
     ) {
         this.preloader = preloader;
         this.configuration = configuration;
         this.chatKeepAlive = chatKeepAlive;
+        this.chatContextSize = chatContextSize;
         this.executor = executor;
     }
 
@@ -63,7 +67,7 @@ public class ModelWarmupService {
                 try {
                     // A question embeds first, so its model loads first.
                     if (embedding) load("embedding", () -> preloader.loadEmbedding(configuration.embedding().model()));
-                    if (chat) load("chat", () -> preloader.loadChat(configuration.chat().model(), chatKeepAlive));
+                    if (chat) load("chat", () -> preloader.loadChat(configuration.chat().model(), chatKeepAlive, chatContextSize));
                 } finally {
                     loading.set(false);
                 }

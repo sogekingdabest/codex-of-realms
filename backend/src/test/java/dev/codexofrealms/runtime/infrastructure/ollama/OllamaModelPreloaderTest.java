@@ -15,16 +15,18 @@ import org.springframework.beans.factory.ObjectProvider;
 class OllamaModelPreloaderTest {
 
     @Test
-    void loadsTheChatModelWithoutMessagesSoNothingIsGenerated() {
+    void loadsTheChatModelWithTheAnswerContextWithoutGeneratingText() {
         OllamaApi api = mock(OllamaApi.class);
         ArgumentCaptor<OllamaApi.ChatRequest> request = ArgumentCaptor.forClass(OllamaApi.ChatRequest.class);
 
-        new OllamaModelPreloader(provider(api)).loadChat("qwen3.5:4b", "5m");
+        new OllamaModelPreloader(provider(api)).loadChat("qwen3.5:4b", "5m", 8192);
 
         verify(api).chat(request.capture());
         assertThat(request.getValue().model()).isEqualTo("qwen3.5:4b");
         assertThat(request.getValue().messages()).isEmpty();
         assertThat(request.getValue().keepAlive()).isEqualTo("5m");
+        // A different context size would make Ollama reload the model for the next answer.
+        assertThat(request.getValue().options()).containsEntry("num_ctx", 8192);
         assertThat(request.getValue().stream()).isFalse();
     }
 
@@ -47,7 +49,7 @@ class OllamaModelPreloaderTest {
 
         OllamaApi api = mock(OllamaApi.class);
         when(api.chat(any())).thenThrow(new IllegalStateException("connection refused"));
-        assertThatThrownBy(() -> new OllamaModelPreloader(provider(api)).loadChat("qwen3.5:4b", "5m"))
+        assertThatThrownBy(() -> new OllamaModelPreloader(provider(api)).loadChat("qwen3.5:4b", "5m", 8192))
             .hasMessage("connection refused");
     }
 
