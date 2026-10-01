@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react'
+import { useEffect, useRef, useState, type RefObject, type SubmitEvent } from 'react'
 
 import { SourceText } from '../../shared/ui/SourceText'
 import type { Citation, LoreAnswer } from './model'
@@ -24,15 +24,21 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
   onSubmit: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
 }>) {
   const question = useRef<HTMLTextAreaElement>(null)
+  const submitted = useRef('')
+  const result = useResultReveal(answer, question, submitted)
   const elapsed = useElapsedSeconds(asking)
   function cancel() {
     onCancel()
     question.current?.focus()
   }
+  function submit(event: SubmitEvent<HTMLFormElement>) {
+    submitted.current = question.current?.value ?? ''
+    void onSubmit(event)
+  }
   return (
     <section className="panel question-panel">
       <div className="panel-heading"><div><p className="eyebrow">Consulta fundamentada</p><h2>Pregunta al archivo</h2></div></div>
-      <form className="question-form" onSubmit={(event) => void onSubmit(event)}>
+      <form className="question-form" onSubmit={submit}>
         <label htmlFor="question">¿Qué quieres saber?</label>
         <textarea ref={question} id="question" name="question" maxLength={1000} required placeholder="¿Por qué la Aguja conserva una deuda antigua?" rows={5} />
         <p className="muted">Las consultas usan las fuentes publicadas. Las fichas del atlas se mantienen por separado.</p>
@@ -54,11 +60,11 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
       </form>
       <div className="answer-region" aria-live="polite">
         {answer?.outcome === 'INSUFFICIENT_EVIDENCE' && (
-          <article className="insufficient"><p className="eyebrow">{failureEyebrow(answer.failureReason)}</p><h3>{failureTitle(answer.failureReason)}</h3><p>{failureMessages[answer.failureReason ?? 'NO_EVIDENCE']}</p></article>
+          <article className="insufficient"><p className="eyebrow">{failureEyebrow(answer.failureReason)}</p><h3 ref={result} tabIndex={-1}>{failureTitle(answer.failureReason)}</h3><p>{failureMessages[answer.failureReason ?? 'NO_EVIDENCE']}</p></article>
         )}
         {answer?.outcome === 'ANSWERED' && (
           <article className="answer-card">
-            <p className="eyebrow">Fragmentos de las fuentes</p>
+            <h3 ref={result} tabIndex={-1} className="eyebrow">Fragmentos de las fuentes</h3>
             <p className="muted">Pasajes literales seleccionados para tu consulta. Las fuentes pueden ser incompletas o discrepar.</p>
             {answer.excerpts.map((excerpt) => {
               const citation = answer.citations.find((item) => item.rank === excerpt.citationRank)
@@ -76,6 +82,32 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
       </div>
     </section>
   )
+}
+
+/**
+ * Moves focus to each new result and, when its heading is off screen, scrolls to the result:
+ * on a phone it arrives below the form. Someone already writing elsewhere keeps the cursor, and the
+ * live region still announces the result.
+ */
+function useResultReveal(answer: LoreAnswer | null, question: RefObject<HTMLTextAreaElement | null>, submitted: RefObject<string>) {
+  const heading = useRef<HTMLHeadingElement>(null)
+  const shown = useRef(answer)
+  useEffect(() => {
+    if (!answer || answer === shown.current) return
+    shown.current = answer
+    const target = heading.current
+    if (!target || isWriting(document.activeElement, question.current, submitted.current)) return
+    target.focus({ preventScroll: true })
+    const { top, bottom } = target.getBoundingClientRect()
+    if (top < 0 || bottom > window.innerHeight) target.closest('article')?.scrollIntoView?.({ block: 'start' })
+  }, [answer, question, submitted])
+  return heading
+}
+
+/** The submitted question may keep focus (iOS does not move it to the button); a changed one is a new draft. */
+function isWriting(active: Element | null, question: HTMLTextAreaElement | null, submitted: string) {
+  if (active && active === question) return question.value !== submitted
+  return active?.matches('input, textarea, select, [contenteditable="true"]') ?? false
 }
 
 function useElapsedSeconds(running: boolean) {
