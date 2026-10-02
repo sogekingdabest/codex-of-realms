@@ -50,9 +50,10 @@ export function App({ api, session }: AppProps) {
     if (questionsOpen && runtimeReady) api.runtime.warmUp().catch(() => undefined)
   }, [questionsOpen, runtimeReady, api.runtime])
 
-  // Unknown, stale or forbidden addresses are replaced by the place actually shown.
+  // Unknown, stale or forbidden addresses are replaced by the place actually shown. The effect can
+  // run after a link was followed, so it only replaces the address this render resolved.
   useEffect(() => {
-    if (me && pathname !== canonicalPath) navigate(canonicalPath, { replace: true })
+    if (me && pathname !== canonicalPath) navigate(canonicalPath, { replace: true, from: pathname })
   }, [me, pathname, canonicalPath])
 
   async function createRealm(event: SubmitEvent<HTMLFormElement>) {
