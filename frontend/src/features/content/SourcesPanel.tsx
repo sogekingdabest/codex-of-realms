@@ -29,10 +29,11 @@ export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, 
   onUpload: (event: SubmitEvent<HTMLFormElement>) => Promise<void>
 }>) {
   const [search, setSearch] = useState('')
-  // The upload form opens for an empty library once the catalogue has loaded, and then stays as the
-  // person leaves it: publishing the first source must not close it in the middle of a batch.
-  const [upload, setUpload] = useState({ settled: !loading, open: !loading && sources.length === 0 })
-  if (!loading && !upload.settled) setUpload({ settled: true, open: sources.length === 0 })
+  // The upload form is open while the library is empty, including while the catalogue loads. Once
+  // the catalogue has loaded it stays as the person leaves it: publishing the first source must not
+  // close it in the middle of a batch.
+  const [upload, setUpload] = useState({ settled: !loading, open: sources.length === 0 })
+  if (!loading && !upload.settled) setUpload({ settled: true, open: upload.open && sources.length === 0 })
   const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es')
   const query = normalize(search.trim())
   const visibleSources = sources.filter((source) => normalize(`${source.title} ${source.originalFilename}`).includes(query))
