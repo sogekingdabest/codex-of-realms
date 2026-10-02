@@ -47,10 +47,10 @@ $http.Timeout = [TimeSpan]::FromMinutes(5)
 
 $adminTokenScript = @'
 set -eu
-config="$1/kcadm.config"
-trap 'rm -rf "$1"' EXIT
+config="$(mktemp)"
+trap 'rm -f "$config"' EXIT
 if ! output="$(/opt/keycloak/bin/kcadm.sh config credentials --config "$config" --server http://localhost:8080 \
-    --realm master --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" 2>&1)"; then
+    --realm master --user "$KC_BOOTSTRAP_ADMIN_USERNAME" --password "$KC_BOOTSTRAP_ADMIN_PASSWORD" </dev/null 2>&1)"; then
   printf '%s\n' "$output" >&2
   exit 1
 fi
@@ -59,21 +59,15 @@ sed -n 's/^ *"token" : "\([^"]*\)".*/\1/p' "$config"
 
 # Signs in inside the Keycloak container, where the bootstrap administrator's credentials stay, and returns an admin
 # API token that expires after a minute. One sign-in replaces a dozen admin CLI calls, each of which starts a JVM.
+# The script travels as base64 text: a copied file can keep permissions the container user cannot read, and piped
+# input picks up line endings or a byte order mark from the shell.
 function Get-AdminToken {
     $container = (& docker compose -f $composePath ps -q keycloak | Out-String).Trim()
     if ($LASTEXITCODE -ne 0 -or -not $container) { throw "Keycloak is not running. Start the stack with $ComposeFile first." }
-    $work = (& docker exec $container mktemp -d /tmp/codex-demo.XXXXXXXX | Out-String).Trim()
-    if ($work -notmatch '^/tmp/codex-demo\.[A-Za-z0-9]+$') { throw "Could not create a private Keycloak work directory." }
-    $local = [IO.Path]::GetTempFileName()
-    try {
-        [IO.File]::WriteAllText($local, ($adminTokenScript -replace "`r", ""), [Text.UTF8Encoding]::new($false))
-        & docker cp -q $local "${container}:$work/admin-token.sh"
-        if ($LASTEXITCODE -ne 0) { throw "Could not copy the sign-in step into the Keycloak container." }
-        $token = (& docker exec $container sh "$work/admin-token.sh" $work | Out-String).Trim()
-        if ($LASTEXITCODE -ne 0 -or -not $token) { throw "Could not sign in to Keycloak as the bootstrap administrator." }
-        $token
-    }
-    finally { Remove-Item -LiteralPath $local -Force }
+    $encoded = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes(($adminTokenScript -replace "`r", "")))
+    $token = (& docker exec $container sh -c "echo $encoded | base64 -d | sh" | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or -not $token) { throw "Could not sign in to Keycloak as the bootstrap administrator." }
+    $token
 }
 
 function Invoke-KeycloakAdmin([string]$Token, [string]$Path, [string]$Method = "GET", $Body) {
