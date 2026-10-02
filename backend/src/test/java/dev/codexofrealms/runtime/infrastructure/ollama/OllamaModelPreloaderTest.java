@@ -44,12 +44,14 @@ class OllamaModelPreloaderTest {
 
     @Test
     void reportsAMissingClientAndPropagatesClientFailures() {
-        assertThatThrownBy(() -> new OllamaModelPreloader(provider(null)).loadEmbedding("bge-m3"))
+        OllamaModelPreloader withoutClient = new OllamaModelPreloader(provider(null));
+        assertThatThrownBy(() -> withoutClient.loadEmbedding("bge-m3"))
             .isInstanceOf(IllegalStateException.class);
 
         OllamaApi api = mock(OllamaApi.class);
         when(api.chat(any())).thenThrow(new IllegalStateException("connection refused"));
-        assertThatThrownBy(() -> new OllamaModelPreloader(provider(api)).loadChat("qwen3.5:4b", "5m", 8192))
+        OllamaModelPreloader failing = new OllamaModelPreloader(provider(api));
+        assertThatThrownBy(() -> failing.loadChat("qwen3.5:4b", "5m", 8192))
             .hasMessage("connection refused");
     }
 
