@@ -1,0 +1,145 @@
+{
+  "realm": "El Meridiano de Ceniza",
+  "accounts": [
+    { "email": "ines@demo.invalid", "firstName": "Inés", "lastName": "Vidal", "role": "OWNER" },
+    { "email": "tala@demo.invalid", "firstName": "Tala", "lastName": "Mir", "role": "PLAYER" },
+    { "email": "oren@demo.invalid", "firstName": "Oren", "lastName": "Brea", "role": "PLAYER" }
+  ],
+  "spoilerGroups": [
+    {
+      "name": "Recuerdos de Nara",
+      "description": "Lo que Tala descubrió bajo las Cisternas.",
+      "players": ["tala@demo.invalid"]
+    }
+  ],
+  "sources": [
+    { "file": "lore/public/01-el-meridiano-y-lumbrevela.md", "title": "El Meridiano y la ciudad de Lumbrevela", "visibility": "public" },
+    { "file": "lore/public/02-personas-facciones-y-objetos.md", "title": "Personas, facciones y objetos de Lumbrevela", "visibility": "public" },
+    { "file": "lore/public/03-rutas-y-vida-civica.md", "title": "Rutas y vida cívica de Lumbrevela", "visibility": "public" },
+    { "file": "lore/spoilers/01-el-recuerdo-de-nara.md", "title": "El recuerdo de Nara", "visibility": "spoiler:Recuerdos de Nara" },
+    { "file": "lore/spoilers/02-la-campana-de-vidrio.md", "title": "La campana de vidrio", "visibility": "spoiler:Recuerdos de Nara" },
+    { "file": "lore/gm-only/01-la-deuda-de-la-aguja.md", "title": "La deuda de la Aguja", "visibility": "gm-only" },
+    { "file": "lore/gm-only/02-el-pacto-del-velo.md", "title": "El pacto del Velo", "visibility": "gm-only" }
+  ],
+  "entities": [
+    {
+      "type": "PLACE", "name": "Lumbrevela", "visibility": "public", "canon": true,
+      "description": "Ciudad al este del Meridiano, sobre siete terrazas de roca rojiza. En su terraza superior se alza la Aguja del Mediodía.",
+      "evidence": [{ "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "Lumbrevela" }]
+    },
+    {
+      "type": "PLACE", "name": "El Meridiano de Ceniza", "aliases": ["el Meridiano"], "visibility": "public", "canon": true,
+      "description": "Franja de tormenta gris que atraviesa las tierras conocidas de norte a sur. Según los mapas oficiales, avanza lentamente hacia el oeste.",
+      "evidence": [
+        { "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "El Meridiano y la ciudad de Lumbrevela" },
+        { "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "La Noche del Cielo Partido" }
+      ]
+    },
+    {
+      "type": "EVENT", "name": "La Noche del Cielo Partido", "visibility": "public", "canon": true,
+      "description": "Noche de dos puestas de sol en la que apareció el Meridiano. Marca el año 0 Después de la Partición.",
+      "evidence": [{ "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "La Noche del Cielo Partido" }]
+    },
+    {
+      "type": "OBJECT", "name": "La Aguja del Mediodía", "aliases": ["la Aguja"], "visibility": "public", "canon": true,
+      "description": "Faro sin costa en el centro de la terraza superior de Lumbrevela. Su luz no se apaga de día y sus campanas ordenan cerrar las rutas.",
+      "evidence": [
+        { "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "Lumbrevela" },
+        { "source": "Rutas y vida cívica de Lumbrevela", "heading": "Señales de cierre" }
+      ]
+    },
+    {
+      "type": "CHARACTER", "name": "Maela Ors", "visibility": "public", "canon": true,
+      "description": "Cartógrafa mayor de la Custodia del Sextante. Dirigió la expedición del Paso Inmóvil en 81 DP y regresó sola.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "Maela Ors" }]
+    },
+    {
+      "type": "FACTION", "name": "La Custodia del Sextante", "aliases": ["la Custodia"], "visibility": "public", "canon": true,
+      "description": "Mantiene las balizas, certifica guías y publica los mapas de las rutas próximas al Meridiano.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "La Custodia del Sextante" }]
+    },
+    {
+      "type": "OBJECT", "name": "El Sextante de Humo", "visibility": "public", "canon": true,
+      "description": "Instrumento anterior a la Partición que señala un lugar recordado a cambio de un recuerdo menor. Volvió agrietado del Paso Inmóvil.",
+      "evidence": [
+        { "source": "Personas, facciones y objetos de Lumbrevela", "heading": "El Sextante de Humo" },
+        { "source": "Personas, facciones y objetos de Lumbrevela", "heading": "La Custodia del Sextante" }
+      ]
+    },
+    {
+      "type": "FACTION", "name": "La Cofradía del Velo Quieto", "visibility": "public", "canon": false,
+      "description": "Familias que se oponen a nuevas expediciones porque creen que cada cruce fortalece al Meridiano.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "La Cofradía del Velo Quieto" }]
+    },
+    {
+      "type": "PLACE", "name": "La Baliza de Sal", "visibility": "public", "canon": false,
+      "description": "Torre baja de yeso blanco al norte de Lumbrevela. Sirve de refugio cuando la ceniza oculta el camino.",
+      "evidence": [{ "source": "Rutas y vida cívica de Lumbrevela", "heading": "La Baliza de Sal" }]
+    },
+    {
+      "type": "CHARACTER", "name": "Nara Ors", "visibility": "spoiler:Recuerdos de Nara", "canon": true,
+      "description": "Hermana mayor de Maela, atrapada dentro del Meridiano desde 72 DP. Lleva una campana de vidrio llena de ceniza inmóvil.",
+      "evidence": [
+        { "source": "El recuerdo de Nara", "heading": "La hermana olvidada" },
+        { "source": "La campana de vidrio", "heading": "La campana de vidrio" }
+      ]
+    },
+    {
+      "type": "PLACE", "name": "Las siete cámaras", "visibility": "gm-only", "canon": true,
+      "description": "Cámaras bajo las terrazas, unidas a la Aguja. Cada nueve años desplazan Lumbrevela una legua hacia el este a cambio de un año de registros.",
+      "evidence": [{ "source": "La deuda de la Aguja", "heading": "El mecanismo" }]
+    },
+    {
+      "type": "CHARACTER", "name": "Oria Venn", "visibility": "gm-only", "canon": true,
+      "description": "Portavoz pública de los curtidores. Custodia en secreto el archivo occidental para la Cofradía.",
+      "evidence": [{ "source": "El pacto del Velo", "heading": "El archivo occidental" }]
+    }
+  ],
+  "relations": [
+    {
+      "from": "La Aguja del Mediodía", "to": "Lumbrevela", "type": "Se encuentra en", "visibility": "public", "canon": true,
+      "description": "La Aguja ocupa el centro de la terraza superior.",
+      "evidence": [{ "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "Lumbrevela" }]
+    },
+    {
+      "from": "Lumbrevela", "to": "El Meridiano de Ceniza", "type": "Se alza al este de", "visibility": "public", "canon": true,
+      "description": "La ciudad está al este de la franja de tormenta.",
+      "evidence": [{ "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "Lumbrevela" }]
+    },
+    {
+      "from": "La Noche del Cielo Partido", "to": "El Meridiano de Ceniza", "type": "Dio origen a", "visibility": "public", "canon": true,
+      "description": "Cuando regresó la luz, la franja ya dividía la llanura de Aramonte.",
+      "evidence": [{ "source": "El Meridiano y la ciudad de Lumbrevela", "heading": "La Noche del Cielo Partido" }]
+    },
+    {
+      "from": "Maela Ors", "to": "La Custodia del Sextante", "type": "Pertenece a", "visibility": "public", "canon": true,
+      "description": "Es su cartógrafa mayor.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "Maela Ors" }]
+    },
+    {
+      "from": "La Custodia del Sextante", "to": "El Sextante de Humo", "type": "Custodia", "visibility": "public", "canon": true,
+      "description": "Es el único de sus tres instrumentos anteriores a la Partición descrito públicamente.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "La Custodia del Sextante" }]
+    },
+    {
+      "from": "La Custodia del Sextante", "to": "La Cofradía del Velo Quieto", "type": "Rivaliza con", "visibility": "public", "canon": false,
+      "description": "Colaboran en los rescates, pero discuten en público la expedición de 83 DP.",
+      "evidence": [{ "source": "Personas, facciones y objetos de Lumbrevela", "heading": "La Cofradía del Velo Quieto" }]
+    },
+    {
+      "from": "Nara Ors", "to": "Maela Ors", "type": "Es hermana mayor de", "visibility": "spoiler:Recuerdos de Nara", "canon": true,
+      "description": "Maela sacrificó su recuerdo de Nara con el Sextante de Humo en 81 DP.",
+      "evidence": [{ "source": "El recuerdo de Nara", "heading": "La hermana olvidada" }]
+    },
+    {
+      "from": "Las siete cámaras", "to": "Lumbrevela", "type": "Desplazan", "visibility": "gm-only", "canon": true,
+      "description": "Cada nueve años, una legua hacia el este, a cambio de un año de registros.",
+      "evidence": [{ "source": "La deuda de la Aguja", "heading": "El mecanismo" }]
+    },
+    {
+      "from": "Oria Venn", "to": "La Cofradía del Velo Quieto", "type": "Guarda el archivo de", "visibility": "gm-only", "canon": false,
+      "description": "Custodia en secreto las copias del pacto del Velo.",
+      "evidence": [{ "source": "El pacto del Velo", "heading": "El archivo occidental" }]
+    }
+  ]
+}
