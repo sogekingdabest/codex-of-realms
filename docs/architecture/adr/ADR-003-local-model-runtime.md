@@ -31,7 +31,7 @@ Defer browser inference and keep it out of the initial HTTP and application cont
 ### Negative
 
 - Local generation can be slow and hardware-dependent.
-- Portfolio reviewers may need to download a model separately.
+- Anyone trying the project may need to download a model separately.
 - Chat and embedding model upgrades require evaluation; embedding changes require reindexing.
 
 ### Mitigation

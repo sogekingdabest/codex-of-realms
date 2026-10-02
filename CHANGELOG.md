@@ -30,7 +30,7 @@ Browser, restore and live-model checks were not repeated. The documentation revi
 | 2026-10-01 | [Simulated user session](reviews/2026-10-01-sesion-simulada.md) | Mobile results, evidence dialog, registration, library and Game Master fixes |
 | 2026-09-20 | [Clean-install rehearsal](reviews/2026-09-20-ensayo-instalacion.md) | First installation from a clean clone and a model name fix |
 | 2026-09-19 | [Campaign archive](reviews/2026-09-19-archivo-campana.md) | Reading layout and frontend checks |
-| 2026-09-15 | [Portfolio usability](reviews/2026-09-15-mejoras-portfolio.md) | Source reading, navigation and browser scenarios |
+| 2026-09-15 | [Reading and navigation](reviews/2026-09-15-lectura-y-navegacion.md) | Source reading, navigation and browser scenarios |
 | 2026-09-13 | [Context and omissions](reviews/2026-09-13-contexto-y-omisiones.md) | AI candidate evaluated; experimental options stayed disabled |
 | 2026-09-06 | [Delivery acceptance](reviews/2026-09-06-entrega-y-validacion.md) | Deterministic, browser, recovery and selector measurements |
 

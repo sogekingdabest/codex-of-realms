@@ -1,10 +1,10 @@
-# Revisión de arquitectura, producto y preparación para currículum
+# Revisión de arquitectura, producto y experiencia de uso
 
 Revisión del árbol de trabajo local del 13 de septiembre de 2026, incluidos los cambios sin confirmar. Los hallazgos describen ese estado; esta revisión no los corrige.
 
 ## Opinión
 
-El proyecto permite explicar decisiones de backend Java y full stack: autorización, transacciones, persistencia, recuperación de trabajos, límites entre módulos y evaluación de IA. La siguiente prioridad es completar los recorridos de usuario y preparar una demo reproducible.
+La base técnica es sólida en autorización, transacciones, persistencia, recuperación de trabajos, límites entre módulos y evaluación de IA. La siguiente prioridad es completar los recorridos de usuario y preparar una demo reproducible.
 
 La utilidad potencial es concreta: consultar notas de una campaña y compartir conocimiento sin revelar información reservada a la dirección o a otros jugadores. Falta comprobar esa utilidad con una campaña real y jugadores externos.
 
@@ -30,10 +30,10 @@ El grafo de graphify se consultó como orientación con los términos `architect
 - **Puertos útiles.** Repositorios, almacenamiento de originales y modelos tienen interfaces en puntos de sustitución reales. La división de persistencia de `realm` por capacidad mejora la claridad sin multiplicar procesos.
 - **Autorización dentro del recorrido de datos.** La consulta de recuperación filtra universo, membresía, políticas y versiones activas antes de ordenar evidencia. Se revalida la visibilidad antes de devolver una respuesta.
 - **IA con autoridad limitada.** El modelo selecciona identificadores y el servidor copia pasajes originales. Esto protege la literalidad y procedencia; no demuestra que el pasaje responda bien a la pregunta.
-- **Ingestión con recuperación.** Idempotencia, estados persistidos, leases, reintentos y activación separada del trabajo de embeddings resuelven problemas reales. Es una buena pieza para explicar decisiones de concurrencia en una entrevista.
+- **Ingestión con recuperación.** Idempotencia, estados persistidos, leases, reintentos y activación separada del trabajo de embeddings resuelven problemas reales de concurrencia.
 - **Pruebas y operación.** Migraciones, pruebas con una base real, CI, métricas y procedimientos de recuperación aportan sustancia. Separar pruebas deterministas de evaluación real de modelos es una decisión acertada.
 
-No considero necesario migrar a microservicios, añadir otro almacenamiento o hacer una refactorización general de capas para que sea un buen proyecto de currículum.
+Con el alcance actual, no considero necesario migrar a microservicios, añadir otro almacenamiento ni hacer una refactorización general de capas.
 
 ## Hallazgos prioritarios
 
@@ -75,7 +75,7 @@ No se midió una degradación con un corpus grande, pero el patrón de crecimien
 
 El README contiene estados históricos y cifras sucesivas. `docs/operations/DEMO.md:30` todavía indica descargar `qwen3:4b`, mientras la configuración y el README actuales seleccionan `qwen3.5:4b`. `docs/product/MVP_SCOPE.md:69` excluye procesamiento asíncrono, ya implementado. El informe de portfolio M7 sigue describiendo el validador generativo histórico.
 
-Conservaría ese historial claramente fechado, pero ofrecería una única entrada vigente: qué hace, captura o vídeo, cómo probarlo, requisitos, limitaciones actuales y tres decisiones técnicas. Quien evalúa el currículum no debería reconstruir la evolución del proyecto para entenderlo.
+Conservaría ese historial claramente fechado, pero ofrecería una única entrada vigente: qué hace, captura o vídeo, cómo probarlo, requisitos, limitaciones actuales y tres decisiones técnicas. Quien llega al repositorio no debería reconstruir la evolución del proyecto para entenderlo.
 
 ## Diseño y experiencia
 
@@ -104,5 +104,3 @@ La siguiente validación útil sería observar a una persona que dirige partidas
 3. Preparar una demostración breve con datos originales ya cargados y una entrada documental vigente.
 4. Validar utilidad con una campaña real y decidir el contrato entre Atlas y consultas.
 5. Mejorar recuperación y selección con preguntas independientes, manteniendo los criterios de evaluación.
-
-Para el currículum destacaría tres aportaciones defendibles: monolito modular verificado, autorización antes de recuperación y trabajos idempotentes recuperables. Acompañaría cada una con una demostración concreta y explicaría con honestidad las limitaciones de IA.

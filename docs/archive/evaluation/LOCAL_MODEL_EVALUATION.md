@@ -37,7 +37,7 @@ The target workstation runs native Ollama on `http://localhost:11434`. Pull each
 evaluation script never downloads weights:
 
 ~~~powershell
-$ollama = "C:\Users\Dani\AppData\Local\Programs\Ollama\ollama.exe"
+$ollama = "$env:LOCALAPPDATA\Programs\Ollama\ollama.exe"
 & $ollama pull qwen3:4b
 & $ollama pull qwen3.5:4b
 & $ollama pull gemma4:e2b-it-qat

@@ -25,7 +25,7 @@ O atlas mantense a man. As preguntas usan os documentos subidos; editar unha fic
 
 ![Lumbrevela no atlas da campaña, cunha relación e a súa fonte ao carón](demo/assets/atlas.png)
 
-[Ver o percorrido breve](demo/assets/recorrido.webm) · [Presentación de cinco minutos e capturas](demo/PORTFOLIO.md)
+[Ver o percorrido breve](demo/assets/recorrido.webm) · [Percorrido guiado e capturas](demo/RECORRIDO.md)
 
 Capturado o 20 de setembro cunha versión anterior da interface, datos dunha campaña ficticia e modelos locais. O percorrido gravouse cos modelos xa cargados.
 
