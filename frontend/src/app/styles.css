@@ -20,7 +20,7 @@
 .realm-picker > span { font-size: 11px; color: var(--muted); }
 .realm-picker select { font-size: 12px; background: transparent; padding: 7px 5px; }
 .realm-picker small { margin-top: 4px; color: var(--muted); font-size: 11px; }
-.realm-controls > button { margin-top: 10px; padding: 4px 0; border: 0; color: var(--muted); font-size: 12px; }
+.new-realm-button { margin-top: 10px; padding: 4px 0; border: 0; color: var(--muted); font-size: 12px; }
 .workspace-navigation { display: grid; grid-template-columns: 1fr 1fr; padding: 0 12px 18px; margin: 0 10px; gap: 2px; border-bottom: 1px solid var(--line); }
 .workspace-navigation a { display: grid; place-items: center; padding: 10px 5px; border-bottom: 2px solid transparent; color: var(--muted); font-size: 12px; font-weight: 500; text-align: center; text-decoration: none; transition: background 140ms ease, color 140ms ease; }
 .workspace-navigation a.active { color: var(--ink); border-color: var(--accent); }

@@ -82,14 +82,19 @@ export function App({ api, session }: AppProps) {
     return <main className="loading-screen" aria-live="polite"><span className="loading-wordmark">Codex of Realms</span><p>Abriendo el archivo…</p></main>
   }
 
+  const newRealmButton = (
+    <button type="button" className="quiet-button new-realm-button" aria-expanded={showRealmForm}
+      aria-controls="new-realm" disabled={creatingRealm}
+      onClick={() => { setShowRealmForm((current) => !current); setRealmCreationError(null) }}>Nuevo universo</button>
+  )
+  // Players rarely start a campaign of their own, so the button waits inside the realm switcher.
+  const playing = realm?.role === 'PLAYER'
   const realmControls = realm && route && (
     <div className="realm-controls">
       <p className="eyebrow">Archivo de campaña</p>
       <h1>{realm.name}</h1>
-      <details className="realm-switcher"><summary>{roleLabels[realm.role]} · Cambiar universo</summary><label className="realm-picker"><span>Universo activo</span><select aria-label="Universo activo" value={realm.id} onChange={(event) => { setShowRealmForm(false); navigate(routePath(sectionRoute(event.target.value, route.section))) }}>{me.realms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label></details>
-      <button type="button" className="quiet-button" aria-expanded={showRealmForm}
-        aria-controls="new-realm" disabled={creatingRealm}
-        onClick={() => { setShowRealmForm((current) => !current); setRealmCreationError(null) }}>Nuevo universo</button>
+      <details className="realm-switcher"><summary>{roleLabels[realm.role]} · Cambiar universo</summary><label className="realm-picker"><span>Universo activo</span><select aria-label="Universo activo" value={realm.id} onChange={(event) => { setShowRealmForm(false); navigate(routePath(sectionRoute(event.target.value, route.section))) }}>{me.realms.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label>{playing && newRealmButton}</details>
+      {!playing && newRealmButton}
     </div>
   )
 

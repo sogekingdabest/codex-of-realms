@@ -23,16 +23,22 @@
   .identity > span { display: none; }
   .identity button { padding: 6px 8px; font-size: 11px; }
   .workspace.has-realm { grid-template-columns: minmax(0, 1fr); }
+  /* Opening a record scrolls it to the top before its text loads; the page must already be tall enough. */
+  .workspace-content { min-height: 100vh; }
   .archive-sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 0; }
-  .mobile-index-toggle { display: block; margin: 12px 20px; width: calc(100% - 40px); text-align: left; }
+  .mobile-index-toggle { display: block; margin: 8px 20px; width: calc(100% - 40px); text-align: left; }
   .archive-index:not(.is-open) { display: none; }
   .catalogue-filters { grid-column: 1 / -1; }
-  .realm-controls { padding: 20px 20px 14px; }
-  .realm-controls h1 { font-size: 27px; margin-bottom: 15px; }
+  /* A compact realm header: name, then the realm switcher and the new realm button on one row. */
+  .realm-controls { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; column-gap: 12px; padding: 12px 20px 8px; }
+  .realm-controls .eyebrow { display: none; }
+  .realm-controls h1 { grid-column: 1 / -1; font-size: 22px; margin: 0 0 4px; }
+  .realm-switcher[open] { grid-column: 1 / -1; }
   .realm-picker { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
   .realm-picker > span { grid-column: 1 / -1; }
-  .realm-controls > button { margin-top: 8px; }
-  .workspace-navigation { padding: 0 8px 12px; }
+  .realm-controls > .new-realm-button { margin-top: 0; }
+  .workspace-navigation { grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); padding: 0 8px 4px; }
+  .workspace-navigation a { padding: 6px 4px; }
   .catalogue-index { padding: 16px 14px; }
   .catalogue-toolbar { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .catalogue-toolbar .segmented-control, .catalogue-toolbar label:has(input) { grid-column: 1 / -1; }
@@ -43,7 +49,8 @@
   .sources-panel .source-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
   .source-item { margin-bottom: 0; }
   .sources-panel .upload-card { margin-top: 10px; padding-block: 12px; }
-  .workspace-location { padding-inline: 22px; }
+  /* The active tab already names the section. */
+  .workspace-location { display: none; }
   .entity-document, .source-reader { padding: 28px 22px 36px; }
   .entity-document h2, .source-reader-heading h2 { font-size: 36px; }
   .entity-description { font-size: 19px; }
