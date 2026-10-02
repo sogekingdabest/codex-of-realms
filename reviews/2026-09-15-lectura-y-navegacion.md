@@ -1,6 +1,6 @@
 # Mejoras de producto tras la revisión
 
-Esta entrega resuelve los primeros puntos de [la revisión del 13 de septiembre](2026-09-13-revision-portfolio.md): arranque de la demo, búsqueda y lectura en la biblioteca, navegación, accesibilidad y documentación.
+Esta entrega resuelve los primeros puntos de [la revisión del 13 de septiembre](2026-09-13-revision-general.md): arranque de la demo, búsqueda y lectura en la biblioteca, navegación, accesibilidad y documentación.
 
 ## Cambios
 

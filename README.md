@@ -25,7 +25,7 @@ The atlas is curated manually. Questions use uploaded documents; editing an atla
 
 ![Lumbrevela in the campaign atlas, with a relationship and its source alongside it](demo/assets/atlas.png)
 
-[Watch the short walkthrough](demo/assets/recorrido.webm) · [Five-minute presentation and screenshots](demo/PORTFOLIO.md)
+[Watch the short walkthrough](demo/assets/recorrido.webm) · [Guided tour and screenshots](demo/RECORRIDO.md)
 
 Captured on 20 September from an earlier version of the interface, with fictional campaign data and local models. The walkthrough is in Spanish and was recorded with the models already loaded.
 

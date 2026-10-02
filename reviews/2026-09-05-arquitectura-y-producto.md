@@ -1,6 +1,6 @@
 # Codex of Realms — revisión de arquitectura y producto, 5 de septiembre de 2026
 
-La recomendación es conservar el monolito modular y dedicar la siguiente etapa a fiabilidad, coherencia del canon y experiencia de uso. Spring Boot, React y PostgreSQL con pgvector encajan con una aplicación de campañas que combina documentación, permisos y consultas con evidencia. Para el portfolio conviene mostrar esos recorridos funcionando y explicar sus límites.
+La recomendación es conservar el monolito modular y dedicar la siguiente etapa a fiabilidad, coherencia del canon y experiencia de uso. Spring Boot, React y PostgreSQL con pgvector encajan con una aplicación de campañas que combina documentación, permisos y consultas con evidencia. Conviene mostrar esos recorridos funcionando y explicar sus límites.
 
 La revisión corresponde al directorio de trabajo del 5 de septiembre, incluidos los cambios sin confirmar. Se consultó el grafo existente, fechado el 2 de septiembre, y se contrastaron sus indicaciones con los archivos actuales. No se han modificado funcionalidades ni configuraciones de la aplicación. Este documento recoge propuestas; no cambia el roadmap acordado.
 
