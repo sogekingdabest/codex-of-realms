@@ -1,7 +1,7 @@
 {
   "name": "codex-of-realms-web",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.0-beta",
   "type": "module",
   "engines": {
     "node": ">=22.12.0"
