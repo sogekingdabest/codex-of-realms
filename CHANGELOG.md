@@ -10,6 +10,10 @@
 - Revised documentation, MIT license and contribution/security guides.
 - A demo loader that creates El Meridiano de Ceniza with three accounts, seven sources, a spoiler group and an atlas, then checks what each account sees.
 
+### Verification recorded on 2 October 2026
+
+On commit `8765c9b`, [CI](https://github.com/sogekingdabest/codex-of-realms/actions/runs/37028219209) passed backend `verify` with 200 tests, frontend `npm run verify` with 216 tests, the Compose definitions and the browser scenarios, including the demo loader on Linux. A [clean-install rehearsal](reviews/2026-10-02-ensayo-instalacion.md) of the same commit loaded the demo campaign with the real models, answered live questions without leaking restricted content, and passed the backup and restore check.
+
 ### Verification recorded on 20 September 2026
 
 Backend `verify` passed 185 tests with no failures, errors or skips, and built the application package. Frontend `npm run verify` passed lint, 119 tests, coverage thresholds and the production build.
