@@ -4,6 +4,7 @@ Start with the most recent record for the area you want to inspect. Each report 
 
 | Date | Record | Checks covered |
 |---|---|---|
+| 2 October | [Release candidate rehearsal](2026-10-02-ensayo-instalacion.md) | Clean clone of `main`, published CI, real models on GPU, demo campaign loader, five live queries with leak probes, backup and restore |
 | 1 October | [Simulated user session](2026-10-01-sesion-simulada.md) | Scripted Game Master and two players (one on mobile), real models, the seven session tasks, permission probes and a cold start. Fixes recorded and the session repeated on 2 October |
 | 20 September | [Clean-install rehearsal](2026-09-20-ensayo-instalacion.md) | Published CI, fresh local data, three accounts, permissions, real ingestion, Atlas and two live queries |
 | 20 September | [Local verification](../CHANGELOG.md#verification-recorded-on-20-september-2026) | 185 backend tests; 119 frontend tests, lint, coverage and builds |
@@ -12,7 +13,7 @@ Start with the most recent record for the area you want to inspect. Each report 
 | 13 September | [AI context and omissions](2026-09-13-contexto-y-omisiones.md) | Candidate evaluation and the reasons promotion was blocked |
 | 6 September | [Delivery acceptance](2026-09-06-entrega-y-validacion.md) | Deterministic, browser, recovery and selector results |
 
-The initial local verification on 20 September did not repeat browser or live-model checks; the later rehearsal records those separately. Restore checks were not repeated. Use [OPERATIONS.md](../OPERATIONS.md) to run them.
+The initial local verification on 20 September did not repeat browser or live-model checks; the later rehearsal records those separately. Restore checks were repeated in the 2 October rehearsal. Use [OPERATIONS.md](../OPERATIONS.md) to run them.
 
 ## Older reports
 
