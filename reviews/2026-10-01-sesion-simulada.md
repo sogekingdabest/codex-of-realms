@@ -107,7 +107,7 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia. Corregido; ver «Corrección del diálogo de evidencia».
 4. Tema y textos propios en el registro. Corregido; ver «Corrección del registro».
 5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil. Corregido; ver «Corrección de la biblioteca y la cabecera en móvil».
-6. Los detalles de la dirección.
+6. Los detalles de la dirección. Corregidos; ver «Corrección de los detalles de la dirección».
 
 ## Corrección del fallo en frío
 
@@ -160,6 +160,17 @@ Verificación: un recorrido completo en español, en escritorio y en móvil, y o
 Con la cabecera más baja, el encabezado de una respuesta ya cabía en pantalla y el pasaje no, así que la regla del desplazamiento mira ahora también el primer pasaje ([captura](assets/2026-10-01-sesion-simulada/correccion-resultado-movil.png)).
 
 Verificación: pruebas nuevas de los documentos pendientes y de la aplicación (fuentes en proceso, primera fuente fallida, «Nuevo universo» según el rol, desplazamiento en móvil y pasaje cortado); las de la aplicación fallan sin el cambio. Frontend: lint, 204 pruebas, cobertura y compilación. En el entorno de pruebas, con el modelo en pausa, una propietaria subió dos fuentes y vio el aviso en escritorio y en móvil; al reanudar el modelo se publicaron y, en móvil, la lectura empezó en el documento. La suite de navegador pasa.
+
+## Corrección de los detalles de la dirección
+
+- **Visibilidad al subir.** El formulario conserva la visibilidad elegida para el siguiente archivo. Como un spoiler subido por error como público es peor que un archivo público subido como «Solo dirección», el botón repite la elección: «Subir y procesar como Público». Al entrar sigue proponiendo «Solo dirección».
+- **Nombres de visibilidad.** La subida y el Atlas usan las mismas etiquetas: «Público», «Solo dirección» y «Spoiler · Recuerdos de Nara».
+- **Sustitución.** El estado de la versión nueva aparece en la propia fuente, junto a «Gestionar»: «Versión 2 · Procesando · 0/1 fragmentos. La versión 1 sigue publicada» ([captura](assets/2026-10-01-sesion-simulada/correccion-sustitucion.png)). «Reprocesar» pasa a acción secundaria. El progreso omite los fragmentos mientras no se conocen y los intentos hasta que hay más de uno, y la lectura dice «1 fragmento».
+- **Biblioteca larga.** El índice se desplaza dentro de la barra lateral. Con 24 fuentes, la página mide lo que la ventana más la cabecera, y la lectura sigue a la vista con el índice al final ([captura](assets/2026-10-01-sesion-simulada/correccion-biblioteca-larga.png)).
+
+Al verificarlo apareció otro fallo de la misma tarea: «Añadir conocimiento» se plegaba al publicarse la primera fuente, en mitad de una tanda de subidas. En la sesión no se notó porque el modelo frío retrasó la publicación hasta después de las tres subidas. Ahora el formulario se abre con la biblioteca vacía y después queda como lo deje la dirección.
+
+Verificación: pruebas nuevas de las etiquetas, la visibilidad conservada, el formulario abierto, la sustitución junto a la fuente, el progreso y el plural; las de la aplicación fallan sin el cambio. Frontend: lint, 212 pruebas, cobertura y compilación. En el entorno de pruebas, una propietaria subió 24 fuentes seguidas eligiendo «Público» una sola vez, sustituyó una con el modelo en pausa y abrió el Atlas. La suite de navegador pasa.
 
 ## Reproducción y registros
 
