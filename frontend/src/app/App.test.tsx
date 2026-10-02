@@ -5,6 +5,7 @@ import { App } from './App'
 import type { LoreAnswer } from '../features/qa'
 import type { AuthSession } from '../shared/auth'
 import { composeTestApiClients } from '../test/apiClients'
+import { sourceJob } from '../test/contentApi'
 
 function testApi() {
   const api = {
@@ -432,6 +433,33 @@ describe('App', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
     await waitFor(() => expect(api.deleteSource).toHaveBeenCalledWith('realm-1', 'uploaded'))
     confirm.mockRestore()
+  })
+
+  it('enseña a la dirección las primeras fuentes en proceso en vez de una biblioteca vacía', async () => {
+    const api = testApi()
+    vi.mocked(api.listSources).mockResolvedValue([])
+    vi.mocked(api.listSourceJobs).mockResolvedValue([
+      { ...sourceJob, id: 'job-a', documentId: 'doc-a', title: 'Rutas de Lumbrevela', state: 'RUNNING', completedChunks: 1, totalChunks: 4 },
+      { ...sourceJob, id: 'job-b', documentId: 'doc-b', title: 'La campana de vidrio', state: 'QUEUED' },
+    ])
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByRole('heading', { name: 'Tus primeras fuentes se están procesando' })).toBeInTheDocument()
+    expect(screen.getByText('Procesando 2 documentos nuevos; aparecerán en la lista al terminar.')).toBeInTheDocument()
+    expect(screen.getByText('Procesando · 1/4 fragmentos')).toBeInTheDocument()
+    expect(screen.getByText('En cola')).toBeInTheDocument()
+    expect(screen.queryByText('Todavía no hay fuentes visibles en este universo.')).not.toBeInTheDocument()
+    expect(screen.queryByText('El archivo empieza aquí')).not.toBeInTheDocument()
+  })
+
+  it('avisa de una primera fuente que necesita atención', async () => {
+    const api = testApi()
+    vi.mocked(api.listSources).mockResolvedValue([])
+    vi.mocked(api.listSourceJobs).mockResolvedValue([{ ...sourceJob, documentId: 'doc-a', state: 'FAILED', errorCode: 'MODEL_UNAVAILABLE' }])
+    render(<App api={api} session={session} />)
+
+    expect(await screen.findByRole('heading', { name: 'Una fuente necesita atención' })).toBeInTheDocument()
+    expect(screen.getByText('1 documento nuevo necesita atención.')).toBeInTheDocument()
   })
 
   it('presenta y permite cerrar errores de operación', async () => {

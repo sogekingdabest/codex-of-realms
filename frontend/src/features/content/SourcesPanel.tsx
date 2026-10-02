@@ -7,7 +7,8 @@ import { VisibilityMark } from '../../shared/ui/VisibilityMark'
 
 import type { AccessPolicyView } from '../realm'
 import type { SourceDocumentView, SourceJobView } from './model'
-import { SourceJobsPanel, RecoveryActions } from './SourceJobsPanel'
+import { pendingSources, pendingSummary } from './pendingSources'
+import { RecoveryActions, SourceJobsPanel } from './SourceJobsPanel'
 
 const classificationLabels = {
   PUBLIC: 'Pública', GM_ONLY: 'Solo dirección', SPOILER: 'Spoiler con permiso',
@@ -35,19 +36,22 @@ export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, 
   const normalize = (value: string) => value.normalize('NFD').replace(/\p{M}/gu, '').toLocaleLowerCase('es')
   const query = normalize(search.trim())
   const visibleSources = sources.filter((source) => normalize(`${source.title} ${source.originalFilename}`).includes(query))
+  const pending = canEdit ? pendingSources(jobs, sources) : []
   return (
     <section className="panel sources-panel">
       <div className="panel-heading">
         <div><h2>Documentos</h2></div>
         <span className="count">{sources.length}</span>
       </div>
+      {pending.length > 0 && <p className="source-pending" role="status">{pendingSummary(pending)}</p>}
       {sources.length > 0 && <label className="source-search"><span>Buscar fuentes</span>
         <input type="search" aria-label="Buscar fuentes" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Título o nombre del archivo" />
         <small>{visibleSources.length} de {sources.length} fuentes</small>
       </label>}
       {sources.length > 0 && visibleSources.length === 0
         ? <p className="empty-state" role="status">No hay fuentes que coincidan con la búsqueda.</p>
-        : <SourceList canEdit={canEdit} audience={audience} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
+        // While the first documents are processed, the line above replaces the empty library message.
+        : sources.length === 0 && pending.length > 0 && !loading ? null : <SourceList canEdit={canEdit} audience={audience} loading={loading} sources={visibleSources} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
       {canEdit && (
         <details className="upload-card" open={sources.length === 0}>
           <summary>Añadir conocimiento</summary>
