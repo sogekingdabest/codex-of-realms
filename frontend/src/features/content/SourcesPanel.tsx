@@ -1,4 +1,4 @@
-import { useState, type RefObject, type SubmitEvent } from 'react'
+import { useState, type ReactNode, type RefObject, type SubmitEvent } from 'react'
 
 import { visibilityOptionLabel, type VisibilityAudience } from '../../shared/lib/visibility'
 import { Link } from '../../shared/routing'
@@ -39,6 +39,11 @@ export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, 
   const visibleSources = sources.filter((source) => normalize(`${source.title} ${source.originalFilename}`).includes(query))
   const pending = canEdit ? pendingSources(jobs, sources) : []
   const selectedPolicy = policies.find((policy) => policy.id === selectedPolicyId)
+  const uploadAs = selectedPolicy ? visibilityOptionLabel(selectedPolicy) : '…'
+  let list: ReactNode = <SourceList canEdit={canEdit} audience={audience} loading={loading} sources={visibleSources} jobs={jobs} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />
+  if (sources.length > 0 && visibleSources.length === 0) list = <p className="empty-state" role="status">No hay fuentes que coincidan con la búsqueda.</p>
+  // While the first documents are processed, the pending line replaces the empty library message.
+  else if (sources.length === 0 && pending.length > 0 && !loading) list = null
   return (
     <section className="panel sources-panel">
       <div className="panel-heading">
@@ -50,10 +55,7 @@ export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, 
         <input type="search" aria-label="Buscar fuentes" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Título o nombre del archivo" />
         <small>{visibleSources.length} de {sources.length} fuentes</small>
       </label>}
-      {sources.length > 0 && visibleSources.length === 0
-        ? <p className="empty-state" role="status">No hay fuentes que coincidan con la búsqueda.</p>
-        // While the first documents are processed, the line above replaces the empty library message.
-        : sources.length === 0 && pending.length > 0 && !loading ? null : <SourceList canEdit={canEdit} audience={audience} loading={loading} sources={visibleSources} jobs={jobs} onDelete={onDelete} busy={uploading} onRecover={onRecover} selectedId={selectedId} sourceHref={sourceHref} />}
+      {list}
       {canEdit && (
         <details className="upload-card" open={upload.open} onToggle={(event) => {
           const open = event.currentTarget.open
@@ -71,7 +73,7 @@ export function SourcesPanel({ canEdit, audience, fileInput, loading, policies, 
               </label>
               <label className="file-field"><span>Archivo Markdown o TXT</span><input ref={fileInput} name="file" type="file" accept=".md,.txt,text/markdown,text/plain" required /></label>
               {/* The choice stays for the next file, so the button repeats it before each upload. */}
-              <button disabled={uploading} type="submit">{uploading ? 'Guardando…' : `Subir y procesar como ${selectedPolicy ? visibilityOptionLabel(selectedPolicy) : '…'}`}</button>
+              <button disabled={uploading} type="submit">{uploading ? 'Guardando…' : `Subir y procesar como ${uploadAs}`}</button>
             </form>
           ) : <p className="muted">Preparando las políticas base del universo…</p>}
         </details>

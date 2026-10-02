@@ -90,8 +90,7 @@ a.relation-entity { color: var(--accent); text-decoration: underline; text-under
 .catalogue-card { padding: 28px 32px; border-bottom: 1px solid var(--line); }
 .catalogue-card > header { display: flex; justify-content: space-between; align-items: start; gap: 16px; }
 .catalogue-card > p { line-height: 1.7; white-space: pre-wrap; }
-.catalogue-card > footer { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 24px; color: var(--muted); font-size: 12px; }
-.catalogue-card > footer { align-items: center; }
+.catalogue-card > footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 24px; color: var(--muted); font-size: 12px; }
 .catalogue-card > footer > div { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .relation-card .relation-sentence { font-size: 16px; }
 .catalogue-list { min-width: 0; }

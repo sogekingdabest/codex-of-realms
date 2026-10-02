@@ -10,6 +10,7 @@ import {
   SourcesPanel,
   useSourceReader,
   type SourceDocumentView,
+  type SourceJobView,
 } from '../../features/content'
 import { RealmAccessPanel, type RealmSummary } from '../../features/realm'
 import { formText } from '../../shared/lib/forms'
@@ -131,18 +132,14 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
       </section>
     } else {
       const pending = workspace.canEdit ? pendingSources(workspace.jobs, workspace.sources) : []
+      const prompt = workspace.sources.length === 0 && pending.length > 0
+        ? <div className="reading-prompt"><LibraryPrompt {...processingPrompt(pending)} /><PendingSources pending={pending} /></div>
+        : <div className="reading-prompt"><LibraryPrompt {...libraryPrompt(workspace.sources.length > 0, workspace.canEdit)} /></div>
       main = <section className="archive-reading-empty">
         <p className="eyebrow">Biblioteca del universo</p>
         <h2>Las voces de {realm.name}</h2>
         <p>Crónicas, notas y documentos que dan forma a tu mundo.</p>
-        {workspace.sources.length === 0 && pending.length > 0
-          ? <div className="reading-prompt">
-            {pending.some((job) => job.state !== 'FAILED')
-              ? <><h3>Tus primeras fuentes se están procesando</h3><p>Aparecerán en el índice en cuanto estén listas. Si el modelo se está cargando, la primera puede tardar un par de minutos.</p></>
-              : <><h3>Una fuente necesita atención</h3><p>Revisa «Procesamiento de fuentes» en el índice para reintentarla o cargarla de nuevo.</p></>}
-            <PendingSources pending={pending} />
-          </div>
-          : <div className="reading-prompt"><h3>{workspace.sources.length > 0 ? 'Abre una fuente del índice' : 'El archivo empieza aquí'}</h3><p>{workspace.sources.length > 0 ? 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' : workspace.canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.'}</p></div>}
+        {prompt}
       </section>
     }
     return layout(<div className="source-workspace" aria-busy={!workspace.sourcesLoaded}>{main}</div>, index, sourceId)
@@ -195,4 +192,22 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
       {workspace.error && <ErrorToast message={workspace.error} onClose={workspace.clearError} />}
     </>
   )
+}
+
+function LibraryPrompt({ title, text }: Readonly<{ title: string; text: string }>) {
+  return <><h3>{title}</h3><p>{text}</p></>
+}
+
+function processingPrompt(pending: SourceJobView[]) {
+  return pending.some((job) => job.state !== 'FAILED')
+    ? { title: 'Tus primeras fuentes se están procesando', text: 'Aparecerán en el índice en cuanto estén listas. Si el modelo se está cargando, la primera puede tardar un par de minutos.' }
+    : { title: 'Una fuente necesita atención', text: 'Revisa «Procesamiento de fuentes» en el índice para reintentarla o cargarla de nuevo.' }
+}
+
+function libraryPrompt(hasSources: boolean, canEdit: boolean) {
+  if (hasSources) return { title: 'Abre una fuente del índice', text: 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' }
+  return {
+    title: 'El archivo empieza aquí',
+    text: canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.',
+  }
 }

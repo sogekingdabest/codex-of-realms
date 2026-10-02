@@ -40,10 +40,10 @@ describe('routing', () => {
     const length = window.history.length
     act(() => navigate('/corregida', { replace: true }))
     expect(window.location.pathname).toBe('/corregida')
-    expect(window.history.length).toBe(length)
+    expect(window.history).toHaveLength(length)
     act(() => navigate('/corregida'))
-    expect(window.history.length).toBe(length)
+    expect(window.history).toHaveLength(length)
     act(() => navigate('/siguiente'))
-    expect(window.history.length).toBe(length + 1)
+    expect(window.history).toHaveLength(length + 1)
   })
 })
