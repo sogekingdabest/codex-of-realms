@@ -13,7 +13,7 @@
 
     <groupId>dev.codexofrealms</groupId>
     <artifactId>codex-of-realms-backend</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0-beta</version>
     <name>Codex of Realms</name>
     <description>Evidence-first lore assistant for fictional worlds and tabletop campaigns</description>
 
