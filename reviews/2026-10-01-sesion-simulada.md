@@ -8,7 +8,7 @@ Revisión del commit `64aed42` de la rama `feat/frontend-reading-and-routing`. N
 - **Personas.** Inés dirige la partida desde un portátil. Tala juega desde un portátil y recibe el spoiler «Recuerdos de Nara». Ivo juega desde un móvil de 390 × 844 px y recibe «La campana de vidrio». Las tres se registran por la página de Keycloak en español y verifican su correo en Mailpit.
 - **Guion.** Un script de Playwright sigue las tareas del guion en orden. Cada persona actúa solo con nombres y etiquetas visibles. Antes, la dirección prepara la campaña desde la interfaz siguiendo la [guía de demo](../docs/operations/DEMO.md).
 - **Medidas.** Se cuentan las interacciones del camino mínimo (clics, campos, teclas y navegaciones) y el tiempo de máquina. Hay una captura en cada punto de decisión, revisada después desde el papel de cada persona.
-- **Ejecuciones.** Una ejecución preliminar, en la que se produjo el fallo en frío; una con los modelos descargados; y una final con los modelos cargados. Las iteraciones anteriores solo corrigieron el guion.
+- **Ejecuciones.** Una ejecución preliminar, en la que se produjo el fallo en frío; una con los modelos descargados; y una final con los modelos cargados. Las iteraciones anteriores solo corrigieron el guion. El 2 de octubre se repitió tras las correcciones; ver «Repetición tras las correcciones».
 
 ## Resultado
 
@@ -171,6 +171,29 @@ Verificación: pruebas nuevas de los documentos pendientes y de la aplicación (
 Al verificarlo apareció otro fallo de la misma tarea: «Añadir conocimiento» se plegaba al publicarse la primera fuente, en mitad de una tanda de subidas. En la sesión no se notó porque el modelo frío retrasó la publicación hasta después de las tres subidas. Ahora el formulario se abre con la biblioteca vacía y después queda como lo deje la dirección.
 
 Verificación: pruebas nuevas de las etiquetas, la visibilidad conservada, el formulario abierto, la sustitución junto a la fuente, el progreso y el plural; las de la aplicación fallan sin el cambio. Frontend: lint, 212 pruebas, cobertura y compilación. En el entorno de pruebas, una propietaria subió 24 fuentes seguidas eligiendo «Público» una sola vez, sustituyó una con el modelo en pausa y abrió el Atlas. La suite de navegador pasa.
+
+## Repetición tras las correcciones
+
+El 2 de octubre se repitió la sesión completa con los modelos reales, cargados en la GPU antes de empezar, sobre el commit `7487a28`. Las siete tareas terminan y no hay ninguna filtración. El guion se adaptó a los textos nuevos y mide ahora lo corregido; la dirección solo cambia la visibilidad cuando no es la que quiere.
+
+| Aspecto | 1 de octubre | 2 de octubre |
+|---|---|---|
+| Registro | Tema de Keycloak, «Modificar contraseña» | Tema propio, «Elige tu contraseña» |
+| Biblioteca mientras procesa | «El archivo empieza aquí» | «Tus primeras fuentes se están procesando» y, en el índice, «Procesando 3 documentos nuevos» ([captura](assets/2026-10-01-sesion-simulada/repeticion-fuentes-procesando.png)) |
+| Preparación de la dirección | 20 interacciones; «Público» tres veces | 18 interacciones; «Público» una vez |
+| Diálogo de evidencia de Ivo | «Procedencia del canon · 3fb51c5251» y el archivo | «Procedencia del canon», la fuente y el apartado |
+| Cabecera en móvil | Unos 450 px | Termina a 268 px |
+| Lectura en móvil | El texto empieza bajo el pliegue | El primer párrafo empieza a 516 px de 844 ([captura](assets/2026-10-01-sesion-simulada/repeticion-lectura-movil.png)) |
+| Respuestas en móvil | Fuera de la pantalla (859 px de 844) | Las tres de Ivo, a la vista con el primer pasaje entero ([captura](assets/2026-10-01-sesion-simulada/repeticion-respuesta-movil.png)) |
+| Sustitución | Progreso solo al final del índice | «Versión 2 · En cola · La versión 1 sigue publicada» en la propia fuente |
+
+Las demás tareas necesitaron las mismas interacciones. La preparación del spoiler bajó de 50 a 49, pero solo porque el guion ya no vuelve a elegir una visibilidad que ya está elegida.
+
+**Un fallo encontrado.** La primera ejecución se detuvo en la preparación. El formulario de subida empezaba cerrado mientras cargaba el catálogo y se abría al terminar; la dirección pulsó «Añadir conocimiento» en ese momento y el final de la carga lo volvió a cerrar. Venía de la corrección del pliegue del formulario y se corrigió en `8bc329a`: con la biblioteca vacía, el formulario está abierto desde el principio.
+
+**Tiempos.** Las consultas de los jugadores tardaron entre 6,6 y 10,7 s, y la del dato ausente 0,3 s. La primera consulta tras arrancar tardó 77,5 s, y las tres primeras fuentes se publicaron en 52 s (5 s el 1 de octubre). Ollama no recargó ningún modelo durante la sesión, pero avisó de presión de memoria y desactivó `mmap` en una máquina virtual de 6,7 GiB. Esta tanda no cambió el backend. Como la primera consulta lenta del 1 de octubre, queda como observación de este equipo.
+
+[Resultados de esta ejecución](2026-10-01-sesion-simulada-results.json) (tercera ejecución del fichero).
 
 ## Reproducción y registros
 
