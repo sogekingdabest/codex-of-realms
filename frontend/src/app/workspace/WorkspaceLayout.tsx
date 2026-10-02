@@ -28,8 +28,10 @@ export function WorkspaceLayout({ header, index, selection = null, location, ban
   return (
     <div className="workspace has-realm">
       <aside className="archive-sidebar" aria-label="Índice del archivo">
-        {header}
-        {index && <FoldingIndex selection={selection}>{index}</FoldingIndex>}
+        <div className="archive-sidebar-content">
+          {header}
+          {index && <FoldingIndex selection={selection}>{index}</FoldingIndex>}
+        </div>
       </aside>
       <main ref={main} id="workspace-content" className="workspace-content">
         {banner}

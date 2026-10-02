@@ -25,7 +25,8 @@
   .workspace.has-realm { grid-template-columns: minmax(0, 1fr); }
   /* Opening a record scrolls it to the top before its text loads; the page must already be tall enough. */
   .workspace-content { min-height: 100vh; }
-  .archive-sidebar { border-right: 0; border-bottom: 1px solid var(--line); padding-bottom: 0; }
+  .archive-sidebar { border-right: 0; border-bottom: 1px solid var(--line); }
+  .archive-sidebar-content { position: static; max-height: none; overflow: visible; padding-bottom: 0; }
   .mobile-index-toggle { display: block; margin: 8px 20px; width: calc(100% - 40px); text-align: left; }
   .archive-index:not(.is-open) { display: none; }
   .catalogue-filters { grid-column: 1 / -1; }
