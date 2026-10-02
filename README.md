@@ -37,7 +37,7 @@ The model downloads are needed once per Ollama volume. If you change the model t
 
 Open [the application](http://localhost:5173), register, and follow the verification email in [Mailpit](http://localhost:8025). Finish setting your password, create a universe, then upload a file from [the public demo sources](demo/lore/public/) with **Público** visibility. Reload the application if you prepared the models after opening it.
 
-The [demo guide](docs/operations/DEMO.md) walks through a campaign with a Game Master and two players. For requirements, GPU setup and troubleshooting, see [local development](docs/operations/LOCAL_DEVELOPMENT.md). Existing installations should follow the [upgrade steps](OPERATIONS.md#upgrade-an-existing-installation).
+To explore a ready-made campaign instead, run `./scripts/load-demo-campaign.ps1` with PowerShell (`pwsh` on Linux and macOS). It creates a Game Master and two players in El Meridiano de Ceniza and prints their password. The [demo guide](docs/operations/DEMO.md) describes what each account sees and an eight-minute walkthrough. For requirements, GPU setup and troubleshooting, see [local development](docs/operations/LOCAL_DEVELOPMENT.md). Existing installations should follow the [upgrade steps](OPERATIONS.md#upgrade-an-existing-installation).
 
 Stop with `docker compose down` to keep your data.
 

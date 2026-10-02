@@ -21,7 +21,7 @@ The sources include three public documents, two GM-only documents and two spoile
 | `player_oren` | `PLAYER` | None |
 | `outsider_nuno` | Member of another realm | None |
 
-These identifiers are used by the deterministic tests; they have no associated passwords. The imported Keycloak realm contains the separate interactive placeholders `gm-demo`, `nara-demo`, and `ivo-demo`, also without committed credentials.
+These identifiers are used by the deterministic tests; they have no associated passwords. For interactive use, `scripts/load-demo-campaign.ps1` creates the accounts listed in [`campaign.json`](campaign.json): Inés directs the game, Tala holds the spoiler and Oren sees only public canon. Each run generates their password.
 
 ## Source layout
 
@@ -30,11 +30,12 @@ lore/public/      Canon visible to every active member of the realm
 lore/gm-only/     Canon restricted to privileged Game Master roles
 lore/spoilers/    Canon available through privileged role or explicit grant
 evaluation/       Machine-readable expected retrieval and authorization outcomes
+campaign.json     Accounts, visibility and atlas loaded by scripts/load-demo-campaign.ps1
 ```
 
 ## Metadata
 
-The Markdown front matter describes the evaluation fixtures. When uploading through the application, choose visibility explicitly in the form: front matter does not create memberships, policies or spoiler grants.
+The Markdown front matter describes the evaluation fixtures. When uploading through the application, choose visibility explicitly in the form: front matter does not create memberships, policies or spoiler grants. The loader also takes visibility from `campaign.json`, not from the front matter.
 
 - `source_id`: stable logical identifier used by evaluation cases
 - `realm_id`: authorization boundary

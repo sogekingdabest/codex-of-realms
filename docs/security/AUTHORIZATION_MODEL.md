@@ -74,4 +74,4 @@ Invitation routes under **/api/v1/realms/{realmId}/invitations** support creatio
 
 ## Demonstration identities
 
-The Keycloak import contains **gm-demo**, **nara-demo**, and **ivo-demo**, without passwords or stored credentials, as optional fixtures. For normal use, register from the login page. Joining an existing campaign still requires application membership, managed through the Codex UI/API.
+The Keycloak import contains no users, and the repository stores no passwords. For a local demo, `scripts/load-demo-campaign.ps1` creates three accounts with a password generated on each run. It joins them to the demo campaign through the application API, as a person would: invitation, verified login and explicit spoiler grant. To obtain their tokens, the script adds a temporary Keycloak client with the password grant and removes it before finishing. For normal use, register from the login page. Joining an existing campaign still requires application membership, managed through the Codex UI/API.

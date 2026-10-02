@@ -1,6 +1,6 @@
 # Campaign demo
 
-This walkthrough uses El Meridiano de Ceniza to show how a Game Master and two players share campaign knowledge. Prepare the accounts and sources first, then follow the eight-minute presentation below.
+This walkthrough uses El Meridiano de Ceniza to show how a Game Master and two players share campaign knowledge. Load the campaign first, then follow the eight-minute presentation below.
 
 ## Prepare once
 
@@ -17,13 +17,31 @@ docker compose exec ollama ollama pull qwen3.5:4b
 
 The downloads go into the stack's model volume, separate from a native Ollama installation. Use your `.env` tags if you changed the defaults, then reload the app.
 
-3. Open [the application](http://localhost:5173). Register a local owner, open its verification message in [Mailpit](http://localhost:8025), follow the link and set the password when Keycloak asks. For an existing realm, first run `./scripts/configure-keycloak-realm.ps1`; a startup import does not update it.
-4. Create **El Meridiano de Ceniza**. Under **Añadir conocimiento**, upload the three files from `demo/lore/public/` with **Público** visibility and readable titles. Wait for publication. Read a source from the library to confirm availability.
-5. Invite two local player addresses. Register each in a separate browser profile, verify its email and return to the app. Invitations activate on a matching verified login; creating an invitation does not send email.
-6. Create a spoiler group, upload `demo/lore/spoilers/01-el-recuerdo-de-nara.md` under that group, and grant it to only the first player. Upload `demo/lore/gm-only/01-la-deuda-de-la-aguja.md` as GM-only. Select visibility in the form explicitly: Markdown front matter does not replace authorization.
-7. In **Atlas del canon**, create **Lumbrevela** as a place and **La Aguja del Mediodía** as an object, attach visible source fragments, and relate them. Promote a reviewed proposal to canon. This is a manual editorial decision.
+3. Load the campaign. For a realm created before the Codex access theme, first run `./scripts/configure-keycloak-realm.ps1`; a startup import does not update an existing realm.
 
-The campaign material is original to this project. Create the accounts through registration; the demo has no shared passwords.
+```powershell
+./scripts/load-demo-campaign.ps1
+```
+
+The script creates three local accounts and prints one password for all of them:
+
+| Account | Role | Sees |
+|---|---|---|
+| Inés Vidal, `ines@demo.invalid` | Game Master and owner | All seven sources, including two GM-only notes, and the whole atlas |
+| Tala Mir, `tala@demo.invalid` | Player | Five sources: the three public ones and the two in the spoiler group **Recuerdos de Nara** |
+| Oren Brea, `oren@demo.invalid` | Player | The three public sources and the public atlas |
+
+As Inés, it creates **El Meridiano de Ceniza**, uploads the sources in `demo/lore` with their visibility, reveals the spoiler group to Tala and fills the atlas. Four atlas items stay as proposals, so promoting one to canon can be shown live. It ends by checking that each account sees exactly its share. The first upload waits for the embedding model, so a cold start can take a few minutes.
+
+Running the script again sets a new password and keeps everything that already exists. It also completes a load that was interrupted. The campaign content is in `demo/campaign.json`. To sign in as several people at once, use a separate browser profile or private window for each account.
+
+The script talks to Keycloak through a temporary client that it removes before finishing. Use it only on a local installation: the accounts use `.invalid` addresses and a password printed on screen.
+
+### Prepare it by hand
+
+To show registration and invitations as well, prepare the campaign from the application instead. Register an owner, open its verification message in [Mailpit](http://localhost:8025) and set the password when Keycloak asks. Create **El Meridiano de Ceniza** and upload the three files from `demo/lore/public/` as **Público**. Invite two player addresses and register each in a separate browser profile; invitations activate on a matching verified login and send no email. Create a spoiler group, upload `demo/lore/spoilers/01-el-recuerdo-de-nara.md` under it and grant it to one player. Upload `demo/lore/gm-only/01-la-deuda-de-la-aguja.md` as GM-only: Markdown front matter does not replace authorization. In **Atlas del canon**, create and relate **Lumbrevela** and **La Aguja del Mediodía** with visible source fragments, then promote a reviewed proposal to canon.
+
+The campaign material is original to this project. No passwords are stored in the repository.
 
 Shortly before the session, ask “¿Dónde se alza Lumbrevela?” and wait for a cited answer. The application starts loading both models when the backend starts and whenever someone opens **Consultas**. Ollama unloads them after five idle minutes (`AI_CHAT_KEEP_ALIVE` for the chat model). A cold load can take more than a minute, and a healthy container does not mean the models are loaded. If preparation fails, resolve it before inviting participants.
 
