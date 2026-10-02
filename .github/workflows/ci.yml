@@ -153,6 +153,10 @@ jobs:
         working-directory: frontend
         run: npm run test:e2e
 
+      - name: Load and check the demo campaign
+        shell: pwsh
+        run: ./scripts/load-demo-campaign.ps1 -ComposeFile compose.e2e.yaml -WebUrl http://localhost:25173 -KeycloakUrl http://localhost:28180
+
       - name: Print service diagnostics on failure
         if: failure()
         run: docker compose -f compose.e2e.yaml logs --tail 100
