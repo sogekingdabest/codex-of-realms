@@ -9,7 +9,9 @@
 .quiet-button:hover:not(:disabled), .chip-button:hover:not(:disabled) { color: var(--ink); background: var(--panel-strong); }
 .workspace { min-height: calc(100vh - 62px); }
 .workspace.has-realm { display: grid; grid-template-columns: 270px minmax(0, 1fr); }
-.archive-sidebar { min-width: 0; background: var(--sidebar); border-right: 1px solid var(--line); padding-bottom: 2rem; }
+.archive-sidebar { min-width: 0; background: var(--sidebar); border-right: 1px solid var(--line); }
+/* A long index scrolls inside the sidebar, so the page never grows past the reading column. */
+.archive-sidebar-content { position: sticky; top: 0; max-height: 100vh; overflow-y: auto; padding-bottom: 2rem; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
 .mobile-index-toggle { display: none; }
 .realm-controls { padding: 27px 22px 20px; }
 .realm-controls h1 { margin: 7px 0 20px; font: 27px/1.17 var(--reading-font); letter-spacing: -.5px; }
