@@ -49,10 +49,15 @@ export function parseRoute(pathname: string): WorkspaceRoute | null {
 
 export function routePath(route: WorkspaceRoute): string {
   const base = `/${REALMS}/${encodeURIComponent(route.realmId)}/${slugs[route.section]}`
-  const item = route.section === 'sources' ? route.sourceId
-    : route.section === 'canon' ? (route.view === 'relations' ? RELATIONS : route.entityId)
-      : null
+  const item = routeItem(route)
   return item ? `${base}/${encodeURIComponent(item)}` : base
+}
+
+/** The last path segment: an open source, an atlas entry or the relations view. */
+function routeItem(route: WorkspaceRoute) {
+  if (route.section === 'sources') return route.sourceId
+  if (route.section === 'canon') return route.view === 'relations' ? RELATIONS : route.entityId
+  return null
 }
 
 export function sectionRoute(realmId: string, section: WorkspaceSection): WorkspaceRoute {

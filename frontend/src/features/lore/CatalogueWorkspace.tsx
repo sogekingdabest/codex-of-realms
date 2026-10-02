@@ -88,39 +88,44 @@ export function CatalogueWorkspace({
       onClick={() => { closeEditors(); setCreating(location.view === 'entities' ? 'entity' : 'relation') }}>{location.view === 'entities' ? 'Nueva ficha' : 'Nueva relación'}</button></div>}
   </div>
 
+  let entityPane: ReactNode
+  if (showEntityEditor) {
+    entityPane = <div className="editor-pane">
+      <EntityEditor
+        contentApi={contentApi}
+        draft={catalogue.effectiveEntityDraft}
+        editing={Boolean(catalogue.editingEntityId)}
+        policies={policies}
+        realmId={realmId}
+        saving={catalogue.saving}
+        sources={sources}
+        onCancel={closeEditors}
+        onChange={catalogue.setEntityDraft}
+        onSubmit={async (event) => { if (await catalogue.saveEntity(event)) setCreating(null) }}
+      />
+    </div>
+  } else if (catalogue.selectedEntity) {
+    entityPane = <EntityDocument
+      contentApi={contentApi}
+      canEdit={canEdit}
+      entity={catalogue.selectedEntity}
+      relations={catalogue.relations}
+      audience={audience}
+      saving={catalogue.saving}
+      focusHeading={location.entityId !== null}
+      entityHref={entityHref}
+      onDelete={catalogue.deleteEntity}
+      onEdit={catalogue.editEntity}
+      onOpenEvidence={onOpenEvidence}
+      onPromote={catalogue.promoteEntity}
+    />
+  } else {
+    entityPane = <CatalogueEmpty text={emptyAtlasText(catalogue.loading, catalogue.entityMissing)} />
+  }
+
   const content = <section className="catalogue-content" aria-busy={catalogue.loading}>
     {catalogue.error && <div className="catalogue-error" role="alert">{catalogue.error}</div>}
-    {location.view === 'entities' ? (
-      showEntityEditor ? <div className="editor-pane">
-        <EntityEditor
-          contentApi={contentApi}
-          draft={catalogue.effectiveEntityDraft}
-          editing={Boolean(catalogue.editingEntityId)}
-          policies={policies}
-          realmId={realmId}
-          saving={catalogue.saving}
-          sources={sources}
-          onCancel={closeEditors}
-          onChange={catalogue.setEntityDraft}
-          onSubmit={async (event) => { if (await catalogue.saveEntity(event)) setCreating(null) }}
-        />
-      </div> : catalogue.selectedEntity ? <EntityDocument
-        contentApi={contentApi}
-        canEdit={canEdit}
-        entity={catalogue.selectedEntity}
-        relations={catalogue.relations}
-        audience={audience}
-        saving={catalogue.saving}
-        focusHeading={location.entityId !== null}
-        entityHref={entityHref}
-        onDelete={catalogue.deleteEntity}
-        onEdit={catalogue.editEntity}
-        onOpenEvidence={onOpenEvidence}
-        onPromote={catalogue.promoteEntity}
-      /> : <CatalogueEmpty text={catalogue.loading ? 'Abriendo el atlas…'
-        : catalogue.entityMissing ? 'Esta ficha no existe o no es visible para ti.'
-          : 'No hay fichas visibles con estos filtros.'} />
-    ) : (
+    {location.view === 'entities' ? entityPane : (
       <div className="relations-workspace">
         {showRelationEditor ? <div className="editor-pane">
           <RelationEditor
@@ -166,6 +171,11 @@ interface CatalogueToolbarProps {
   readonly onCanonFilterChange: (filter: CanonStatus | 'ALL') => void
   readonly onSearchChange: (search: string) => void
   readonly onTypeFilterChange: (filter: EntityType | 'ALL') => void
+}
+
+function emptyAtlasText(loading: boolean, entityMissing: boolean) {
+  if (loading) return 'Abriendo el atlas…'
+  return entityMissing ? 'Esta ficha no existe o no es visible para ti.' : 'No hay fichas visibles con estos filtros.'
 }
 
 function CatalogueToolbar({ canonFilter, search, view, typeFilter, hrefFor, onCanonFilterChange, onSearchChange, onTypeFilterChange }: CatalogueToolbarProps) {

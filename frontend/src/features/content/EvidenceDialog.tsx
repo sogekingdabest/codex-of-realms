@@ -47,9 +47,9 @@ export function SourceReader({ evidence, published, audience = playerAudience, m
       <button className="quiet-button" type="button" onClick={onClose}>Cerrar fuente</button>
     </header>
     {(source.excludedSentences ?? 0) > 0 && <p role="status">Esta fuente contiene {source.excludedSentences} frase(s) de más de 2.000 caracteres que no pueden usarse para responder.</p>}
-    <div className="source-reader-content" role="region" aria-label="Contenido de la fuente">
+    <section className="source-reader-content" aria-label="Contenido de la fuente">
       <SourceText content={source.content} format={sourceFormat(source.originalFilename)} />
-    </div>
+    </section>
   </article>
 }
 

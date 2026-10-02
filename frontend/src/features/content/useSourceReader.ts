@@ -44,7 +44,7 @@ export function useSourceReader({ contentApi, realmId, sourceId, sources, source
     return () => controller.abort()
   }, [contentApi, realmId, sourceId, versionId, onError])
 
-  const reading = loaded && loaded.key === key ? loaded : null
+  const reading = loaded?.key === key ? loaded : null
   let status: SourceReaderStatus = 'loading'
   if (!sourceId) status = 'idle'
   else if (reading) status = 'ready'

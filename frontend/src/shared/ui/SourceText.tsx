@@ -176,8 +176,8 @@ function nestItems(entries: { item: ListItem; children: ReactNode[] }[]): ListNo
 function renderListLevel(nodes: ListNode[], className?: string): ReactNode[] {
   const groups: ListNode[][] = []
   for (const node of nodes) {
-    const group = groups[groups.length - 1]
-    if (group && group[0].item.ordered === node.item.ordered) group.push(node)
+    const group = groups.at(-1)
+    if (group?.[0].item.ordered === node.item.ordered) group.push(node)
     else groups.push([node])
   }
   return groups.map((group) => {
