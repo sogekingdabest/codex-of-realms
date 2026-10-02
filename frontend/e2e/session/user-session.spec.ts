@@ -133,7 +133,9 @@ async function uploadSource(persona: Persona, file: string, title: string, visib
   const form = page.getByRole('button', { name: 'Subir y procesar' })
   if (!(await form.isVisible())) await persona.click(page.getByText('Añadir conocimiento', { exact: true }))
   await persona.fill(page.getByLabel('Título', { exact: true }), title)
-  await persona.select(page.getByRole('combobox', { name: 'Visibilidad', exact: true }), visibility)
+  // The form keeps the last choice; a person changes it only when it differs.
+  const choice = page.getByRole('combobox', { name: 'Visibilidad', exact: true })
+  if (await choice.evaluate((select: HTMLSelectElement) => select.selectedOptions[0]?.text) !== visibility) await persona.select(choice, visibility)
   await persona.upload(page.getByLabel('Archivo Markdown o TXT'), lore + file)
   await persona.click(page.getByRole('button', { name: 'Subir y procesar' }))
   // The library lists a source only once it is published; the job panel shows it meanwhile.
@@ -180,14 +182,17 @@ async function ask(persona: Persona, question: string, notes: string[]) {
   await persona.click(page.getByRole('button', { name: 'Consultar', exact: true }))
   await expect(page.getByRole('button', { name: 'Consultar', exact: true })).toBeEnabled({ timeout: 300_000 })
   const seconds = Math.round((Date.now() - started) / 100) / 10
-  // Whether the result starts inside the viewport the persona is looking at.
-  // The first heading of the result must be fully on screen, not just its top edge.
-  const top = await page.locator('.answer-region h3, .answer-region p').first()
-    .evaluate((element) => ({ bottom: Math.round(element.getBoundingClientRect().bottom), height: window.innerHeight }))
+  // Whether the persona sees the result without scrolling: the first passage, or the whole notice
+  // when there is no answer, must be fully on screen.
+  const lead = await page.locator('.answer-region blockquote, .answer-region article.insufficient').first()
+    .evaluate((element) => {
+      const box = element.getBoundingClientRect()
+      return { top: Math.round(box.top), bottom: Math.round(box.bottom), height: window.innerHeight }
+    })
     .catch(() => null)
-  const where = top && top.bottom <= top.height
-    ? 'visible sin desplazarse'
-    : `fuera de la pantalla: empieza en ${top?.bottom ?? '?'} px con una ventana de ${top?.height ?? '?'} px`
+  const where = lead && lead.top >= 0 && lead.bottom <= lead.height
+    ? 'a la vista'
+    : `cortado o fuera de la pantalla: de ${lead?.top ?? '?'} a ${lead?.bottom ?? '?'} px con una ventana de ${lead?.height ?? '?'} px`
   const toast = page.getByRole('alert')
   if (await toast.count()) {
     const text = (await toast.first().innerText()).replaceAll('\n', ' · ').replace('×', '').trim()
@@ -232,6 +237,8 @@ test('sesión simulada: dirección y dos jugadores', async ({ browser, request }
     for (const [file, title] of publicSources) await uploadSource(ines, file, title, 'Público')
     await shot(ines, 'fuentes-procesando')
     notes.push('Mientras procesa: ' + (await page.locator('main').innerText()).replaceAll('\n', ' · ').slice(0, 240))
+    const pending = page.locator('.source-pending')
+    notes.push('Índice mientras procesa: ' + (await pending.count() ? await pending.innerText() : 'sin aviso'))
     await waitForProcessing(ines, 3)
     notes.push(`Tres fuentes públicas publicadas ${Math.round((Date.now() - uploaded) / 1000)} s después de empezar a subirlas (primer uso del modelo de embeddings).`)
     await shot(ines, 'fuentes-publicadas')
@@ -342,6 +349,8 @@ test('sesión simulada: dirección y dos jugadores', async ({ browser, request }
   await task('T2', ivo, 'Buscar un documento por su nombre y leerlo sin consultar a la IA', async (notes) => {
     const page = ivo.page
     await section(ivo, 'Fuentes')
+    const headerEnd = await page.locator('.mobile-index-toggle').evaluate((element) => Math.round(element.getBoundingClientRect().bottom + window.scrollY))
+    notes.push(`En móvil, la cabecera termina con «Abrir índice» a ${headerEnd} px de la parte superior de la página.`)
     await openIndex(ivo)
     await ivo.fill(page.getByLabel('Buscar fuentes'), 'rutas')
     notes.push(`Resultados al buscar «rutas»: ${(await page.locator('.source-search small').innerText())}`)
@@ -349,6 +358,9 @@ test('sesión simulada: dirección y dos jugadores', async ({ browser, request }
     await ivo.click(page.getByRole('link', { name: 'Leer Rutas y vida cívica de Lumbrevela' }))
     const reader = page.getByRole('article', { name: 'Fuente: Rutas y vida cívica de Lumbrevela' })
     await expect(reader.getByRole('heading', { name: 'La Baliza de Sal' })).toBeVisible()
+    const text = await reader.locator('.source-reader-content p').first()
+      .evaluate((element) => ({ top: Math.round(element.getBoundingClientRect().top), height: window.innerHeight }))
+    notes.push(`Al abrirlo, el primer párrafo empieza a ${text.top} px en una ventana de ${text.height} px.`)
     await shot(ivo, 't2-lectura')
     await ivo.click(reader.getByRole('button', { name: 'Cerrar fuente' }))
   })
