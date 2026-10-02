@@ -45,7 +45,7 @@ For an existing Keycloak realm, run `./scripts/configure-keycloak-realm.ps1` aft
 | Keycloak | http://localhost:8180 |
 | Ollama | http://localhost:11434 |
 
-Register through the application, verify your email in Mailpit and finish setting your password. Owners share the application URL with invitees; creating an invitation sends no email. Follow the [demo guide](DEMO.md) to prepare a campaign.
+Register through the application, verify your email in Mailpit and finish setting your password. Owners share the application URL with invitees; creating an invitation sends no email. To start with a prepared campaign, run `./scripts/load-demo-campaign.ps1`; the [demo guide](DEMO.md) describes what it creates.
 
 If you change an authentication address, update the issuer, browser URL, Keycloak redirects and Nginx CSP together. Changing just the published port will leave them inconsistent.
 

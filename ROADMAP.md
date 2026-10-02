@@ -6,7 +6,7 @@ The next release is a small beta for role-playing groups. The core workflow is i
 
 - [ ] Review and commit the delivery, then install it from a clean clone.
 - [ ] Run backend, frontend, browser and backup/restore checks on the same release candidate.
-- [ ] Prepare an example campaign that a newcomer can explore immediately.
+- [x] Prepare an example campaign that a newcomer can explore immediately: `scripts/load-demo-campaign.ps1`.
 - [ ] Choose between a documented local installation and a hosted beta by invitation. Hosting needs HTTPS, identity and email configuration, private service networks and resource limits.
 - [ ] Run the [user session](docs/product/USER_VALIDATION.md) with a Game Master and two players, then fix the tasks that repeatedly need help.
 - [ ] Publish a tagged beta with setup instructions, known limitations and a short demonstration.

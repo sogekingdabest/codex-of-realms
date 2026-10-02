@@ -8,6 +8,7 @@
 - Source reading and title/filename search, multiple universes and atlas navigation.
 - Campaign archive layout with keyboard and mobile reading support.
 - Revised documentation, MIT license and contribution/security guides.
+- A demo loader that creates El Meridiano de Ceniza with three accounts, seven sources, a spoiler group and an atlas, then checks what each account sees.
 
 ### Verification recorded on 20 September 2026
 
