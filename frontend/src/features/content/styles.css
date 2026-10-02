@@ -34,6 +34,12 @@ input[type=file]::file-selector-button { padding: 5px; color: var(--ink); backgr
 .source-recovery label { display: grid; gap: 8px; max-width: 100%; }
 .source-recovery input { max-width: 100%; }
 .source-job progress { width: 100%; }
+.source-pending { margin: 12px 22px 4px; padding: 10px 12px; border-left: 2px solid var(--accent); background: var(--panel-strong); font-size: 12px; line-height: 1.5; }
+.pending-sources { display: grid; gap: 14px; margin: 20px 0 0; padding: 0; list-style: none; }
+.pending-sources li { display: grid; gap: 4px; }
+.pending-sources span { color: var(--ink); font-weight: 500; }
+.pending-sources small { color: var(--muted); font-size: 12px; }
+.pending-sources progress { width: 100%; height: 6px; }
 .source-reader { max-width: 1080px; padding: 40px clamp(24px, 4vw, 64px) 70px; margin: 0 auto; }
 .source-reader-heading { display: flex; align-items: start; justify-content: space-between; gap: 24px; padding-bottom: 26px; margin-bottom: 30px; border-bottom: 1px solid var(--ink); }
 .source-reader-heading h2 { font: 42px/1.2 var(--reading-font); letter-spacing: -.8px; margin: 12px 0; }

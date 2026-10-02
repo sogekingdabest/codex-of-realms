@@ -1,4 +1,5 @@
 import type { SourceDocumentView, SourceJobView } from './model'
+import { unfinished } from './pendingSources'
 
 const stateLabels = { UPLOADING: 'Guardando archivo', QUEUED: 'En cola', RUNNING: 'Procesando', SUCCEEDED: 'Completado', FAILED: 'Necesita atención', CANCELLED: 'Cancelado' }
 const errorLabels: Record<string, string> = {
@@ -13,6 +14,15 @@ const errorLabels: Record<string, string> = {
   SOURCE_UNAVAILABLE: 'La operación ya no está disponible.',
 }
 
+/** The pending documents with their state, for the reading column while the library is still empty. */
+export function PendingSources({ pending }: Readonly<{ pending: SourceJobView[] }>) {
+  return <ul className="pending-sources">{pending.map((job) => <li key={job.id}>
+    <span>{job.title}</span>
+    <small>{stateLabels[job.state]}{job.state === 'RUNNING' && ` · ${job.completedChunks}/${job.totalChunks} fragmentos`}</small>
+    {job.state === 'RUNNING' && <progress aria-hidden="true" max={job.totalChunks || 1} value={job.completedChunks} />}
+  </li>)}</ul>
+}
+
 export function SourceJobsPanel({ jobs, sources, busy, onRetry, onRecover }: Readonly<{
   jobs: SourceJobView[]
   sources: SourceDocumentView[]
@@ -21,7 +31,7 @@ export function SourceJobsPanel({ jobs, sources, busy, onRetry, onRecover }: Rea
   onRecover: (documentId: string, policyId: string, file?: File) => Promise<boolean>
 }>) {
   if (jobs.length === 0) return null
-  const finished = (job: SourceJobView) => job.state === 'SUCCEEDED' || job.state === 'CANCELLED'
+  const finished = (job: SourceJobView) => !unfinished(job)
   function renderJob(job: SourceJobView) {
       const published = sources.find((source) => source.id === job.documentId)
       return <article className="source-job" key={job.id}>

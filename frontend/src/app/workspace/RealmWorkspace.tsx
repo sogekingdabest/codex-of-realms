@@ -4,6 +4,8 @@ import { CatalogueWorkspace } from '../../features/lore'
 import { QuestionPanel } from '../../features/qa'
 import {
   EvidenceDialog,
+  PendingSources,
+  pendingSources,
   SourceReader,
   SourcesPanel,
   useSourceReader,
@@ -128,11 +130,19 @@ export function RealmWorkspace({ api, realm, route, header, banner }: Readonly<{
         <Link className="citation-link" href={sourcesPath}>Volver a las fuentes</Link>
       </section>
     } else {
+      const pending = workspace.canEdit ? pendingSources(workspace.jobs, workspace.sources) : []
       main = <section className="archive-reading-empty">
         <p className="eyebrow">Biblioteca del universo</p>
         <h2>Las voces de {realm.name}</h2>
         <p>Crónicas, notas y documentos que dan forma a tu mundo.</p>
-        <div className="reading-prompt"><h3>{workspace.sources.length > 0 ? 'Abre una fuente del índice' : 'El archivo empieza aquí'}</h3><p>{workspace.sources.length > 0 ? 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' : workspace.canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.'}</p></div>
+        {workspace.sources.length === 0 && pending.length > 0
+          ? <div className="reading-prompt">
+            {pending.some((job) => job.state !== 'FAILED')
+              ? <><h3>Tus primeras fuentes se están procesando</h3><p>Aparecerán en el índice en cuanto estén listas. Si el modelo se está cargando, la primera puede tardar un par de minutos.</p></>
+              : <><h3>Una fuente necesita atención</h3><p>Revisa «Procesamiento de fuentes» en el índice para reintentarla o cargarla de nuevo.</p></>}
+            <PendingSources pending={pending} />
+          </div>
+          : <div className="reading-prompt"><h3>{workspace.sources.length > 0 ? 'Abre una fuente del índice' : 'El archivo empieza aquí'}</h3><p>{workspace.sources.length > 0 ? 'Lee su contenido original y vuelve a él cuando necesites contrastar una afirmación.' : workspace.canEdit ? 'Añade un documento Markdown o TXT desde el índice para comenzar.' : 'Todavía no hay fuentes disponibles para ti.'}</p></div>}
       </section>
     }
     return layout(<div className="source-workspace" aria-busy={!workspace.sourcesLoaded}>{main}</div>, index, sourceId)
