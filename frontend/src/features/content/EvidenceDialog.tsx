@@ -41,7 +41,7 @@ export function SourceReader({ evidence, published, audience = playerAudience, m
       <div>
         <p className="eyebrow">Documento original</p>
         <h2 ref={heading} tabIndex={-1}>{source.title}</h2>
-        {editor && <p className="muted">{source.originalFilename}{published && ` · v${published.versionNumber} · ${published.chunkCount} fragmentos`}</p>}
+        {editor && <p className="muted">{source.originalFilename}{published && ` · v${published.versionNumber} · ${published.chunkCount} ${published.chunkCount === 1 ? 'fragmento' : 'fragmentos'}`}</p>}
         {published?.visibility === 'GM_ONLY' && <VisibilityMark visibility="GM_ONLY" viewer={audience.viewer} />}
       </div>
       <button className="quiet-button" type="button" onClick={onClose}>Cerrar fuente</button>

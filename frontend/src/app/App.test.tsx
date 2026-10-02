@@ -429,7 +429,7 @@ describe('App', () => {
     fireEvent.change(screen.getByLabelText('Archivo Markdown o TXT'), {
       target: { files: [new File(['contenido'], 'nueva.md', { type: 'text/markdown' })] },
     })
-    fireEvent.submit(screen.getByRole('button', { name: 'Subir y procesar' }).closest('form')!)
+    fireEvent.submit(screen.getByRole('button', { name: 'Subir y procesar como Público' }).closest('form')!)
     await screen.findByText('Nueva fuente')
     fireEvent.click(screen.getByText('Gestionar'))
     fireEvent.click(screen.getByRole('button', { name: 'Eliminar' }))
@@ -448,10 +448,24 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'Tus primeras fuentes se están procesando' })).toBeInTheDocument()
     expect(screen.getByText('Procesando 2 documentos nuevos; aparecerán en la lista al terminar.')).toBeInTheDocument()
-    expect(screen.getByText('Procesando · 1/4 fragmentos')).toBeInTheDocument()
-    expect(screen.getByText('En cola')).toBeInTheDocument()
+    const reading = screen.getByRole('main')
+    expect(within(reading).getByText('Procesando · 1/4 fragmentos')).toBeInTheDocument()
+    expect(within(reading).getByText('En cola · 0/2 fragmentos')).toBeInTheDocument()
     expect(screen.queryByText('Todavía no hay fuentes visibles en este universo.')).not.toBeInTheDocument()
     expect(screen.queryByText('El archivo empieza aquí')).not.toBeInTheDocument()
+  })
+
+  it('informa de una sustitución junto a la fuente que sustituye', async () => {
+    const api = testApi()
+    vi.mocked(api.listSourceJobs).mockResolvedValue([
+      { ...sourceJob, documentId: 'source-1', versionId: 'version-3', versionNumber: 3, state: 'FAILED', completedChunks: 1, totalChunks: 4, attempts: 3 },
+    ])
+    render(<App api={api} session={session} />)
+
+    const entry = (await screen.findByRole('link', { name: 'Leer Crónica de Lumbrevela' })).closest('article')!
+    expect(await within(entry).findByText('Versión 3 · Necesita atención · 1/4 fragmentos · 3 intentos')).toBeInTheDocument()
+    expect(within(entry).getByText('Revísala en «Procesamiento de fuentes». La versión 2 sigue publicada.')).toBeInTheDocument()
+    for (const reprocess of screen.getAllByRole('button', { name: 'Reprocesar' })) expect(reprocess).toHaveClass('quiet-button')
   })
 
   it('avisa de una primera fuente que necesita atención', async () => {
@@ -462,6 +476,29 @@ describe('App', () => {
 
     expect(await screen.findByRole('heading', { name: 'Una fuente necesita atención' })).toBeInTheDocument()
     expect(screen.getByText('1 documento nuevo necesita atención.')).toBeInTheDocument()
+  })
+
+  it('mantiene abierto el formulario de subida cuando se publica la primera fuente', async () => {
+    const api = testApi()
+    const [baseSource] = await api.listSources('realm-1')
+    if (!baseSource) throw new Error('Falta la fuente de prueba')
+    vi.mocked(api.listSources).mockResolvedValue([])
+    vi.mocked(api.uploadSource).mockImplementation(async () => {
+      vi.mocked(api.listSources).mockResolvedValue([{ ...baseSource, id: 'first', title: 'Primera fuente' }])
+      return { documentId: 'first', versionId: 'v1', job: sourceJob }
+    })
+    render(<App api={api} session={session} />)
+    const form = (await screen.findByText('Añadir conocimiento')).closest('details')!
+    await waitFor(() => expect(form).toHaveAttribute('open'))
+
+    fireEvent.change(screen.getByLabelText('Título'), { target: { value: 'Primera fuente' } })
+    fireEvent.change(screen.getByLabelText('Archivo Markdown o TXT'), {
+      target: { files: [new File(['contenido'], 'primera.md', { type: 'text/markdown' })] },
+    })
+    fireEvent.submit(screen.getByRole('button', { name: 'Subir y procesar como Público' }).closest('form')!)
+
+    expect(await screen.findByRole('link', { name: 'Leer Primera fuente' })).toBeInTheDocument()
+    expect(form).toHaveAttribute('open')
   })
 
   it('presenta y permite cerrar errores de operación', async () => {

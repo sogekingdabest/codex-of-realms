@@ -54,7 +54,7 @@ test('source reader keyboard navigation and mobile layout', async ({ browser, re
   const owner = await register(browser, request, 'reader-' + Date.now() + '@example.local')
   await owner.getByLabel('Nombre del universo').fill('El Meridiano de Ceniza')
   await owner.getByRole('button', { name: 'Crear universo' }).click()
-  await owner.getByRole('combobox', { name: 'Visibilidad', exact: true }).selectOption({ label: 'Público · Pública' })
+  await owner.getByRole('combobox', { name: 'Visibilidad', exact: true }).selectOption({ label: 'Público' })
   await owner.getByLabel('Título', { exact: true }).fill('El Meridiano y Lumbrevela')
   await owner.getByLabel('Archivo Markdown o TXT').setInputFiles('../demo/lore/public/01-el-meridiano-y-lumbrevela.md')
   await owner.getByRole('button', { name: 'Subir y procesar' }).click()
@@ -101,7 +101,7 @@ test('verified owner and two players: realms, library, invitation, recovery and 
   await request.post('http://localhost:21434/test/failures', { data: { count: 1 } })
   await owner.getByRole('link', { name: 'Fuentes', exact: true }).click()
   const literal = 'Nara no entregó las 37 monedas el 2 de mayo de 2024. Áurea conserva 1.250 € y una brújula 🧭.'
-  await owner.getByRole('combobox', { name: 'Visibilidad', exact: true }).selectOption({ label: 'Público · Pública' })
+  await owner.getByRole('combobox', { name: 'Visibilidad', exact: true }).selectOption({ label: 'Público' })
   await owner.getByLabel('Título', { exact: true }).fill('Crónica verificable')
   await owner.getByLabel('Archivo Markdown o TXT').setInputFiles({ name: 'cronica.md', mimeType: 'text/markdown', buffer: Buffer.from('# Nara\n\n' + literal) })
   await owner.getByRole('button', { name: 'Subir y procesar' }).click()

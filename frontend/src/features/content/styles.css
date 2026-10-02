@@ -35,6 +35,8 @@ input[type=file]::file-selector-button { padding: 5px; color: var(--ink); backgr
 .source-recovery input { max-width: 100%; }
 .source-job progress { width: 100%; }
 .source-pending { margin: 12px 22px 4px; padding: 10px 12px; border-left: 2px solid var(--accent); background: var(--panel-strong); font-size: 12px; line-height: 1.5; }
+.source-replacement { display: grid; gap: 2px; margin: 8px 0 0; padding-left: 8px; border-left: 2px solid var(--accent); color: var(--muted); font-size: 11px; }
+.source-replacement span:first-child { color: var(--ink); }
 .pending-sources { display: grid; gap: 14px; margin: 20px 0 0; padding: 0; list-style: none; }
 .pending-sources li { display: grid; gap: 4px; }
 .pending-sources span { color: var(--ink); font-weight: 500; }
