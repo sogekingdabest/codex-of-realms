@@ -23,8 +23,13 @@ export function usePathname() {
   return useSyncExternalStore(subscribe, currentPathname)
 }
 
-export function navigate(path: string, { replace = false }: { replace?: boolean } = {}) {
-  if (path === currentPathname()) return
+/**
+ * With `from`, the change only happens while the address is still `from`. A correction computed
+ * for an older address then cannot undo a link the user followed in the meantime.
+ */
+export function navigate(path: string, { replace = false, from }: { replace?: boolean; from?: string } = {}) {
+  const current = currentPathname()
+  if (path === current || (from !== undefined && from !== current)) return
   if (replace) window.history.replaceState(null, '', path)
   else window.history.pushState(null, '', path)
   for (const listener of listeners) listener()

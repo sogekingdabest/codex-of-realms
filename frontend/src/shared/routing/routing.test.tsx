@@ -46,4 +46,13 @@ describe('routing', () => {
     act(() => navigate('/siguiente'))
     expect(window.history).toHaveLength(length + 1)
   })
+
+  it('no deshace un enlace seguido después de calcular una corrección', () => {
+    act(() => navigate('/universos/a/consultas'))
+    act(() => navigate('/universos/a/fuentes', { replace: true, from: '/' }))
+    expect(window.location.pathname).toBe('/universos/a/consultas')
+
+    act(() => navigate('/universos/a/fuentes', { replace: true, from: '/universos/a/consultas' }))
+    expect(window.location.pathname).toBe('/universos/a/fuentes')
+  })
 })
