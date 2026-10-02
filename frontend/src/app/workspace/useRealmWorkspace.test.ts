@@ -249,6 +249,22 @@ describe('workspace: recuperación y mutaciones', () => {
     expect(api.content.listSourceJobs).toHaveBeenCalledTimes(1)
   })
 
+  it('conserva la visibilidad elegida para la siguiente subida', async () => {
+    const api = workspaceApi()
+    vi.mocked(api.realm.listPolicies).mockResolvedValue([
+      { id: 'gm', realmId: 'realm-1', classification: 'GM_ONLY', name: 'Solo dirección', description: null },
+      { id: 'public', realmId: 'realm-1', classification: 'PUBLIC', name: 'Público', description: null },
+    ])
+    const { result } = await mount(api)
+    expect(result.current.administration.selectedPolicyId).toBe('gm')
+
+    act(() => result.current.administration.setSelectedPolicyId('public'))
+    await act(async () => { expect(await result.current.uploadSource('Crónica', new File(['texto'], 'c.md'))).toBe(true) })
+
+    expect(api.content.uploadSource).toHaveBeenCalledWith('realm-1', 'Crónica', 'public', expect.any(File))
+    expect(result.current.administration.selectedPolicyId).toBe('public')
+  })
+
   it('no envía una subida sin política seleccionada', async () => {
     const api = workspaceApi()
     vi.mocked(api.realm.listPolicies).mockResolvedValue([])

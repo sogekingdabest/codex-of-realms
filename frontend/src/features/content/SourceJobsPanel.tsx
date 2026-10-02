@@ -1,7 +1,6 @@
 import type { SourceDocumentView, SourceJobView } from './model'
-import { unfinished } from './pendingSources'
+import { jobProgress, stateLabels, unfinished } from './sourceJobs'
 
-const stateLabels = { UPLOADING: 'Guardando archivo', QUEUED: 'En cola', RUNNING: 'Procesando', SUCCEEDED: 'Completado', FAILED: 'Necesita atención', CANCELLED: 'Cancelado' }
 const errorLabels: Record<string, string> = {
   FILE_UNAVAILABLE: 'Falta una copia íntegra del archivo. Cárgalo nuevamente.',
   MODEL_UNAVAILABLE: 'El modelo no respondió. Puedes reintentar el procesamiento.',
@@ -18,7 +17,7 @@ const errorLabels: Record<string, string> = {
 export function PendingSources({ pending }: Readonly<{ pending: SourceJobView[] }>) {
   return <ul className="pending-sources">{pending.map((job) => <li key={job.id}>
     <span>{job.title}</span>
-    <small>{stateLabels[job.state]}{job.state === 'RUNNING' && ` · ${job.completedChunks}/${job.totalChunks} fragmentos`}</small>
+    <small>{jobProgress(job)}</small>
     {job.state === 'RUNNING' && <progress aria-hidden="true" max={job.totalChunks || 1} value={job.completedChunks} />}
   </li>)}</ul>
 }
@@ -36,7 +35,7 @@ export function SourceJobsPanel({ jobs, sources, busy, onRetry, onRecover }: Rea
       const published = sources.find((source) => source.id === job.documentId)
       return <article className="source-job" key={job.id}>
         <h4>{job.title} · versión {job.versionNumber}</h4>
-        <p>{stateLabels[job.state]} · {job.completedChunks}/{job.totalChunks} fragmentos · {job.attempts} intentos</p>
+        <p>{jobProgress(job)}</p>
         {job.state === 'RUNNING' && <progress aria-label={`Progreso de ${job.title}`} max={job.totalChunks || 1} value={job.completedChunks} />}
         {published && published.versionId !== job.versionId && <p className="muted">La versión {published.versionNumber} sigue publicada y disponible para consultas.</p>}
         {job.errorCode && <p>{errorLabels[job.errorCode] ?? 'La operación necesita revisión.'}</p>}
@@ -65,7 +64,7 @@ export function RecoveryActions({ documentId, policyId, title, busy, onRecover }
   onRecover: (documentId: string, policyId: string, file?: File) => Promise<boolean>
 }>) {
   return <div className="source-recovery">
-    <button type="button" disabled={busy} onClick={() => void onRecover(documentId, policyId)}>Reprocesar</button>
+    <button type="button" className="quiet-button" disabled={busy} onClick={() => void onRecover(documentId, policyId)}>Reprocesar</button>
     <label><span>Reemplazar archivo de {title}</span><input type="file" accept=".md,.txt,text/markdown,text/plain" disabled={busy}
       onChange={(event) => { const file = event.target.files?.[0]; if (file) void onRecover(documentId, policyId, file); event.target.value = '' }} /></label>
   </div>

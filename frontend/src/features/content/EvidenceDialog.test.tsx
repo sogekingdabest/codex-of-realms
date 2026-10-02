@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, within } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 
+import { sourceDocument } from '../../test/contentApi'
 import { EvidenceDialog, SourceReader } from './EvidenceDialog'
 
 const content = [
@@ -77,6 +78,15 @@ describe('EvidenceDialog', () => {
 })
 
 describe('SourceReader', () => {
+  it('cuenta los fragmentos en singular y en plural para la dirección', () => {
+    const editor = { viewer: 'editor' as const, revealedTo: () => [], policyName: () => undefined }
+    const { rerender } = render(<SourceReader evidence={{ source }} published={{ ...sourceDocument, chunkCount: 1 }} audience={editor} onClose={vi.fn()} />)
+    expect(screen.getByText('cronica.md · v1 · 1 fragmento')).toBeInTheDocument()
+
+    rerender(<SourceReader evidence={{ source }} published={{ ...sourceDocument, chunkCount: 3 }} audience={editor} onClose={vi.fn()} />)
+    expect(screen.getByText('cronica.md · v1 · 3 fragmentos')).toBeInTheDocument()
+  })
+
   it('lee Markdown formateado y un TXT sin interpretarlo', () => {
     const { rerender } = render(<SourceReader evidence={{ source }} onClose={vi.fn()} />)
     const reader = screen.getByRole('region', { name: 'Contenido de la fuente' })

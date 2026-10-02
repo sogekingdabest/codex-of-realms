@@ -149,7 +149,6 @@ export function useRealmWorkspace({ api, realm, processingVisible = true }: Read
       )
       setJobsRevision((value) => value + 1)
       showExclusions(submission.excludedSentences)
-      administration.setSelectedPolicyId(administration.policies[0]?.id ?? '')
       return true
     } catch (reason) {
       reportError(reason)

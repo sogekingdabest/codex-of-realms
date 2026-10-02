@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { SourceEvidence } from '../content'
+import { visibilityOptionLabel } from '../../shared/lib/visibility'
 import type { AccessPolicyView } from '../realm'
 
 export function PolicySelect({ policies, value, onChange }: Readonly<{
@@ -11,7 +12,7 @@ export function PolicySelect({ policies, value, onChange }: Readonly<{
     <label>
       <span>Visibilidad de la afirmación</span>
       <select required value={value} onChange={(event) => onChange(event.target.value)}>
-        {policies.map((policy) => <option key={policy.id} value={policy.id}>{policy.name}</option>)}
+        {policies.map((policy) => <option key={policy.id} value={policy.id}>{visibilityOptionLabel(policy)}</option>)}
       </select>
     </label>
   )
