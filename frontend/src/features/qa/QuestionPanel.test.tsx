@@ -91,6 +91,19 @@ describe('QuestionPanel', () => {
     expect(scrollIntoView.mock.contexts[0]).toBe(screen.getByRole('article'))
   })
 
+  it('desplaza el resultado si el primer pasaje queda cortado aunque se vea el encabezado', () => {
+    const scrollIntoView = layoutAt(window.innerHeight - 60)
+    vi.mocked(Element.prototype.getBoundingClientRect).mockImplementation(function (this: Element) {
+      return this.tagName === 'BLOCKQUOTE' ? new DOMRect(0, window.innerHeight - 30, 300, 120) : new DOMRect(0, window.innerHeight - 60, 300, 20)
+    })
+    const { rerender } = render(panel(false))
+
+    ask(rerender, answered)
+
+    expect(screen.getByRole('heading', { name: 'Fragmentos de las fuentes' })).toHaveFocus()
+    expect(scrollIntoView).toHaveBeenCalledExactlyOnceWith({ block: 'start' })
+  })
+
   it('enfoca un resultado sin respuesta sin mover la página si ya se ve', () => {
     const scrollIntoView = layoutAt(400)
     const { rerender } = render(panel(false))

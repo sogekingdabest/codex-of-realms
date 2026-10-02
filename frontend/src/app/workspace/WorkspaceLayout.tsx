@@ -1,8 +1,11 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 
 import type { RealmSummary } from '../../features/realm'
 import { Link } from '../../shared/routing'
 import { canOpenSection, routePath, sectionLabels, sectionRoute, type WorkspaceSection } from '../routes'
+
+/** Matches the single-column layout in shared/styles/responsive.css. */
+const compactLayout = '(max-width: 640px)'
 
 /**
  * The workspace zones: the sidebar holds the realm header and, for browsable sections, an index;
@@ -17,13 +20,18 @@ export function WorkspaceLayout({ header, index, selection = null, location, ban
   banner?: ReactNode
   children: ReactNode
 }>) {
+  const main = useRef<HTMLElement>(null)
+  useEffect(() => {
+    // On a phone the realm header and the index sit above the content: bring what was opened to the top.
+    if (selection !== null && window.matchMedia?.(compactLayout).matches) main.current?.scrollIntoView?.({ block: 'start' })
+  }, [selection])
   return (
     <div className="workspace has-realm">
       <aside className="archive-sidebar" aria-label="Índice del archivo">
         {header}
         {index && <FoldingIndex selection={selection}>{index}</FoldingIndex>}
       </aside>
-      <main id="workspace-content" className="workspace-content">
+      <main ref={main} id="workspace-content" className="workspace-content">
         {banner}
         <div className="workspace-location">{location}</div>
         {children}

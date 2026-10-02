@@ -85,9 +85,9 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
 }
 
 /**
- * Moves focus to each new result and, when its heading is off screen, scrolls to the result:
- * on a phone it arrives below the form. Someone already writing elsewhere keeps the cursor, and the
- * live region still announces the result.
+ * Moves focus to each new result and, unless its heading and first passage (or the whole notice) are
+ * already on screen, scrolls the result to the top: on a phone it arrives below the form. Someone
+ * already writing elsewhere keeps the cursor, and the live region still announces the result.
  */
 function useResultReveal(answer: LoreAnswer | null, question: RefObject<HTMLTextAreaElement | null>, submitted: RefObject<string>) {
   const heading = useRef<HTMLHeadingElement>(null)
@@ -98,8 +98,11 @@ function useResultReveal(answer: LoreAnswer | null, question: RefObject<HTMLText
     const target = heading.current
     if (!target || isWriting(document.activeElement, question.current, submitted.current)) return
     target.focus({ preventScroll: true })
-    const { top, bottom } = target.getBoundingClientRect()
-    if (top < 0 || bottom > window.innerHeight) target.closest('article')?.scrollIntoView?.({ block: 'start' })
+    const result = target.closest('article')
+    const lead = result?.querySelector('blockquote') ?? result
+    if (target.getBoundingClientRect().top < 0 || (lead?.getBoundingClientRect().bottom ?? 0) > window.innerHeight) {
+      result?.scrollIntoView?.({ block: 'start' })
+    }
   }, [answer, question, submitted])
   return heading
 }

@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, onTestFinished, vi } from 'vitest'
 
 import { App } from './App'
 import type { LoreAnswer } from '../features/qa'
@@ -242,6 +242,8 @@ describe('App', () => {
     expect(api.listPolicies).not.toHaveBeenCalled()
     expect(api.listMemberships).not.toHaveBeenCalled()
     expect(screen.queryByRole('link', { name: 'Personas y permisos' })).not.toBeInTheDocument()
+    // A player finds the new realm button inside the realm switcher, not beside it.
+    expect(screen.getByRole('button', { name: 'Nuevo universo' }).closest('details')).toHaveClass('realm-switcher')
     fireEvent.click(screen.getByRole('link', { name: 'Consultas' }))
     fireEvent.change(screen.getByLabelText('¿Qué quieres saber?'), { target: { value: '¿Qué deuda conserva la Aguja?' } })
     fireEvent.click(screen.getByRole('button', { name: 'Consultar' }))
@@ -633,10 +635,22 @@ describe('App: direcciones', () => {
   it('pliega el índice en móvil al abrir una ficha y lo recupera al volver a la lista', async () => {
     const api = testApi()
     vi.mocked(api.listLoreEntities).mockResolvedValue([entity('aguja', 'La Aguja')])
+    vi.stubGlobal('matchMedia', vi.fn().mockReturnValue({ matches: true }))
+    const scrollIntoView = vi.fn()
+    Element.prototype.scrollIntoView = scrollIntoView
+    onTestFinished(() => {
+      vi.unstubAllGlobals()
+      Reflect.deleteProperty(Element.prototype, 'scrollIntoView')
+    })
     window.history.replaceState(null, '', '/universos/realm-1/atlas')
     render(<App api={api} session={session} />)
+    // The owner keeps the new realm button in sight.
+    expect((await screen.findByRole('button', { name: 'Nuevo universo' })).closest('details')).toBeNull()
+    expect(scrollIntoView).not.toHaveBeenCalled()
 
     fireEvent.click(await screen.findByRole('link', { name: 'Abrir ficha de La Aguja' }))
+    // On a phone the opened record moves to the top, past the realm header and the folded index.
+    expect(scrollIntoView.mock.contexts).toContain(document.getElementById('workspace-content'))
     expect(screen.getByRole('button', { name: 'Abrir índice' })).toHaveAttribute('aria-expanded', 'false')
     fireEvent.click(screen.getByRole('button', { name: 'Abrir índice' }))
     expect(screen.getByRole('button', { name: 'Cerrar índice' })).toHaveAttribute('aria-expanded', 'true')
