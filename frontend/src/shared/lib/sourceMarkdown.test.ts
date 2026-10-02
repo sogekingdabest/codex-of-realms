@@ -118,6 +118,30 @@ describe('parseSource', () => {
     expect(parseSource('', 'markdown')).toEqual([])
     expect(kinds(parseSource('---\ntitle: abierto', 'markdown'))).toEqual(['rule', 'paragraph'])
   })
+
+  it('reconoce filas separadoras de tabla con o sin bordes y alineación', () => {
+    for (const delimiter of ['|---|---|', '--- | ---', '| :-- | --: |', '|:-:|-|']) {
+      expect(kinds(parseSource(`a | b\n${delimiter}\n1 | 2`, 'markdown')), delimiter).toEqual(['table'])
+    }
+    for (const delimiter of ['|---||---|', '| - - |', '|', '| a |']) {
+      expect(kinds(parseSource(`a | b\n${delimiter}`, 'markdown')), delimiter).not.toContain('table')
+    }
+  })
+
+  it('lee una línea larga y hostil sin bloquear la página', () => {
+    // A single pattern for the whole delimiter row took seconds on this line.
+    const hostile = `a | b\n${' '.repeat(50_000)}|x`
+    const started = performance.now()
+    expect(kinds(parseSource(hostile, 'markdown'))).toEqual(['paragraph'])
+    expect(performance.now() - started).toBeLessThan(1000)
+  })
+
+  it('toma entera la marca de un bloque de código', () => {
+    const source = '````js\n```\nsigue dentro\n````'
+    const [code] = parseSource(source, 'markdown')
+    if (code.kind !== 'code') throw new Error('Se esperaba un bloque de código')
+    expect(source.slice(code.content.start, code.content.end)).toBe('```\nsigue dentro')
+  })
 })
 
 describe('parseInline', () => {

@@ -58,12 +58,13 @@ interface Line extends TextRange {
   readonly next: number
 }
 
-const FENCE = /^( {0,3})(`{3,}|~{3,})(.*)$/
+// The marker run is taken whole, so a failed match never retries shorter runs.
+const FENCE = /^( {0,3})(`{3,}(?!`)|~{3,}(?!~))(.*)$/
 const ATX = /^ {0,3}(#{1,6})(?=[ \t]|$)/
 const RULE = /^ {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$/
 const QUOTE = /^ {0,3}(?:>[ \t]?)+/
 const LIST = /^([ \t]*)([-*+]|\d{1,9}[.)])(?:[ \t]+|$)/
-const TABLE_DELIMITER = /^[ \t]*\|?[ \t]*:?-+:?[ \t]*(?:\|[ \t]*:?-+:?[ \t]*)*\|?[ \t]*$/
+const TABLE_DELIMITER_CELL = /^[ \t]*:?-+:?[ \t]*$/
 const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/
 const FRONT_MATTER_OPEN = /^---[ \t]*$/
 const FRONT_MATTER_CLOSE = /^(?:---|\.\.\.)[ \t]*$/
@@ -122,7 +123,7 @@ function parseMarkdown(source: string): SourceBlock[] {
       continue
     }
     const fence = FENCE.exec(content)
-    if (fence && !(fence[2][0] === '`' && fence[3].includes('`'))) {
+    if (fence && !(fence[2].startsWith('`') && fence[3].includes('`'))) {
       const marker = fence[2]
       let close = index + 1
       while (close < lines.length && !isFenceClose(text(close), marker)) close++
@@ -235,16 +236,23 @@ function tableCells(source: string, line: Line): InlineRun[][] {
     else if (source[position] === '|') edges.push(position)
   }
   const bounded = trimRange(source, line.start, line.end)
-  const leading = edges[0] === bounded.start
-  const trailing = edges.length > (leading ? 1 : 0) && edges[edges.length - 1] === bounded.end - 1
+  const [first] = edges
+  const last = edges.at(-1)
+  const leading = first === bounded.start
+  const trailing = last !== undefined && edges.length > (leading ? 1 : 0) && last === bounded.end - 1
   const inner = edges.slice(leading ? 1 : 0, trailing ? -1 : undefined)
-  const cuts = [leading ? edges[0] : line.start - 1, ...inner, trailing ? edges[edges.length - 1] : line.end]
+  const cuts = [leading ? first : line.start - 1, ...inner, trailing ? last : line.end]
   const cells: InlineRun[][] = []
   for (let position = 0; position + 1 < cuts.length; position++) {
     const cell = trimRange(source, cuts[position] + 1, cuts[position + 1])
     cells.push(parseInline(source, cell.start, cell.end))
   }
   return cells
+}
+
+function taskState(task: RegExpExecArray | null) {
+  if (!task) return undefined
+  return task[1] === ' ' ? 'open' : 'done'
 }
 
 function readList(source: string, lines: Line[], first: number, text: (index: number) => string, blocks: SourceBlock[]) {
@@ -272,7 +280,7 @@ function readList(source: string, lines: Line[], first: number, text: (index: nu
         depth: indents.length - 1,
         ordered,
         number: ordered ? Number.parseInt(item[2], 10) : 1,
-        task: task ? (task[1] === ' ' ? 'open' : 'done') : undefined,
+        task: taskState(task),
       })
       previousBlank = false
     } else if (isBlank(source, line)) {
@@ -312,7 +320,7 @@ function readParagraph(source: string, lines: Line[], first: number, text: (inde
         const range = trimRange(source, lines[first].start, lines[index - 1].end)
         blocks.push({
           kind: 'heading',
-          level: setext[1][0] === '=' ? 1 : 2,
+          level: setext[1].startsWith('=') ? 1 : 2,
           start: lines[first].start,
           end: lines[index].end,
           inline: parseInline(source, range.start, range.end),
@@ -340,11 +348,22 @@ function interruptsParagraph(content: string) {
 
 function isFenceClose(content: string, marker: string) {
   const close = /^ {0,3}(`{3,}|~{3,})[ \t]*$/.exec(content)
-  return close !== null && close[1][0] === marker[0] && close[1].length >= marker.length
+  return close !== null && close[1].startsWith(marker[0]) && close[1].length >= marker.length
 }
 
+/**
+ * Cells of dashes, optionally aligned with colons, between pipes. The row is checked cell by cell:
+ * one pattern for the whole row backtracked quadratically on long runs of spaces.
+ */
 function isTableDelimiter(content: string) {
-  return content.includes('|') && TABLE_DELIMITER.test(content)
+  if (!content.includes('|')) return false
+  let start = 0
+  let end = content.length
+  while (start < end && (content[start] === ' ' || content[start] === '\t')) start++
+  while (end > start && (content[end - 1] === ' ' || content[end - 1] === '\t')) end--
+  if (content[start] === '|') start++
+  if (end > start && content[end - 1] === '|') end--
+  return content.slice(start, end).split('|').every((cell) => TABLE_DELIMITER_CELL.test(cell))
 }
 
 function nextFilledLine(source: string, lines: Line[], from: number) {
@@ -437,14 +456,16 @@ export function parseInline(source: string, start: number, end: number, marks: M
 
 function parseEmphasis(source: string, position: number, end: number, character: string) {
   const length = runLength(source, position, end, character)
-  const sizes = character === '~' ? (length === 2 ? [2] : []) : length >= 2 ? [2, 1] : [1]
+  let sizes = length >= 2 ? [2, 1] : [1]
+  if (character === '~') sizes = length === 2 ? [2] : []
   if (character === '_' && position > 0 && WORD.test(source[position - 1])) return null
   for (const size of sizes) {
     const innerStart = position + size
     if (innerStart >= end || SPACE.test(source[innerStart])) continue
     const close = findEmphasisClose(source, innerStart, end, character, size)
     if (close > innerStart) {
-      const mark = character === '~' ? 'del' : size === 2 ? 'strong' : 'em'
+      const emphasis = size === 2 ? 'strong' : 'em'
+      const mark = character === '~' ? 'del' : emphasis
       return { innerStart, innerEnd: close, next: close + size, mark } as const
     }
   }
@@ -452,24 +473,30 @@ function parseEmphasis(source: string, position: number, end: number, character:
 }
 
 function findEmphasisClose(source: string, from: number, end: number, character: string, size: number) {
-  for (let position = from; position < end; position++) {
+  let position = from
+  while (position < end) {
     const current = source[position]
     if (current === '\\') {
-      position++
+      // An escaped character never closes emphasis.
+      position += 2
       continue
     }
     if (current === '`') {
+      // A code span is skipped whole, or only its opening run when it never closes.
       const length = runLength(source, position, end, '`')
       const close = findCodeClose(source, position + length, end, length)
-      position = close >= 0 ? close + length - 1 : position + length - 1
+      position = close >= 0 ? close + length : position + length
       continue
     }
-    if (current !== character) continue
+    if (current !== character) {
+      position++
+      continue
+    }
     const length = runLength(source, position, end, character)
     const rightFlanking = !SPACE.test(source[position - 1])
     const closesWord = character !== '_' || position + length >= end || !WORD.test(source[position + length])
     if (rightFlanking && closesWord && length >= size && !(size === 1 && length === 2)) return position + length - size
-    position += length - 1
+    position += length
   }
   return -1
 }
