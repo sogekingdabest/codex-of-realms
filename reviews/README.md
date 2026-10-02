@@ -4,7 +4,7 @@ Start with the most recent record for the area you want to inspect. Each report 
 
 | Date | Record | Checks covered |
 |---|---|---|
-| 1 October | [Simulated user session](2026-10-01-sesion-simulada.md) | Scripted Game Master and two players (one on mobile), real models, the seven session tasks, permission probes and a cold start |
+| 1 October | [Simulated user session](2026-10-01-sesion-simulada.md) | Scripted Game Master and two players (one on mobile), real models, the seven session tasks, permission probes and a cold start. Fixes recorded and the session repeated on 2 October |
 | 20 September | [Clean-install rehearsal](2026-09-20-ensayo-instalacion.md) | Published CI, fresh local data, three accounts, permissions, real ingestion, Atlas and two live queries |
 | 20 September | [Local verification](../CHANGELOG.md#verification-recorded-on-20-september-2026) | 185 backend tests; 119 frontend tests, lint, coverage and builds |
 | 19 September | [Archive interface](2026-09-19-archivo-campana.md) | Frontend checks and desktop/mobile review with example API data |
