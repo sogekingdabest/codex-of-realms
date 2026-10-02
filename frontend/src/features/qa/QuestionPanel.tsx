@@ -40,7 +40,7 @@ export function QuestionPanel({ answer, asking, loadingCitation, loadingRealm, o
       <div className="panel-heading"><div><p className="eyebrow">Consulta fundamentada</p><h2>Pregunta al archivo</h2></div></div>
       <form className="question-form" onSubmit={submit}>
         <label htmlFor="question">¿Qué quieres saber?</label>
-        <textarea ref={question} id="question" name="question" maxLength={1000} required placeholder="¿Por qué la Aguja conserva una deuda antigua?" rows={5} />
+        <textarea ref={question} id="question" name="question" maxLength={1000} required placeholder="Pregunta por un lugar, un personaje o un suceso de la campaña" rows={5} />
         <p className="muted">Las consultas usan las fuentes publicadas. Las fichas del atlas se mantienen por separado.</p>
         <div className="question-footer">
           {asking
