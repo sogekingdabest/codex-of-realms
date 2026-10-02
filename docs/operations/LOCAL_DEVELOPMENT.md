@@ -4,7 +4,7 @@
 
 - Docker with Compose for the application and PostgreSQL integration tests.
 - Java 21 for Maven commands; the repository includes the wrapper.
-- Node.js 24 and npm for frontend commands.
+- Node.js 24.15 or later and npm for frontend commands. The test environment, jsdom, needs that version.
 - PowerShell for the repository's operational scripts, including backup and evaluation.
 
 Development uses a machine with 16 GB RAM and a 6 GB NVIDIA GPU. Expect inference speed and model-loading time to vary on other hardware.
