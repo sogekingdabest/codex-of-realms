@@ -106,7 +106,7 @@ No se puede simular de forma justa. Como referencia, «Lumbrevela» aparece 12 v
 2. Foco y desplazamiento al resultado de la consulta en móvil. Corregido; ver «Corrección del resultado fuera de pantalla».
 3. Ocultar el archivo y el checksum a los jugadores en el diálogo de evidencia. Corregido; ver «Corrección del diálogo de evidencia».
 4. Tema y textos propios en el registro. Corregido; ver «Corrección del registro».
-5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil.
+5. Estado de procesamiento en la biblioteca y cabecera compacta en móvil. Corregido; ver «Corrección de la biblioteca y la cabecera en móvil».
 6. Los detalles de la dirección.
 
 ## Corrección del fallo en frío
@@ -129,7 +129,7 @@ Ollama descarga el modelo tras cinco minutos sin uso (`AI_CHAT_KEEP_ALIVE`). Una
 
 ## Corrección del resultado fuera de pantalla
 
-Cuando llega un resultado nuevo, el foco pasa a su encabezado. Si ese encabezado no se ve, la página se desplaza hasta el resultado. En escritorio, donde ya se veía, la página no se mueve. La tarjeta con pasajes no tenía encabezado: «Fragmentos de las fuentes» pasa a serlo, con el mismo aspecto.
+Cuando llega un resultado nuevo, el foco pasa a su encabezado. Si el encabezado o el primer pasaje (o el aviso entero, cuando no hay respuesta) no se ven completos, la página se desplaza hasta el resultado. En escritorio, donde ya se veía, la página no se mueve. La tarjeta con pasajes no tenía encabezado: «Fragmentos de las fuentes» pasa a serlo, con el mismo aspecto.
 
 El foco no se mueve si la persona ya está escribiendo otra pregunta; la región `aria-live` sigue anunciando el resultado. Que el foco siga en la pregunta enviada no cuenta como escribir, porque iOS no lo pasa al botón al tocar «Consultar». Al volver a Consultas con un resultado anterior, el foco tampoco se mueve.
 
@@ -150,6 +150,16 @@ El paso de la contraseña se llama «Elige tu contraseña» y explica que es la 
 El tema hereda de `keycloak.v2` y solo cambia estilos y textos, sin plantillas propias. Se aplica a los realms nuevos al importarlos. Para un realm existente, `./scripts/configure-keycloak-realm.ps1` (antes `configure-email-verification.ps1`) lo activa junto con la verificación y el SMTP. El correo de verificación en español decía «expirará en 5 minutos minutos»; el texto nuevo dice «caduca en 5 minutos».
 
 Verificación: un recorrido completo en español, en escritorio y en móvil, y otro en inglés contra el entorno de pruebas. Cubrió entrar con error, crear la cuenta con campos vacíos, confirmar el correo, elegir la contraseña con y sin coincidencia y recuperarla. El script devolvió el tema a un realm que tenía los temas por defecto. La suite de navegador recorre el registro en inglés y comprueba el título «Choose your password». No se revisaron otras pantallas de Keycloak (OTP, cuenta, administración), que conservan sus textos.
+
+## Corrección de la biblioteca y la cabecera en móvil
+
+**Fuentes en proceso.** La biblioteca solo lista versiones publicadas, así que mientras se procesaban las primeras fuentes parecía vacía. Ahora, para la dirección, el índice empieza con «Procesando 2 documentos nuevos; aparecerán en la lista al terminar» en lugar de «Todavía no hay fuentes visibles». La columna principal dice «Tus primeras fuentes se están procesando» y muestra cada documento con su estado y su progreso ([captura](assets/2026-10-01-sesion-simulada/correccion-procesando-escritorio.png)). Si la primera fuente falla, dice «Una fuente necesita atención». Los jugadores no ven el procesamiento, como antes.
+
+**Cabecera en móvil.** Se oculta el rótulo «Archivo de campaña», el nombre del universo es más pequeño, «Cambiar universo» y «Nuevo universo» comparten fila, las secciones caben en una fila y desaparece la barra de ubicación, que repetía la pestaña activa. Hasta el botón del índice, la cabecera pasa de unos 450 a 243 px ([captura](assets/2026-10-01-sesion-simulada/correccion-cabecera-movil.png)). Los jugadores encuentran «Nuevo universo» dentro de «Cambiar universo». Al abrir un documento o una ficha en móvil, la vista baja hasta él ([captura](assets/2026-10-01-sesion-simulada/correccion-lectura-movil.png)).
+
+Con la cabecera más baja, el encabezado de una respuesta ya cabía en pantalla y el pasaje no, así que la regla del desplazamiento mira ahora también el primer pasaje ([captura](assets/2026-10-01-sesion-simulada/correccion-resultado-movil.png)).
+
+Verificación: pruebas nuevas de los documentos pendientes y de la aplicación (fuentes en proceso, primera fuente fallida, «Nuevo universo» según el rol, desplazamiento en móvil y pasaje cortado); las de la aplicación fallan sin el cambio. Frontend: lint, 204 pruebas, cobertura y compilación. En el entorno de pruebas, con el modelo en pausa, una propietaria subió dos fuentes y vio el aviso en escritorio y en móvil; al reanudar el modelo se publicaron y, en móvil, la lectura empezó en el documento. La suite de navegador pasa.
 
 ## Reproducción y registros
 
