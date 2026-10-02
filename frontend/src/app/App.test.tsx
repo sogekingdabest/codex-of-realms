@@ -478,6 +478,18 @@ describe('App', () => {
     expect(screen.getByText('1 documento nuevo necesita atención.')).toBeInTheDocument()
   })
 
+  it('abre el formulario de subida de una biblioteca vacía desde que empieza a cargar', async () => {
+    const api = testApi()
+    let finishLoading!: (sources: Awaited<ReturnType<typeof api.listSources>>) => void
+    vi.mocked(api.listSources).mockReturnValue(new Promise((resolve) => { finishLoading = resolve }))
+    render(<App api={api} session={session} />)
+
+    const form = (await screen.findByText('Añadir conocimiento')).closest('details')!
+    expect(form).toHaveAttribute('open')
+    await act(async () => finishLoading([]))
+    expect(form).toHaveAttribute('open')
+  })
+
   it('mantiene abierto el formulario de subida cuando se publica la primera fuente', async () => {
     const api = testApi()
     const [baseSource] = await api.listSources('realm-1')
