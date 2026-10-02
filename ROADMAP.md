@@ -1,15 +1,18 @@
 # Roadmap
 
-The next release is a small beta for role-playing groups. The core workflow is in place; the remaining work is making it easy to try and learning where users need help.
+The first beta, [0.1.0-beta](CHANGELOG.md#010-beta--2-october-2026), is a documented local installation for small role-playing groups. The remaining work is learning where people need help.
 
-## Before the first beta
+## First beta
 
 - [x] Review and commit the delivery, then install it from a clean clone ([2 October rehearsal](reviews/2026-10-02-ensayo-instalacion.md)).
 - [x] Run backend, frontend, browser and backup/restore checks on the same release candidate (`8765c9b`).
 - [x] Prepare an example campaign that a newcomer can explore immediately: `scripts/load-demo-campaign.ps1`.
-- [ ] Choose between a documented local installation and a hosted beta by invitation. Hosting needs HTTPS, identity and email configuration, private service networks and resource limits.
-- [ ] Run the [user session](docs/product/USER_VALIDATION.md) with a Game Master and two players, then fix the tasks that repeatedly need help.
-- [ ] Publish a tagged beta with setup instructions, known limitations and a short demonstration.
+- [x] Publish a tagged beta with setup instructions, known limitations and a short demonstration: `v0.1.0-beta`.
+
+## Next
+
+- [ ] Run the [user session](docs/product/USER_VALIDATION.md) with a Game Master and two players, then fix the tasks that repeatedly need help. Until a group is available, scripted sessions with real models stand in for it ([1 October](reviews/2026-10-01-sesion-simulada.md)).
+- [ ] Decide whether a hosted beta by invitation is needed. Hosting needs HTTPS, identity and email configuration, private service networks and resource limits.
 
 AI experiments have their own promotion criteria. The [evaluation guide](demo/evaluation/README.md) describes them.
 

@@ -1,6 +1,6 @@
 # Current limitations
 
-The first beta is still being prepared. These are the limits to expect when trying the current local application.
+These are the limits to expect in the first beta, 0.1.0-beta, a local installation.
 
 ## Sources and questions
 
@@ -18,10 +18,10 @@ Owners invite members by email and share the application URL themselves. The app
 
 The supplied Compose stack uses localhost addresses, Keycloak development mode and Mailpit for verification messages. A hosted beta needs HTTPS, production identity and email settings, private service networks, and limits on query and storage use. See the [threat model](../security/THREAT_MODEL.md) for the security details.
 
-Local inference depends on available hardware. Development has used 16 GB RAM and a 6 GB NVIDIA GPU; model loading and the first question can take noticeably longer than later requests. Source-job history also grows without pagination.
+Local inference depends on available hardware. Development has used 16 GB RAM and a 6 GB NVIDIA GPU; model loading and the first question can take noticeably longer than later requests. In the [latest rehearsal](../../reviews/2026-10-02-ensayo-instalacion.md), the first answer after startup took about a minute and later ones took seconds. Source-job history also grows without pagination.
 
 ## What remains to be checked
 
 The [review index](../../reviews/README.md) records which checks ran on each revision. Automated tests use model doubles; live evaluation measures model behavior, and recovery drills check backups.
 
-The [user session](USER_VALIDATION.md) is prepared but has not yet been run with an external group. The next product question is whether a Game Master and two players can find and verify campaign information without help.
+The [user session](USER_VALIDATION.md) is prepared but has not yet been run with an external group. Until one is available, scripted sessions with real models stand in for it; the [1 October report](../../reviews/2026-10-01-sesion-simulada.md) records what they found and fixed. The next product question is whether a Game Master and two players can find and verify campaign information without help.

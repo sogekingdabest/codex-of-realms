@@ -4,7 +4,7 @@ A shared archive for tabletop role-playing campaigns. Keep session notes, charac
 
 For example, the Game Master can keep the truth about an ancient tower private, share its public history with everyone, and reveal a clue to one player. Each person can browse their sources or ask a question and open the passages behind the answer.
 
-The interface is in Spanish. The application runs locally and is being prepared for its first beta.
+The interface is in Spanish. The application runs locally; the first beta is [0.1.0-beta](CHANGELOG.md#010-beta--2-october-2026). Read the [current limitations](docs/product/LIMITATIONS.md) before trying it with a group.
 
 ## What you can do
 
